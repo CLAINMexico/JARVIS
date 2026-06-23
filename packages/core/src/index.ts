@@ -3,7 +3,9 @@ import { JarvisApplication } from './runtime/jarvis-application.js';
 import type { JarvisInfo } from './contracts/jarvis-info.js';
 import type { JarvisOptions } from './contracts/jarvis-options.js';
 
-export type { JarvisInfo } from './contracts/jarvis-info.js';
+export type {
+  JarvisInfo
+} from './contracts/jarvis-info.js';
 
 export type {
   JarvisModuleInfo,
@@ -18,12 +20,13 @@ export type {
   JarvisServerOptions
 } from './contracts/jarvis-options.js';
 
-export { JarvisApplication } from './runtime/jarvis-application.js';
+export {
+  JarvisApplication
+} from './runtime/jarvis-application.js';
 
 export class Jarvis {
   public static async boot(options: JarvisOptions): Promise<JarvisApplication> {
     const app = new JarvisApplication(options);
-
     return app;
   }
 

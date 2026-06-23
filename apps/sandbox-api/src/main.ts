@@ -1,9 +1,9 @@
 import { Jarvis } from '@jarvis/core';
 
-const J = await Jarvis.boot({
+const Core = await Jarvis.boot({
   app: {
-    name: 'J.A.R.V.I.S. Sandbox API',
-    version: '0.1.0',
+    name: 'Sandbox API for development',
+    version: '0.5.1',
     environment: 'local'
   },
   server: {
@@ -27,17 +27,15 @@ const J = await Jarvis.boot({
   ]
 });
 
-const info = J.info();
+const Instance = Core.info();
 
-console.log(`${info.name} | ${info.app.name}`);
-console.log(info.description);
-console.log(`Version: ${info.app.version}`);
-console.log(`Environment: ${info.app.environment}`);
-console.log(`Server: ${info.server.host}:${info.server.port}`);
-console.log(`Status: ${info.status}`);
-
+console.log(`App: ${Instance.name} | ${Instance.app.name}`);
+console.log(`Description: ${Instance.description}`);
+console.log(`Version: ${Instance.app.version}`);
+console.log(`Environment: ${Instance.app.environment}`);
+console.log(`Server: ${Instance.server.host}:${Instance.server.port}`);
+console.log(`Status: ${Instance.status}`);
 console.log('Modules:');
-
-for (const module of J.modules()) {
-  console.log(`- ${module.name}: ${module.status}`);
+for (const Module of Instance.modules) {
+  console.log(`- ${Module.name}: ${Module.status}`);
 }
