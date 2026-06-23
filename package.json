@@ -1,6 +1,6 @@
 {
-  "name": "J.A.R.V.I.S.",
-  "version": "0.2.3",
+  "name": "@jarvis/root",
+  "version": "0.3.0",
   "private": true,
   "description": "J.A.R.V.I.S. | JavaScript Architecture Runtime for Versatile Intelligent Services",
   "author": "CLAIN México, S.A. de C.V.",
@@ -11,7 +11,7 @@
     "pnpm": ">=11.0.0"
   },
   "scripts": {
-    "dev": "pnpm --filter @jarvis/sandbox-api dev",
+    "dev": "pnpm --filter @jarvis/core build && pnpm --filter @jarvis/sandbox-api dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "clean": "pnpm -r clean",
