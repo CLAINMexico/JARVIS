@@ -44,6 +44,7 @@ El stack principal definido para el proyecto es:
 
 Estructura conceptual inicial:
 
+```
 jarvis/
   apps/
     sandbox-api/
@@ -65,6 +66,7 @@ jarvis/
     mongo/
   examples/
   tools/
+```
 
 ⸻
 
