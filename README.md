@@ -1,7 +1,19 @@
+<p align="center">
+  <img src="./assets/branding/jarvis-logo.png" alt="J.A.R.V.I.S. Logo" width="360" />
+</p>
+
+<h1 align="center">J.A.R.V.I.S.</h1>
+
+<p align="center">
+  <strong>JavaScript Architecture Runtime for Versatile Intelligent Services</strong>
+</p>
+
+---
+
 # J.A.R.V.I.S.
 JavaScript Architecture Runtime for Versatile Intelligent Services
 
-⸻
+---
 
 ## Objetivo
 
@@ -23,7 +35,7 @@ Entre sus responsabilidades principales se contemplan:
 * Cliente SDK para consumo desde frontends o PWAs.
 * Preparación para arquitecturas modulares y microservicios.
 
-⸻
+---
 
 ## Stack
 
@@ -36,7 +48,7 @@ El stack principal definido para el proyecto es:
 * Docker
 * Docker Compose
 
-⸻
+---
 
 ## Arquitectura
 
@@ -68,7 +80,7 @@ jarvis/
   tools/
 ```
 
-⸻
+---
 
 ## Paquetes contemplados
 
@@ -97,7 +109,7 @@ Seguridad, autenticación, autorización, JWT, roles, permisos, auditoría y pol
 
 Capa de datos para conexiones, consultas, recursos y drivers de base de datos.
 
-Drives Integrados:
+**`Drivers`** contemplados:
 
 - **`@jarvis/database-mssql`**
 - **`@jarvis/database-postgresql`**
@@ -111,7 +123,7 @@ Drives Integrados:
 
 Capa de almacenamiento para archivos, baúles, carpetas, metadatos y providers externos.
 
-Providers Integrados:
+**`Providers`** contemplados:
 
 - **`@jarvis/storage-local`**
 - **`@jarvis/storage-s3`**
@@ -124,7 +136,7 @@ Providers Integrados:
 
 Sistema de notificaciones multicanal.
 
-Canales Integrados:
+**`Channels`** contemplados:
 
 - **`email`**
 - **`push`**
@@ -137,7 +149,7 @@ Canales Integrados:
 
 SDK cliente para consumir APIs de **`J.A.R.V.I.S.`** desde frontends, PWAs, apps móviles u otros sistemas.
 
-⸻
+---
 
 ## Ambiente de desarrollo
 
@@ -151,7 +163,9 @@ Ambientes objetivo:
 - **`Linux`**
 - **`Windows`**
 
-## Servicios contemplados para desarrollo:
+---
+
+## Servicios contemplados
 
 - **`jarvis-node`**
 - **`jarvis-postgres`**
@@ -162,7 +176,7 @@ Ambientes objetivo:
 - **`jarvis-mailpit`**
 - **`jarvis-minio`**
 
-⸻
+---
 
 ## Convención de Docker
 
@@ -184,7 +198,7 @@ Servicios adicionales bajo perfiles:
 - **`jarvis-mongo`**
 - **`jarvis-minio`**
 
-⸻
+---
 
 ## Instalación inicial
 
@@ -192,47 +206,47 @@ Esta sección será actualizada conforme avance la implementación.
 
 Clonar el repositorio:
 
-```cmd
-git clone <repository-url>
-cd jarvis
+```bash
+git clone https://github.com/CLAINMexico/JARVIS.git
+cd JARVIS
 ```
 
 Copiar variables de entorno:
 
-```cmd
+```bash
 cp .env.example .env
-````
+```
 
 Levantar ambiente Docker:
 
-```cmd
+```bash
 docker compose up -d --build
 ```
 
 Validar contenedores:
 
-```cmd
+```bash
 docker compose ps
 ```
 
 Validar Node y pnpm dentro del contenedor:
 
-```cmd
+```bash
 docker compose exec jarvis-node node -v
 docker compose exec jarvis-node pnpm -v
 ```
 
-⸻
+---
 
-## Package manager
+## Gestor de Paquetes
 
-El package manager oficial será:
+El gestor de paquetes oficial será:
 
 - **`pnpm`**
 
 El proyecto utilizará pnpm workspaces para administrar los paquetes internos del monorepo.
 
-⸻
+---
 
 ## Filosofía del proyecto
 
@@ -249,7 +263,7 @@ El proyecto utilizará pnpm workspaces para administrar los paquetes internos de
 - Documentación progresiva.
 - Cero dependencia del “en mi máquina sí funciona”.
 
-⸻
+---
 
 ## API objetivo
 
@@ -268,7 +282,7 @@ GET https://api.midominio.com/v1/storage/vaults/facturas/files
 POST https://api.midominio.com/v1/notify/email/send
 ```
 
-⸻
+---
 
 ## Seguridad
 
@@ -289,7 +303,7 @@ Capas contempladas:
 - Audit log.
 - Respuestas de error seguras.
 
-⸻
+---
 
 ## Licencia
 
@@ -298,7 +312,7 @@ Este proyecto es privado y propietario.
 Copyright (c) CLAIN México, S.A. de C.V.
 Todos los derechos reservados.
 
-⸻
+---
 
 ## Nota
 
