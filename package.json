@@ -1,0 +1,38 @@
+{
+  "name": "J.A.R.V.I.S.",
+  "version": "0.1.0",
+  "private": true,
+  "description": "J.A.R.V.I.S. | JavaScript Architecture Runtime for Versatile Intelligent Services",
+  "author": "CLAIN México, S.A. de C.V.",
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@11.8.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=11.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @jarvis/sandbox-api dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm -r clean",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:ps": "docker compose ps",
+    "docker:shell": "docker compose exec jarvis-node sh"
+  },
+  "keywords": [
+    "jarvis",
+    "kernel",
+    "sdk",
+    "backend",
+    "typescript",
+    "fastify",
+    "clain"
+  ],
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0"
+  }
+}
