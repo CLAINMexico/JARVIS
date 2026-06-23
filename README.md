@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/branding/jarvis-logo.png" alt="J.A.R.V.I.S. Logo" width="360" />
+  <img src="./assets/images/branding/jarvis-logo.png" alt="J.A.R.V.I.S. Logo" width="360" />
 </p>
 
 <h1 align="center">J.A.R.V.I.S.</h1>
@@ -7,11 +7,6 @@
 <p align="center">
   <strong>JavaScript Architecture Runtime for Versatile Intelligent Services</strong>
 </p>
-
----
-
-# J.A.R.V.I.S.
-JavaScript Architecture Runtime for Versatile Intelligent Services
 
 ---
 
