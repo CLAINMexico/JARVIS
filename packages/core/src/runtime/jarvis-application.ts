@@ -1,4 +1,5 @@
 import type { JarvisInfo } from '../contracts/jarvis-info.js';
+import type { JarvisModuleInfo } from '../contracts/jarvis-module.js';
 import type { JarvisEnvironment, JarvisOptions } from '../contracts/jarvis-options.js';
 
 interface NormalizedJarvisOptions {
@@ -11,6 +12,7 @@ interface NormalizedJarvisOptions {
     host: string;
     port: number;
   };
+  modules: JarvisModuleInfo[];
 }
 
 export class JarvisApplication {
@@ -26,7 +28,11 @@ export class JarvisApplication {
       server: {
         host: options.server?.host ?? '0.0.0.0',
         port: options.server?.port ?? 3000
-      }
+      },
+      modules: (options.modules ?? []).map((module) => ({
+        name: module.name,
+        status: module.status ?? 'registered'
+      }))
     };
   }
 
@@ -43,7 +49,12 @@ export class JarvisApplication {
         host: this.options.server.host,
         port: this.options.server.port
       },
+      modules: this.modules(),
       status: 'bootstrapped'
     };
+  }
+
+  public modules(): JarvisModuleInfo[] {
+    return [...this.options.modules];
   }
 }

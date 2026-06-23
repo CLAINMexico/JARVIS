@@ -4,6 +4,13 @@ import type { JarvisInfo } from './contracts/jarvis-info.js';
 import type { JarvisOptions } from './contracts/jarvis-options.js';
 
 export type { JarvisInfo } from './contracts/jarvis-info.js';
+
+export type {
+  JarvisModuleInfo,
+  JarvisModuleOptions,
+  JarvisModuleStatus
+} from './contracts/jarvis-module.js';
+
 export type {
   JarvisAppOptions,
   JarvisEnvironment,

@@ -1,3 +1,4 @@
+import type { JarvisModuleInfo } from './jarvis-module.js';
 import type { JarvisEnvironment } from './jarvis-options.js';
 
 export interface JarvisAppInfo {
@@ -16,5 +17,6 @@ export interface JarvisInfo {
   description: 'JavaScript Architecture Runtime for Versatile Intelligent Services';
   app: JarvisAppInfo;
   server: JarvisServerInfo;
+  modules: JarvisModuleInfo[];
   status: 'bootstrapped';
 }

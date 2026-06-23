@@ -1,3 +1,5 @@
+import type { JarvisModuleOptions } from './jarvis-module.js';
+
 export type JarvisEnvironment = 'local' | 'development' | 'testing' | 'staging' | 'production';
 
 export interface JarvisAppOptions {
@@ -54,4 +56,9 @@ export interface JarvisOptions {
    * Server configuration.
    */
   server?: JarvisServerOptions;
+
+  /**
+   * Initial modules registered in the runtime.
+   */
+  modules?: JarvisModuleOptions[];
 }
