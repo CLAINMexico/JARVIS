@@ -1,8 +1,10 @@
 {
   "name": "@jarvis/core",
-  "version": "0.0.0",
+  "version": "0.5.1",
   "private": true,
   "description": "J.A.R.V.I.S. | Package - Core",
+  "author": "CLAIN México, S.A. de C.V.",
+  "license": "UNLICENSED",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

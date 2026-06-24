@@ -1,6 +1,20 @@
-import { Jarvis } from '@jarvis/core';
+/**
+ * Se importa el punto de entrada principal de @jarvis/core.
+ *
+ * Jarvis permite arrancar una instancia del runtime usando Jarvis.boot().
+ */
+import {
+  Jarvis
+} from '@jarvis/core';
 
-const Core = await Jarvis.boot({
+/**
+ * Se arranca una instancia de J.A.R.V.I.S. para pruebas de desarrollo.
+ *
+ * Esta aplicación no representa todavía una API real de negocio.
+ * Su objetivo es validar que el core pueda bootear, recibir configuración
+ * inicial y registrar módulos dentro del runtime.
+ */
+const core = await Jarvis.boot({
   app: {
     name: 'Sandbox API for development',
     version: '0.5.1',
@@ -27,15 +41,29 @@ const Core = await Jarvis.boot({
   ]
 });
 
-const Instance = Core.info();
+/**
+ * Se obtiene la información normalizada de la instancia arrancada.
+ *
+ * A partir de este punto, los valores opcionales ya fueron resueltos
+ * por el core, por ejemplo environment, host, port y status de módulos.
+ */
+const instance = core.info();
 
-console.log(`App: ${Instance.name} | ${Instance.app.name}`);
-console.log(`Description: ${Instance.description}`);
-console.log(`Version: ${Instance.app.version}`);
-console.log(`Environment: ${Instance.app.environment}`);
-console.log(`Server: ${Instance.server.host}:${Instance.server.port}`);
-console.log(`Status: ${Instance.status}`);
+console.log(`App: ${instance.name} | ${instance.app.name}`);
+console.log(`Description: ${instance.description}`);
+console.log(`Version: ${instance.app.version}`);
+console.log(`Environment: ${instance.app.environment}`);
+console.log(`Server: ${instance.server.host}:${instance.server.port}`);
+console.log(`Status: ${instance.status}`);
+
 console.log('Modules:');
-for (const Module of Instance.modules) {
-  console.log(`- ${Module.name}: ${Module.status}`);
+
+/**
+ * Se recorren los módulos reportados por la instancia.
+ *
+ * Esto valida que los módulos enviados a Jarvis.boot() fueron
+ * registrados y normalizados correctamente.
+ */
+for (const module of instance.modules) {
+  console.log(`- ${module.name}: ${module.status}`);
 }
