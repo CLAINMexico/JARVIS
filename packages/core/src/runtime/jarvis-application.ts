@@ -15,6 +15,14 @@ import type {
 } from '../contracts/jarvis-module.js';
 
 /**
+ * Se importa como type porque solo se usa para describir
+ * módulos vivos que pueden ejecutar ciclo de vida.
+ */
+import type {
+  JarvisRuntimeModule
+} from '../contracts/jarvis-runtime-module.js';
+
+/**
  * Se importan como type porque solo se usan para validar
  * la configuración recibida y el ambiente de ejecución.
  */
@@ -54,13 +62,22 @@ interface NormalizedJarvisOptions {
    * Lista de módulos registrados ya normalizados.
    */
   modules: JarvisModuleInfo[];
+
+  /**
+   * Lista de módulos vivos registrados en el runtime.
+   *
+   * Estos módulos pueden tener comportamiento como boot()
+   * y shutdown().
+   */
+  runtimeModules: JarvisRuntimeModule[];
 }
 
 /**
  * Representa una instancia viva del runtime de J.A.R.V.I.S.
  *
  * Esta clase recibe las opciones de arranque, las normaliza
- * y expone métodos para consultar el estado actual del runtime.
+ * y expone métodos para consultar o ejecutar el estado actual
+ * del runtime.
  */
 export class JarvisApplication {
   /**
@@ -81,6 +98,8 @@ export class JarvisApplication {
    * y guarda una versión normalizada para uso interno.
    */
   public constructor(options: JarvisOptions) {
+    const runtimeModules = options.runtimeModules ?? [];
+
     this.options = {
       app: {
         name: options.app.name,
@@ -91,11 +110,42 @@ export class JarvisApplication {
         host: options.server?.host ?? '0.0.0.0',
         port: options.server?.port ?? 3000
       },
-      modules: (options.modules ?? []).map((module) => ({
-        name: module.name,
-        status: module.status ?? 'registered'
-      }))
+      modules: [
+        ...(options.modules ?? []).map((module) => ({
+          name: module.name,
+          status: module.status ?? 'registered'
+        })),
+        ...runtimeModules.map((module) => ({
+          name: module.name,
+          status: 'registered' as const
+        }))
+      ],
+      runtimeModules
     };
+  }
+
+  /**
+   * Ejecuta el método boot() de todos los módulos vivos que lo tengan.
+   *
+   * Este método permite que los módulos inicialicen recursos internos,
+   * conexiones o cualquier preparación necesaria.
+   */
+  public async bootModules(): Promise<void> {
+    for (const module of this.options.runtimeModules) {
+      await module.boot?.();
+    }
+  }
+
+  /**
+   * Ejecuta el método shutdown() de todos los módulos vivos que lo tengan.
+   *
+   * Los módulos se apagan en orden inverso al arranque para respetar
+   * dependencias simples entre ellos.
+   */
+  public async shutdown(): Promise<void> {
+    for (const module of [...this.options.runtimeModules].reverse()) {
+      await module.shutdown?.();
+    }
   }
 
   /**

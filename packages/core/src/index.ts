@@ -50,6 +50,16 @@ export type {
 } from './contracts/jarvis-module.js';
 
 /**
+ * Contratos públicos de módulos vivos del runtime.
+ *
+ * Estos tipos definen el comportamiento que puede tener un módulo
+ * dentro del ciclo de vida de J.A.R.V.I.S., como boot() y shutdown().
+ */
+export type {
+  JarvisRuntimeModule
+} from './contracts/jarvis-runtime-module.js';
+
+/**
  * Contratos públicos de configuración de arranque.
  *
  * Estos tipos definen la configuración aceptada por Jarvis.boot().

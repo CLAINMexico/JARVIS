@@ -12,12 +12,12 @@ import {
  *
  * Esta aplicación no representa todavía una API real de negocio.
  * Su objetivo es validar que el core pueda bootear, recibir configuración
- * inicial y registrar módulos dentro del runtime.
+ * inicial, registrar módulos y ejecutar módulos vivos del runtime.
  */
 const core = await Jarvis.boot({
   app: {
     name: 'Sandbox API for development',
-    version: '0.5.2',
+    version: '0.6.0',
     environment: 'local'
   },
   server: {
@@ -26,20 +26,47 @@ const core = await Jarvis.boot({
   },
   modules: [
     {
-      name: 'config'
-    },
-    {
-      name: 'logger'
-    },
-    {
       name: 'license',
       status: 'disabled'
+    }
+  ],
+  runtimeModules: [
+    {
+      name: 'config',
+      boot() {
+        console.log('[config] boot ejecutado');
+      },
+      shutdown() {
+        console.log('[config] shutdown ejecutado');
+      }
     },
     {
-      name: 'database'
+      name: 'logger',
+      boot() {
+        console.log('[logger] boot ejecutado');
+      },
+      shutdown() {
+        console.log('[logger] shutdown ejecutado');
+      }
+    },
+    {
+      name: 'database',
+      async boot() {
+        console.log('[database] boot asíncrono ejecutado');
+      },
+      async shutdown() {
+        console.log('[database] shutdown asíncrono ejecutado');
+      }
     }
   ]
 });
+
+/**
+ * Se ejecuta el arranque de los módulos vivos.
+ *
+ * Cada módulo que tenga método boot() será inicializado por el core.
+ */
+await core.bootModules();
 
 /**
  * Se obtiene la información normalizada de la instancia arrancada.
@@ -67,3 +94,10 @@ console.log('Modules:');
 for (const module of instance.modules) {
   console.log(`- ${module.name}: ${module.status}`);
 }
+
+/**
+ * Se ejecuta el apagado de los módulos vivos.
+ *
+ * El core apagará los módulos en orden inverso al arranque.
+ */
+await core.shutdown();

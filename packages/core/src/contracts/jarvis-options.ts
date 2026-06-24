@@ -10,6 +10,14 @@ import type {
 } from './jarvis-module.js';
 
 /**
+ * Se importa como type porque solo se usa para describir módulos vivos
+ * que pueden participar en el ciclo de vida del runtime.
+ */
+import type {
+  JarvisRuntimeModule
+} from './jarvis-runtime-module.js';
+
+/**
  * Ambientes soportados por el runtime de J.A.R.V.I.S.
  *
  * Estos valores ayudan a identificar en qué contexto está corriendo
@@ -88,9 +96,18 @@ export interface JarvisOptions {
   server?: JarvisServerOptions;
 
   /**
-   * Lista inicial de módulos que serán registrados en el runtime.
+   * Lista inicial de módulos informativos que serán registrados
+   * en el runtime.
    *
-   * Si no se define, J.A.R.V.I.S. arrancará sin módulos iniciales.
+   * Estos módulos solo describen nombre y estado.
    */
   modules?: JarvisModuleOptions[];
+
+  /**
+   * Lista inicial de módulos vivos del runtime.
+   *
+   * Estos módulos pueden incluir comportamiento de ciclo de vida,
+   * por ejemplo boot() y shutdown().
+   */
+  runtimeModules?: JarvisRuntimeModule[];
 }
