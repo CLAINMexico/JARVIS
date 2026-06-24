@@ -17,7 +17,7 @@ import {
 const core = await Jarvis.boot({
   app: {
     name: 'Sandbox API for development',
-    version: '0.5.1',
+    version: '0.5.2',
     environment: 'local'
   },
   server: {
