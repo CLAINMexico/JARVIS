@@ -20,15 +20,15 @@ El objetivo de **`J.A.R.V.I.S.`** es proporcionar un kernel backend capaz de cen
 
 Entre sus responsabilidades principales se contemplan:
 
-* Levantamiento de servicios backend con Node.js, TypeScript y Fastify.
-* Administración de configuración por ambiente.
-* Seguridad basada en JWT, roles, permisos y políticas.
-* Conexión con múltiples motores de base de datos.
-* Manejo de almacenamiento de archivos.
-* Envío de notificaciones multicanal.
-* Licenciamiento y activación de paquetes.
-* Cliente SDK para consumo desde frontends o PWAs.
-* Preparación para arquitecturas modulares y microservicios.
+- Levantamiento de servicios backend con Node.js, TypeScript y Fastify.
+- Administración de configuración por ambiente.
+- Seguridad basada en JWT, roles, permisos y políticas.
+- Conexión con múltiples motores de base de datos.
+- Manejo de almacenamiento de archivos.
+- Envío de notificaciones multicanal.
+- Licenciamiento y activación de paquetes.
+- Cliente SDK para consumo desde frontends o PWAs.
+- Preparación para arquitecturas modulares y microservicios.
 
 ---
 
@@ -36,12 +36,12 @@ Entre sus responsabilidades principales se contemplan:
 
 El stack principal definido para el proyecto es:
 
-* Node.js
-* TypeScript
-* Fastify
-* pnpm
-* Docker
-* Docker Compose
+- Node.js
+- TypeScript
+- Fastify
+- pnpm
+- Docker
+- Docker Compose
 
 ---
 

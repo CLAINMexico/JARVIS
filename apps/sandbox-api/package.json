@@ -1,8 +1,8 @@
 {
   "name": "@jarvis/sandbox-api",
-  "version": "0.6.0",
+  "version": "1.0.0",
   "private": true,
-  "description": "J.A.R.V.I.S. | Sandbox API for development.",
+  "description": "Sandbox API for Developers.",
   "author": "CLAIN México, S.A. de C.V.",
   "license": "UNLICENSED",
   "type": "module",

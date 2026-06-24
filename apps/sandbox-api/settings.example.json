@@ -1,0 +1,98 @@
+{
+  "app": {
+    "name": "MyApp",
+    "version": "1.0.0",
+    "environment": "local"
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 3000,
+    "basePath": "/api"
+  },
+  "api": {
+    "version": "v1",
+    "cors": {
+      "origins": [
+        "http://localhost:5173",
+        "http://localhost:3000"
+      ]
+    }
+  },
+  "security": {
+    "jwt": {
+      "secretRef": "SETTINGS_SECURITY_JWT_SECRET",
+      "accessTokenExpiresIn": "15m",
+      "refreshTokenExpiresIn": "7d"
+    }
+  },
+  "license": {
+    "keyRef": "SETTINGS_LICENSE_KEY"
+  },
+  "logger": {
+    "level": "debug",
+    "pretty": true
+  },
+  "database": {
+    "default": "main",
+    "connections": {
+      "main": {
+        "driver": "mssql",
+        "host": "localhost",
+        "port": 1433,
+        "database": "SETTINGS_DATABASE_NAME",
+        "usernameRef": "SETTINGS_DATABASE_USERNAME",
+        "passwordRef": "SETTINGS_DATABASE_PASSWORD",
+        "options": {
+          "encrypt": false,
+          "trustServerCertificate": true
+        }
+      }
+    }
+  },
+  "notifications": {
+    "email": {
+      "provider": "smtp",
+      "host": "localhost",
+      "port": 1025,
+      "secure": false,
+      "usernameRef": "SETTINGS_NOTIFICATIONS_EMAIL_USERNAME",
+      "passwordRef": "SETTINGS_NOTIFICATIONS_EMAIL_PASSWORD",
+      "from": {
+        "name": "User Name",
+        "email": "address@domain.com"
+      }
+    }
+  },
+  "storage": {
+    "default": "local",
+    "providers": {
+      "local": {
+        "driver": "local",
+        "rootPath": "./storage"
+      }
+    }
+  },
+  "modules": {
+    "config": {
+      "enabled": true
+    },
+    "logger": {
+      "enabled": true
+    },
+    "license": {
+      "enabled": false
+    },
+    "security": {
+      "enabled": true
+    },
+    "database": {
+      "enabled": false
+    },
+    "storage": {
+      "enabled": false
+    },
+    "notifications": {
+      "enabled": false
+    }
+  }
+}
