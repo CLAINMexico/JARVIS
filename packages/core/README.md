@@ -1,6 +1,6 @@
 ## @jarvis/core
 
-**`@jarvis/core`** es el paquete principal del runtime de **`J.A.R.V.I.S.`**
+**`@jarvis/core`** es el package principal del runtime de **`J.A.R.V.I.S.`**
 
 Este package define las bases centrales para arrancar una instancia de **`J.A.R.V.I.S.`**, registrar módulos, ejecutar ciclos de vida y exponer información del runtime.
 
@@ -10,7 +10,14 @@ Este package define las bases centrales para arrancar una instancia de **`J.A.R.
 
 El objetivo de **`@jarvis/core`** es funcionar como el núcleo del ecosistema **`J.A.R.V.I.S.`**
 
-Este paquete no debe contener lógica específica de base de datos, configuración, seguridad, almacenamiento o notificaciones. Su responsabilidad es definir las reglas y mecanismos base para que otros paquetes puedan integrarse al runtime.
+Este package no debe contener lógica específica de base de datos, configuración, seguridad, almacenamiento, licenciamiento o notificaciones. Su responsabilidad es definir las reglas y mecanismos base para que otros packages puedan integrarse al runtime.
+
+En palabras simples:
+
+```
+@jarvis/core define cómo vive J.A.R.V.I.S.
+Los demás packages definen qué puede hacer J.A.R.V.I.S.
+```
 
 ---
 
@@ -18,21 +25,23 @@ Este paquete no debe contener lógica específica de base de datos, configuraci�
 
 **`@jarvis/core`** se encarga de:
 
-- Arrancar una instancia del runtime mediante Jarvis.boot().
+- Arrancar una instancia del runtime mediante **`Jarvis.boot()`**.
 - Normalizar opciones iniciales de arranque.
 - Registrar módulos informativos.
 - Registrar módulos vivos del runtime.
-- Ejecutar el ciclo de vida inicial de módulos con bootModules().
-- Ejecutar apagado ordenado con shutdown().
-- Reportar información de la instancia mediante info().
-- Exponer contratos base para otros paquetes.
+- Ejecutar el ciclo de vida inicial de módulos con **`bootModules()`**.
+- Ejecutar apagado ordenado con **`shutdown()`**.
+- Reportar información de la instancia mediante **`info()`**.
+- Exponer contratos base para otros packages.
 
-Lo que NO debe hacer
+---
+
+## Lo que NO debe hacer
 
 **`@jarvis/core`** no debe encargarse directamente de:
 
-- Leer archivos settings.json.
-- Leer archivos .env.
+- Leer archivos **`settings.json`**.
+- Leer archivos **`.env`**.
 - Conectarse a bases de datos.
 - Enviar correos o notificaciones.
 - Validar licencias.
@@ -40,7 +49,7 @@ Lo que NO debe hacer
 - Servir rutas HTTP directamente.
 - Implementar lógica específica de negocio.
 
-Esas responsabilidades deben vivir en paquetes especializados como:
+Esas responsabilidades deben vivir en packages especializados como:
 
 - **`@jarvis/config`**
 - **`@jarvis/logger`**
@@ -84,32 +93,38 @@ packages/core/
 
 ### src/index.ts
 
-Es la entrada pública del paquete.
+Entrada pública del package.
 
 Desde aquí se exportan:
 
-- Jarvis
-- JarvisApplication
-- Contratos públicos de opciones.
-- Contratos públicos de información.
-- Contratos públicos de módulos.
-- Contrato de módulos vivos del runtime.
+- **`Jarvis`**
+- **`JarvisApplication`**
+- **`JarvisInfo`**
+- **`JarvisOptions`**
+- **`JarvisAppOptions`**
+- **`JarvisServerOptions`**
+- **`JarvisEnvironment`**
+- **`JarvisModuleInfo`**
+- **`JarvisModuleOptions`**
+- **`JarvisModuleStatus`**
+- **`JarvisRuntimeModule`**
 
 ### src/runtime/jarvis-application.ts
 
-Contiene la clase JarvisApplication.
+Contiene la clase **`JarvisApplication`**.
 
 Esta clase representa una instancia viva de **`J.A.R.V.I.S.`** y se encarga de:
 
 - Guardar configuración interna normalizada.
-- Registrar módulos.
-- Ejecutar boot() de módulos vivos.
-- Ejecutar shutdown() de módulos vivos.
-- Reportar información del runtime.
+- Registrar módulos informativos.
+- Registrar módulos vivos.
+- Ejecutar **`boot()`** de módulos vivos.
+- Ejecutar **`shutdown()`** de módulos vivos.
+- Reportar información del runtime mediante **`info()`**.
 
 ### src/contracts/jarvis-options.ts
 
-Define las opciones aceptadas por Jarvis.boot().
+Define las opciones aceptadas por **`Jarvis.boot()`**.
 
 Incluye:
 
@@ -120,15 +135,17 @@ Incluye:
 
 ### src/contracts/jarvis-info.ts
 
-Define la estructura de información que devuelve J.info().
+Define la estructura de información que devuelve **`core.info()`**.
 
 ### src/contracts/jarvis-module.ts
 
-Define los contratos para módulos informativos:
+Define los contratos para módulos informativos.
 
-- JarvisModuleOptions
-- JarvisModuleInfo
-- JarvisModuleStatus
+Incluye:
+
+- **`JarvisModuleOptions`**
+- **`JarvisModuleInfo`**
+- **`JarvisModuleStatus`**
 
 ### src/contracts/jarvis-runtime-module.ts
 
@@ -136,15 +153,18 @@ Define el contrato para módulos vivos del runtime.
 
 Un módulo vivo puede tener comportamiento de ciclo de vida mediante:
 
-- boot()
-- shutdown()
+- **`boot()`**
+- **`shutdown()`**
 
-Uso básico
+---
+
+## Uso básico
 
 Ejemplo mínimo:
 
 ```ts
 import { Jarvis } from '@jarvis/core';
+
 const core = await Jarvis.boot({
   app: {
     name: 'MyApp',
@@ -156,18 +176,23 @@ const core = await Jarvis.boot({
     port: 3000
   }
 });
+
 const info = core.info();
+
 console.log(info.name);
 console.log(info.app.name);
 console.log(info.status);
 ```
 
-Uso con módulos informativos
+---
+
+## Uso con módulos informativos
 
 Los módulos informativos solo registran nombre y estado.
 
 ```ts
 import { Jarvis } from '@jarvis/core';
+
 const core = await Jarvis.boot({
   app: {
     name: 'MyApp',
@@ -184,21 +209,25 @@ const core = await Jarvis.boot({
     }
   ]
 });
+
 console.log(core.modules());
 ```
 
-Si un módulo no define status, **`J.A.R.V.I.S.`** usará:
+Si un módulo no define **`status`**, **`J.A.R.V.I.S.`** usará:
 
 ```
 registered
 ```
 
-Uso con módulos vivos
+---
+
+## Uso con módulos vivos
 
 Los módulos vivos pueden ejecutar lógica durante el arranque y apagado.
 
 ```ts
 import { Jarvis } from '@jarvis/core';
+
 const core = await Jarvis.boot({
   app: {
     name: 'MyApp',
@@ -226,8 +255,11 @@ const core = await Jarvis.boot({
     }
   ]
 });
+
 await core.bootModules();
+
 console.log(core.info());
+
 await core.shutdown();
 ```
 
@@ -247,11 +279,9 @@ core.info()
 core.shutdown()
 ```
 
----
+### bootModules()
 
-## bootModules()
-
-Ejecuta el método boot() de cada módulo vivo registrado.
+Ejecuta el método **`boot()`** de cada módulo vivo registrado.
 
 Los módulos se arrancan en el orden en el que fueron registrados.
 
@@ -259,11 +289,9 @@ Los módulos se arrancan en el orden en el que fueron registrados.
 config → logger → database
 ```
 
----
+### shutdown()
 
-## shutdown()
-
-Ejecuta el método shutdown() de cada módulo vivo registrado.
+Ejecuta el método **`shutdown()`** de cada módulo vivo registrado.
 
 Los módulos se apagan en orden inverso.
 
@@ -277,7 +305,7 @@ Esto ayuda a respetar dependencias simples entre módulos.
 
 ## Contrato JarvisRuntimeModule
 
-Todo paquete que quiera conectarse al ciclo de vida del core debe implementar este contrato.
+Todo package que quiera conectarse al ciclo de vida del core debe implementar este contrato.
 
 ```ts
 export interface JarvisRuntimeModule {
@@ -287,10 +315,11 @@ export interface JarvisRuntimeModule {
 }
 ```
 
-Ejemplo futuro en @jarvis/config:
+Ejemplo en un package externo como **`@jarvis/config`**:
 
 ```ts
 import type { JarvisRuntimeModule } from '@jarvis/core';
+
 export function createConfigModule(): JarvisRuntimeModule {
   return {
     name: 'config',
@@ -304,16 +333,27 @@ export function createConfigModule(): JarvisRuntimeModule {
 }
 ```
 
-## Relación con otros paquetes
+---
+
+## Relación con otros packages
 
 La relación correcta es:
 
 ```
-@jarvis/core = define contratos y mecanismos base
-@jarvis/config = implementa un módulo compatible con el core
-@jarvis/logger = implementa un módulo compatible con el core
-@jarvis/database = implementa un módulo compatible con el core
-apps/sandbox-api = conecta el core con los módulos reales
+@jarvis/core
+= define contratos y mecanismos base
+
+@jarvis/config
+= implementa un módulo compatible con el core
+
+@jarvis/logger
+= implementa un módulo compatible con el core
+
+@jarvis/database
+= implementa un módulo compatible con el core
+
+apps/sandbox-api
+= conecta el core con los módulos reales
 ```
 
 Regla importante:
@@ -324,11 +364,13 @@ Packages implementan reglas.
 Apps conectan packages con core.
 ```
 
-Decisión arquitectónica importante
+---
 
-**`@jarvis/core`** no debe depender de paquetes concretos como **`@jarvis/config`** o **`@jarvis/database`**.
+## Decisión arquitectónica importante
 
-Los paquetes concretos sí pueden depender de **`@jarvis/core`** para implementar sus contratos.
+**`@jarvis/core`** no debe depender de packages concretos como **`@jarvis/config`** o **`@jarvis/database`**.
+
+Los packages concretos sí pueden depender de **`@jarvis/core`** para implementar sus contratos.
 
 Correcto:
 
@@ -345,7 +387,7 @@ Incorrecto:
 @jarvis/core → @jarvis/database
 ```
 
-Esto evita dependencias circulares y mantiene al core limpio.
+Esto evita dependencias circulares y mantiene el core limpio.
 
 ---
 
@@ -380,13 +422,19 @@ dist/
 node_modules/
 ```
 
+Estos archivos no deben subirse a Git.
+
+**`dist/`** se genera con build.
+
+**`node_modules/`** se genera con pnpm.
+
 ---
 
 ## Convenciones
 
-Nombres de archivos
+### Nombres de archivos
 
-Dentro de **`@jarvis/core`** se usa prefijo jarvis-* porque este paquete define conceptos propios del runtime principal.
+Dentro de **`@jarvis/core`** se usa prefijo **`jarvis-*`** porque este package define conceptos propios del runtime principal.
 
 Ejemplos:
 
@@ -398,7 +446,7 @@ jarvis-runtime-module.ts
 jarvis-application.ts
 ```
 
-## Nombres en código
+### Nombres en código
 
 ```
 camelCase     → variables, funciones y métodos
@@ -407,11 +455,11 @@ kebab-case    → nombres de archivos
 UPPER_CASE    → constantes globales fijas
 ```
 
-## Imports ESM
+### Imports ESM
 
 Este proyecto usa TypeScript con ESM.
 
-Por eso los imports relativos deben usar extensión .js, aunque los archivos fuente sean .ts.
+Por eso los imports relativos deben usar extensión **`.js`**, aunque los archivos fuente sean **`.ts`**.
 
 Ejemplo:
 
@@ -419,24 +467,26 @@ Ejemplo:
 import type { JarvisOptions } from './contracts/jarvis-options.js';
 ```
 
+---
+
 ## Estado actual
 
 Actualmente **`@jarvis/core`** ya puede:
 
-- Bootear una instancia de **`J.A.R.V.I.S.`**
+- Bootear una instancia de **`J.A.R.V.I.S.`**.
 - Normalizar opciones iniciales.
 - Registrar módulos simples.
 - Registrar módulos vivos.
-- Ejecutar boot() en módulos vivos.
-- Ejecutar shutdown() en orden inverso.
-- Reportar información mediante info().
+- Ejecutar **`boot()`** en módulos vivos.
+- Ejecutar **`shutdown()`** en orden inverso.
+- Reportar información mediante **`info()`**.
 - Exponer contratos públicos para futuros packages.
 
 ## Notas para desarrollo
 
-* No meter lógica específica de negocio en **`@jarvis/core`**.
-* No leer secretos directamente desde este paquete.
-* No acoplar el core a paquetes concretos.
-* No romper el contrato JarvisRuntimeModule.
-* Mantener comentarios de documentación en español.
-* Mantener commits en español.
+- No meter lógica específica de negocio en **`@jarvis/core`**.
+- No leer secretos directamente desde este package.
+- No acoplar el core a packages concretos.
+- No romper el contrato **`JarvisRuntimeModule`**.
+- Mantener comentarios de documentación en español.
+- Mantener commits en español.
