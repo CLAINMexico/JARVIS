@@ -13,7 +13,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@jarvis/core": "workspace:*"
+    "@jarvis/core": "workspace:*",
+    "@jarvis/config": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

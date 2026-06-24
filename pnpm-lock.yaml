@@ -20,6 +20,9 @@ importers:
 
   apps/sandbox-api:
     dependencies:
+      '@jarvis/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@jarvis/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -27,6 +30,16 @@ importers:
       tsx:
         specifier: ^4.19.0
         version: 4.22.4
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/config:
+    dependencies:
+      '@jarvis/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
