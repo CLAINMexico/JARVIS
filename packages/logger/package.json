@@ -1,0 +1,28 @@
+{
+  "name": "@jarvis/logger",
+  "description": "Logger | Paquete principal para gestionar el ciclo de vida, ejecución y mapeo que lleva acabo el runtime de J.A.R.V.I.S.",
+  "version": "1.0.0",
+  "author": "CLAIN México, S.A. de C.V.",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@jarvis/core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

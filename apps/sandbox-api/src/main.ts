@@ -10,22 +10,34 @@ import {
 /**
  * Se importa el factory principal de @jarvis/config.
  *
- * createConfigModule() Permite crear un módulo vivo de configuración.
- * ConfigService Permite cargar la clase del módulo definido por @jarvis/config.
+ * createConfigModule() permite crear un módulo vivo de configuración.
  */
 import {
-  createConfigModule,
+  createConfigModule
+} from '@jarvis/config';
+
+/**
+ * Se importa como type porque ConfigService solo se usa para tipar
+ * el servicio registrado dentro del core.
+ */
+import type {
   ConfigService
 } from '@jarvis/config';
 
 /**
  * Se importa el factory principal de @jarvis/logger.
  *
- * createLoggerModule() Permite crear un módulo vivo de logger.
- * LoggerService Permite cargar la clase del módulo definido por @jarvis/logger.
+ * createLoggerModule() permite crear un módulo vivo de logger.
  */
 import {
-  createLoggerModule,
+  createLoggerModule
+} from '@jarvis/logger';
+
+/**
+ * Se importa como type porque LoggerService solo se usa para tipar
+ * el servicio registrado dentro del core.
+ */
+import type {
   LoggerService
 } from '@jarvis/logger';
 
@@ -40,42 +52,52 @@ import {
 /**
  * Se ejecuta el bootstrap inicial de la app.
  *
- * Esta etapa ocurre antes de arrancar @jarvis/core y permite cargar
- * settings.json para normalizar app, server y logger.
+ * Esta etapa ocurre antes de arrancar @jarvis/core y permite:
+ * - Leer settings.json.
+ * - Crear ConfigService.
+ * - Normalizar app.
+ * - Normalizar server.
+ * - Normalizar logger.
+ *
+ * De esta forma @jarvis/core no necesita saber cómo leer archivos
+ * ni depender directamente de @jarvis/config.
  */
-const bootstrap = await createJarvisBootstrap({
+const jarvisBootstrap = await createJarvisBootstrap({
   settingsFile: './settings.json'
 });
 
 /**
  * Se crea el módulo real de configuración.
  *
- * En este sandbox, @jarvis/config leerá el archivo settings.json
- * de la aplicación durante su método boot().
+ * En este flujo, @jarvis/bootstrap ya leyó settings.json, por lo que
+ * @jarvis/config recibe los valores cargados mediante values.
  *
- * Importante:
- * - settings.json contiene configuración no sensible.
- * - settings.json puede tener referencias hacia variables del .env.
- * - El archivo settings.json real no debe subirse a Git.
+ * Esto evita leer el mismo archivo dos veces y mantiene un flujo
+ * de arranque más claro:
+ *
+ * bootstrap -> configModule -> core
  */
 const configModule = createConfigModule({
-  values: bootstrap.settings
+  values: jarvisBootstrap.settings
 });
 
 /**
- * Se crea el módulo real de logger
+ * Se crea el módulo real de logger.
  *
- * En este sandbox, @jarvis/logger, permitira contar con una ambiente
- * controlado de logs y vista de depuración a nivel consola y archivos logs
+ * @jarvis/bootstrap normaliza previamente la configuración del logger
+ * desde settings.json, por lo que aquí se entrega directamente.
+ *
+ * Esto permite que @jarvis/logger use:
+ * - appName
+ * - level
+ * - defaultModule
+ * - timeZone
+ * - console
+ * - file
  */
-const loggerModule = createLoggerModule({
-  appName: bootstrap.logger.appName,
-  level: bootstrap.logger.level,
-  defaultModule: bootstrap.logger.defaultModule,
-  timeZone: bootstrap.logger.timeZone,
-  console: bootstrap.logger.console,
-  file: bootstrap.logger.file
-});
+const loggerModule = createLoggerModule(
+  jarvisBootstrap.logger
+);
 
 /**
  * Se arranca una instancia de J.A.R.V.I.S.
@@ -84,12 +106,15 @@ const loggerModule = createLoggerModule({
  * Su objetivo es validar que el core pueda bootear, recibir configuración
  * inicial, registrar módulos y ejecutar módulos vivos del runtime.
  *
- * En esta prueba, @jarvis/config ya no es un módulo falso: es un package
- * real montado por el core mediante runtimeModules.
+ * En este flujo:
+ * - @jarvis/bootstrap prepara los valores iniciales.
+ * - @jarvis/config expone ConfigService.
+ * - @jarvis/logger expone LoggerService.
+ * - @jarvis/core orquesta el ciclo de vida.
  */
 const core = await Jarvis.boot({
-  app: bootstrap.app,
-  server: bootstrap.server,
+  app: jarvisBootstrap.app,
+  server: jarvisBootstrap.server,
   runtimeModules: [
     configModule,
     loggerModule
@@ -100,8 +125,6 @@ const core = await Jarvis.boot({
  * Se ejecuta el arranque de los módulos vivos.
  *
  * Cada módulo que tenga método boot() será inicializado por el core.
- * En este caso, @jarvis/config leerá settings.json y cargará sus valores
- * dentro de ConfigService.
  */
 await core.bootModules();
 
@@ -114,26 +137,25 @@ await core.bootModules();
 const instance = core.info();
 
 /**
- * Se almacena el @jarvis/config como servicio
+ * Se obtiene @jarvis/config como servicio registrado en el core.
  *
- * Esta acción permite reservar la instancia del módulo de configuración
- * como servicio dentro del core.
+ * Esto permite consultar la configuración cargada desde settings.json
+ * usando ConfigService.
  */
 const config = core.service<ConfigService>('config');
 
 /**
- * Se almacena el @jarvis/logger como servicio
+ * Se obtiene @jarvis/logger como servicio registrado en el core.
  *
- * Esta acción permite reservar la instancia del módulo de logger
- * como servicio dentro del core.
+ * Esto permite escribir logs de consola y archivo usando LoggerService.
  */
 const logger = core.service<LoggerService>('logger');
 
 /**
  * Se imprime información general del runtime.
  *
- * Esta sección valida que @jarvis/core sigue bootstrapped correctamente
- * después de montar el módulo real @jarvis/config.
+ * Esta sección valida que @jarvis/core sigue arrancando correctamente
+ * después de montar módulos reales.
  */
 logger?.debug('================================================================================');
 logger?.debug(`- App: ${instance.name} | ${instance.app.name}`);
@@ -145,10 +167,10 @@ logger?.debug(`- Server: ${instance.server.host}:${instance.server.port}`);
 logger?.debug(`- Status: ${instance.status}`);
 
 /**
- * Se imprime la configuración cargada por @jarvis/config.
+ * Se confirma que @jarvis/config quedó disponible como servicio.
  *
- * configModule.service.all() devuelve la configuración completa que fue
- * cargada desde settings.json durante boot().
+ * config?.all() devuelve la configuración completa disponible desde
+ * el servicio registrado en core.
  *
  * Nota:
  * Esta salida es útil para el sandbox, pero en una app real no se debe
@@ -158,24 +180,41 @@ logger?.debug(`- Status: ${instance.status}`);
 logger?.info('================================================================================');
 logger?.info('- Package - Config | Inicializado:');
 logger?.info('================================================================================');
-//console.log(config?.all());
+logger?.info('Configuración cargada desde settings.json.', {
+  module: `${instance.name} | ${instance.app.name}`,
+  data: config?.all()
+});
 
 /**
- * Se imprime loggers cargados por @jarvis/logger.
+ * Se confirma que @jarvis/logger quedó disponible como servicio
+ * dentro del runtime.
+ *
+ * Esta salida valida la integración real del módulo logger sin generar
+ * errores falsos durante una ejecución normal del sandbox.
  */
 logger?.info('================================================================================');
 logger?.info('- Package - Logger | Inicializado:');
 logger?.info('================================================================================');
-logger?.info('Test Logger | INFO');
-logger?.debug('Test Logger | DEBUG');
-logger?.warn('Test Logger | WARN');
-logger?.error('Test Logger | ERROR');
-logger?.fatal('Test Logger | FATAL');
+logger?.info('Package - Logger | Servicio disponible desde core.service().');
+
+/**
+ * Se imprime una muestra controlada de metadata.
+ *
+ * Esta salida permite validar que @jarvis/logger puede escribir contexto
+ * adicional usando objetos serializados en formato JSON legible.
+ */
+logger?.debug('Package - Logger | Metadata de arranque normalizada.', {
+  module: `${instance.name} | ${instance.app.name}`,
+  data: {
+    app: jarvisBootstrap.app,
+    server: jarvisBootstrap.server,
+    logger: jarvisBootstrap.logger
+  }
+});
 
 /**
  * Se ejecuta el apagado de los módulos vivos.
  *
  * El core apagará los módulos en orden inverso al arranque.
- * En este caso, ejecutará shutdown() de @jarvis/config.
  */
 await core.shutdown();
