@@ -1,98 +1,92 @@
 {
   "app": {
     "name": "MyApp",
-    "version": "1.0.0",
-    "environment": "local"
+    "description": "Lorem ipsum dolor sit amet consectetur adipiscing elit, sem himenaeos ad nisi at odio ante, sagittis curae torquent fames tellus venenatis.",
+    "version": "0.0.0",
+    "environment": "local",
+    "license": "SETTINGS_LICENSE_KEY",
+    "timeZone": "America/Mexico_City"
   },
   "server": {
-    "host": "0.0.0.0",
-    "port": 3000,
-    "basePath": "/api"
+    "host": "localhost",
+    "port": 3000
   },
   "api": {
     "version": "v1",
     "cors": {
+      "enabled": true,
       "origins": [
         "http://localhost:5173",
         "http://localhost:3000"
       ]
-    }
-  },
-  "security": {
+    },
     "jwt": {
-      "secretRef": "SETTINGS_SECURITY_JWT_SECRET",
+      "enabled": true,
+      "secret": "SETTINGS_SECURITY_JWT_SECRET",
       "accessTokenExpiresIn": "15m",
       "refreshTokenExpiresIn": "7d"
     }
   },
-  "license": {
-    "keyRef": "SETTINGS_LICENSE_KEY"
-  },
-  "logger": {
-    "level": "debug",
-    "pretty": true
-  },
-  "database": {
-    "default": "main",
-    "connections": {
-      "main": {
-        "driver": "mssql",
-        "host": "localhost",
-        "port": 1433,
-        "database": "SETTINGS_DATABASE_NAME",
-        "usernameRef": "SETTINGS_DATABASE_USERNAME",
-        "passwordRef": "SETTINGS_DATABASE_PASSWORD",
-        "options": {
-          "encrypt": false,
-          "trustServerCertificate": true
-        }
-      }
-    }
-  },
-  "notifications": {
-    "email": {
-      "provider": "smtp",
-      "host": "localhost",
-      "port": 1025,
-      "secure": false,
-      "usernameRef": "SETTINGS_NOTIFICATIONS_EMAIL_USERNAME",
-      "passwordRef": "SETTINGS_NOTIFICATIONS_EMAIL_PASSWORD",
-      "from": {
-        "name": "User Name",
-        "email": "address@domain.com"
-      }
-    }
-  },
-  "storage": {
-    "default": "local",
-    "providers": {
-      "local": {
-        "driver": "local",
-        "rootPath": "./storage"
-      }
-    }
-  },
   "modules": {
-    "config": {
-      "enabled": true
-    },
     "logger": {
-      "enabled": true
-    },
-    "license": {
-      "enabled": false
-    },
-    "security": {
-      "enabled": true
+      "enabled": true,
+      "level": "debug",
+      "console": {
+        "enabled": true,
+        "colors": true
+      },
+      "file": {
+        "enabled": true,
+        "path": "./logs",
+        "splitByLevel": true,
+        "writeAll": true
+      }
     },
     "database": {
-      "enabled": false
+      "enabled": true,
+      "defaultConnection": "mssql",
+      "connections": {
+        "mssql": {
+          "driver": "mssql",
+          "host": "localhost",
+          "port": 1433,
+          "database": "SETTINGS_DATABASE_NAME",
+          "username": "SETTINGS_DATABASE_USERNAME",
+          "password": "SETTINGS_DATABASE_PASSWORD",
+          "options": {
+            "encrypt": false,
+            "trustServerCertificate": true
+          }
+        }
+      }
     },
     "storage": {
-      "enabled": false
+      "enabled": true,
+      "defaultProvider": "local",
+      "providers": {
+        "local": {
+          "driver": "local",
+          "rootPath": "./storage"
+        }
+      }
     },
     "notifications": {
-      "enabled": false
+      "enabled": true,
+      "defaultChannel": "email",
+      "channels": {
+        "email": {
+          "provider": "smtp",
+          "host": "localhost",
+          "port": 1025,
+          "secure": false,
+          "username": "SETTINGS_NOTIFICATIONS_EMAIL_USERNAME",
+          "password": "SETTINGS_NOTIFICATIONS_EMAIL_PASSWORD",
+          "from": {
+            "name": "User Name",
+            "email": "address@domain.com"
+          }
+        }
+      }
     }
   }
 }

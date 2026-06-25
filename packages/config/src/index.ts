@@ -1,11 +1,4 @@
 /**
- * Entrada pública del package @jarvis/config.
- *
- * Este package permite crear un módulo vivo de configuración
- * compatible con el runtime de J.A.R.V.I.S.
- */
-
-/**
  * Contratos públicos de valores de configuración.
  *
  * Estos tipos describen qué valores puede almacenar y exponer
@@ -47,9 +40,24 @@ export type {
   ConfigModule
 } from './runtime/config-module.js';
 
+/**
+ * Entrada pública del package @jarvis/config.
+ *
+ * Este package permite crear un módulo vivo de configuración
+ * compatible con el runtime de J.A.R.V.I.S.
+ */
 export {
   createConfigModule
 } from './runtime/config-module.js';
+
+/**
+ * Se exporta loadConfigFile para que otros packages superiores,
+ * como @jarvis/bootstrap, puedan cargar settings.json sin duplicar
+ * lógica de lectura y parseo de archivos.
+ */
+export {
+  loadConfigFile
+} from './runtime/config-file-loader.js';
 
 /**
  * Información estática del package.
@@ -58,6 +66,5 @@ export {
  */
 export const JarvisConfigPackage = {
   name: '@jarvis/config',
-  description: 'J.A.R.V.I.S. | Package - Config',
-  version: '0.7.0'
+  description: 'J.A.R.V.I.S. | Package - Config'
 } as const;

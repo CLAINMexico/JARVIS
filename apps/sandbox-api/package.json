@@ -1,10 +1,10 @@
 {
   "name": "@jarvis/sandbox-api",
+  "description": "Sandbox-API | Ambiente de pruebas para desarrolladores, contemplado para aplicaciones de tipo API.",
   "version": "1.0.0",
-  "private": true,
-  "description": "Sandbox API for Developers.",
   "author": "CLAIN México, S.A. de C.V.",
   "license": "UNLICENSED",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "tsx src/main.ts",
@@ -13,8 +13,10 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@jarvis/bootstrap": "workspace:*",
+    "@jarvis/config": "workspace:*",
     "@jarvis/core": "workspace:*",
-    "@jarvis/config": "workspace:*"
+    "@jarvis/logger": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

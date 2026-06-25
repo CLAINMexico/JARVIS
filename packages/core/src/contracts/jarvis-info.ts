@@ -27,6 +27,11 @@ export interface JarvisAppInfo {
   name: string;
 
   /**
+   * Descripción de la aplicación arrancada.
+   */
+  description: string;
+
+  /**
    * Versión de la aplicación arrancada.
    */
   version: string;

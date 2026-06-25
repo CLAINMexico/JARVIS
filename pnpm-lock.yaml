@@ -20,16 +20,38 @@ importers:
 
   apps/sandbox-api:
     dependencies:
+      '@jarvis/bootstrap':
+        specifier: workspace:*
+        version: link:../../packages/bootstrap
       '@jarvis/config':
         specifier: workspace:*
         version: link:../../packages/config
       '@jarvis/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@jarvis/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
     devDependencies:
       tsx:
         specifier: ^4.19.0
         version: 4.22.4
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/bootstrap:
+    dependencies:
+      '@jarvis/config':
+        specifier: workspace:*
+        version: link:../config
+      '@jarvis/core':
+        specifier: workspace:*
+        version: link:../core
+      '@jarvis/logger':
+        specifier: workspace:*
+        version: link:../logger
+    devDependencies:
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
@@ -45,6 +67,16 @@ importers:
         version: 5.9.3
 
   packages/core:
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/logger:
+    dependencies:
+      '@jarvis/core':
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       typescript:
         specifier: ^5.7.0

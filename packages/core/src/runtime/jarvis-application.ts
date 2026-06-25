@@ -46,6 +46,7 @@ interface NormalizedJarvisOptions {
    */
   app: {
     name: string;
+    description: string;
     version: string;
     environment: JarvisEnvironment;
   };
@@ -110,6 +111,7 @@ export class JarvisApplication {
     this.options = {
       app: {
         name: options.app.name,
+        description: options.app.description,
         version: options.app.version,
         environment: options.app.environment ?? 'local'
       },
@@ -171,6 +173,7 @@ export class JarvisApplication {
       description: 'JavaScript Architecture Runtime for Versatile Intelligent Services',
       app: {
         name: this.options.app.name,
+        description: this.options.app.description,
         version: this.options.app.version,
         environment: this.options.app.environment
       },

@@ -1,6 +1,6 @@
 {
-  "name": "@jarvis/config",
-  "description": "Config | Paquete principal para cargar, normalizar y exponer configuración para aplicaciones que usen el runtime de J.A.R.V.I.S.",
+  "name": "@jarvis/bootstrap",
+  "description": "Bootstrap | Paquete principal encargado de preparar la configuración inicial de una app antes de arrancar el runtime de J.A.R.V.I.S.",
   "version": "1.0.0",
   "author": "CLAIN México, S.A. de C.V.",
   "license": "UNLICENSED",
@@ -20,6 +20,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@jarvis/logger": "workspace:*",
+    "@jarvis/config": "workspace:*",
     "@jarvis/core": "workspace:*"
   },
   "devDependencies": {

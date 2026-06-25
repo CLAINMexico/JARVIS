@@ -14,7 +14,7 @@ JavaScript Architecture Runtime for Versatile Intelligent Services
 
 **`J.A.R.V.I.S.`** es un proyecto backend modular, escalable y orientado a servicios, creado como núcleo tecnológico para aplicaciones empresariales modernas de **CLAIN México, S.A. de C.V.**
 
-Este proyecto nace como una base sólida para construir APIs, servicios, integraciones, almacenamiento, seguridad, notificaciones, licenciamiento y futuras arquitecturas basadas en microservicios.
+Este proyecto nace como una base sólida para construir APIs, servicios, integraciones, configuración, bootstrap de aplicaciones, almacenamiento, seguridad, notificaciones, licenciamiento y futuras arquitecturas basadas en microservicios.
 
 ---
 
@@ -25,14 +25,15 @@ El objetivo de **`J.A.R.V.I.S.`** es proporcionar un kernel backend capaz de cen
 En palabras simples:
 
 ```txt
-J.A.R.V.I.S. será el núcleo backend reutilizable.
+J.A.R.V.I.S. será el núcleo backend reutilizable de CLAIN México.
 ```
 
 Entre sus responsabilidades principales se contemplan:
 
 - Levantamiento de servicios backend con **`Node.js`**, **`TypeScript`** y **`Fastify`**.
-- Administración de configuración por ambiente.
-- Registro y consulta de servicios internos expuestos por módulos.
+- Preparación inicial de aplicaciones mediante **`@jarvis/bootstrap`**.
+- Administración de configuración por ambiente mediante **`@jarvis/config`**.
+- Registro de servicios expuestos por módulos vivos desde **`@jarvis/core`**.
 - Seguridad basada en **`JWT`**, roles, permisos y políticas.
 - Conexión con múltiples motores de base de datos.
 - Manejo de almacenamiento de archivos.
@@ -65,15 +66,8 @@ La idea base es:
 ```txt
 Core define reglas.
 Packages implementan capacidades.
+Bootstrap prepara la app.
 Apps conectan y prueban el ecosistema.
-```
-
-A partir de **`v0.8.0`**, el core también puede registrar servicios expuestos por módulos vivos para que una app los consulte desde una única instancia del runtime.
-
-Ejemplo conceptual:
-
-```ts
-const config = core.service('config');
 ```
 
 Estructura conceptual:
@@ -85,6 +79,7 @@ JARVIS/
   packages/
     core/
     config/
+    bootstrap/
     logger/
     license/
     security/
@@ -93,61 +88,9 @@ JARVIS/
     notify/
     client/
   docker/
-    node/
-    postgres/
-    mysql/
-    mssql/
-    mongo/
   examples/
   tools/
 ```
-
----
-
-## Estructura actual
-
-La estructura actual del proyecto incluye:
-
-```txt
-JARVIS/
-  apps/
-    sandbox-api/
-  assets/
-    images/
-      branding/
-        jarvis-logo.png
-  docker/
-    node/
-  packages/
-    core/
-    config/
-  .env.example
-  .gitignore
-  docker-compose.yml
-  package.json
-  pnpm-workspace.yaml
-  tsconfig.base.json
-  README.md
-```
-
----
-
-## Apps actuales
-
-### apps/sandbox-api
-
-**`sandbox-api`** es una aplicación interna de desarrollo usada para probar el funcionamiento de **`J.A.R.V.I.S.`** desde el contexto de una API backend.
-
-Actualmente permite validar:
-
-- Arranque del core.
-- Registro de módulos.
-- Ciclo de vida de módulos.
-- Registro inicial de services dentro de **`@jarvis/core`**.
-- Integración de packages reales.
-- Lectura de configuración mediante **`@jarvis/config`**.
-- Consulta de **`ConfigService`** mediante **`core.service('config')`**.
-- Uso de archivos **`settings.json`** y **`.env`** por app.
 
 ---
 
@@ -160,11 +103,10 @@ Actualmente permite validar:
 Responsable de:
 
 - Arrancar una instancia de **`J.A.R.V.I.S.`**.
-- Normalizar configuración inicial.
+- Normalizar configuración inicial recibida.
 - Registrar módulos informativos.
 - Registrar módulos vivos.
-- Registrar services expuestos por módulos vivos.
-- Permitir consulta de services mediante **`core.service(name)`**.
+- Registrar servicios expuestos por módulos vivos.
 - Ejecutar **`boot()`** de módulos vivos.
 - Ejecutar **`shutdown()`** en orden inverso.
 - Exponer contratos base para otros packages.
@@ -180,67 +122,95 @@ Responsable de:
 - Guardar valores en **`ConfigService`**.
 - Consultar valores mediante paths como **`app.name`** o **`server.port`**.
 - Exponer un módulo compatible con **`JarvisRuntimeModule`**.
-- Exponer **`ConfigService`** para que pueda ser registrado por **`@jarvis/core`**.
+
+### @jarvis/bootstrap
+
+**`@jarvis/bootstrap`** es el package encargado de preparar una aplicación antes de arrancar el runtime.
+
+Responsable de:
+
+- Leer **`settings.json`** usando **`@jarvis/config`**.
+- Crear un **`ConfigService`** listo para consultas.
+- Normalizar datos de **`app`**.
+- Normalizar datos de **`server`**.
+- Normalizar configuración inicial de **`logger`**.
+- Entregar valores listos para que una app pueda construir módulos y arrancar **`@jarvis/core`**.
 
 ---
 
-## Packages contemplados
+## Apps actuales
 
-### @jarvis/logger
+### apps/sandbox-api
 
-Sistema centralizado de logs, trazabilidad y diagnóstico.
+**`sandbox-api`** es una aplicación interna de desarrollo usada para probar el funcionamiento de **`J.A.R.V.I.S.`** desde el contexto de una API backend.
 
-### @jarvis/license
+Actualmente permite validar:
 
-Validación de licenciamiento, activación, planes, paquetes disponibles y restricciones de uso.
+- Arranque del core.
+- Registro de módulos.
+- Registro de servicios internos.
+- Ciclo de vida de módulos.
+- Integración de packages reales.
+- Lectura de configuración mediante **`@jarvis/config`**.
+- Bootstrap inicial mediante **`@jarvis/bootstrap`**.
+- Uso de archivos **`settings.json`** y **`.env`** por app.
 
-### @jarvis/security
+---
 
-Seguridad, autenticación, autorización, **`JWT`**, roles, permisos, auditoría y políticas de acceso.
+## Configuración y bootstrap
 
-### @jarvis/database
+**`J.A.R.V.I.S.`** separa configuración de secretos.
 
-Capa de datos para conexiones, consultas, recursos y drivers de base de datos.
+```txt
+settings.json = configuración no sensible y referencias
+.env = secretos reales y valores sensibles
+```
 
-Drivers contemplados:
+El flujo recomendado para una app es:
 
-- **`@jarvis/database-mssql`**
-- **`@jarvis/database-postgresql`**
-- **`@jarvis/database-mysql`**
-- **`@jarvis/database-mongodb`**
-- **`@jarvis/database-redis`**
-- **`@jarvis/database-firebase`**
-- **`@jarvis/database-firebird`**
+```txt
+@jarvis/bootstrap
+↓
+@jarvis/config
+↓
+settings.json
+↓
+valores normalizados para app/server/logger
+↓
+Jarvis.boot()
+```
 
-### @jarvis/storage
+Ejemplo conceptual:
 
-Capa de almacenamiento para archivos, baúles, carpetas, metadatos y providers externos.
+```ts
+const bootstrap = await createJarvisBootstrap({
+  settingsFile: './settings.json'
+});
 
-Providers contemplados:
+const core = await Jarvis.boot({
+  app: bootstrap.app,
+  server: bootstrap.server,
+  runtimeModules: [
+    configModule
+  ]
+});
+```
 
-- **`@jarvis/storage-local`**
-- **`@jarvis/storage-s3`**
-- **`@jarvis/storage-azure`**
-- **`@jarvis/storage-gdrive`**
-- **`@jarvis/storage-onedrive`**
-- **`@jarvis/storage-minio`**
+El objetivo de este flujo es mantener limpio a **`@jarvis/core`**.
 
-### @jarvis/notify
+Correcto:
 
-Sistema de notificaciones multicanal.
+```txt
+@jarvis/bootstrap → @jarvis/config
+@jarvis/bootstrap → @jarvis/core
+```
 
-Channels contemplados:
+Incorrecto:
 
-- **`email`**
-- **`push`**
-- **`sms`**
-- **`whatsapp`**
-- **`in-app`**
-- **`webhooks`**
-
-### @jarvis/client
-
-SDK cliente para consumir APIs de **`J.A.R.V.I.S.`** desde frontends, PWAs, apps móviles u otros sistemas.
+```txt
+@jarvis/core → @jarvis/config
+@jarvis/core → @jarvis/bootstrap
+```
 
 ---
 
@@ -249,56 +219,6 @@ SDK cliente para consumir APIs de **`J.A.R.V.I.S.`** desde frontends, PWAs, apps
 El ambiente oficial de desarrollo será **`Docker`**.
 
 La intención es que cualquier desarrollador pueda clonar el repositorio y levantar el mismo entorno sin depender de configuraciones particulares de su sistema operativo.
-
-Ambientes objetivo:
-
-- **`macOS`**
-- **`Linux`**
-- **`Windows`**
-
----
-
-## Servicios de desarrollo
-
-Servicios base:
-
-- **`jarvis-node`**
-- **`jarvis-postgres`**
-- **`jarvis-redis`**
-- **`jarvis-mailpit`**
-
-Servicios adicionales bajo perfiles:
-
-- **`jarvis-mssql`**
-- **`jarvis-mysql`**
-- **`jarvis-mongo`**
-- **`jarvis-minio`**
-
----
-
-## Convención de Docker
-
-La nomenclatura base para el ambiente de desarrollo es:
-
-```txt
-clainmexico-jarvis-development-environment
-```
-
-La convención general es:
-
-```txt
-project name = clainmexico-jarvis-development-environment
-services     = jarvis-*
-```
-
-Ejemplos:
-
-```txt
-jarvis-node
-jarvis-postgres
-jarvis-redis
-jarvis-mailpit
-```
 
 ---
 
@@ -323,19 +243,6 @@ Levantar ambiente Docker:
 docker compose up -d --build
 ```
 
-Validar contenedores:
-
-```bash
-docker compose ps
-```
-
-Validar Node y pnpm dentro del contenedor:
-
-```bash
-docker compose exec jarvis-node node -v
-docker compose exec jarvis-node pnpm -v
-```
-
 Instalar dependencias del monorepo:
 
 ```bash
@@ -351,13 +258,6 @@ Copiar archivos de configuración del sandbox:
 ```bash
 cp apps/sandbox-api/settings.example.json apps/sandbox-api/settings.json
 cp apps/sandbox-api/.env.example apps/sandbox-api/.env
-```
-
-Regla principal:
-
-```txt
-settings.json = configuración no sensible y referencias
-.env = secretos reales y valores sensibles
 ```
 
 Los archivos reales no deben subirse a Git:
@@ -422,6 +322,22 @@ docker compose exec jarvis-node pnpm --filter @jarvis/config typecheck
 docker compose exec jarvis-node pnpm --filter @jarvis/config clean
 ```
 
+### @jarvis/bootstrap
+
+```bash
+docker compose exec jarvis-node pnpm --filter @jarvis/bootstrap build
+docker compose exec jarvis-node pnpm --filter @jarvis/bootstrap typecheck
+docker compose exec jarvis-node pnpm --filter @jarvis/bootstrap clean
+```
+
+### @jarvis/logger
+
+```bash
+docker compose exec jarvis-node pnpm --filter @jarvis/logger build
+docker compose exec jarvis-node pnpm --filter @jarvis/logger typecheck
+docker compose exec jarvis-node pnpm --filter @jarvis/logger clean
+```
+
 ### @jarvis/sandbox-api
 
 ```bash
@@ -432,126 +348,6 @@ docker compose exec jarvis-node pnpm --filter @jarvis/sandbox-api clean
 
 ---
 
-## Gestor de paquetes
-
-El gestor de paquetes oficial es:
-
-```txt
-pnpm
-```
-
-El proyecto utiliza **`pnpm workspaces`** para administrar los packages internos del monorepo.
-
-Regla de dependencias internas:
-
-```json
-"@jarvis/core": "workspace:*"
-```
-
-Regla de dependencias externas:
-
-```json
-"typescript": "^5.7.0"
-```
-
----
-
-## Filosofía del proyecto
-
-**`J.A.R.V.I.S.`** se construirá bajo los siguientes principios:
-
-- Modularidad.
-- Escalabilidad.
-- Seguridad por capas.
-- Código limpio.
-- Separación clara de responsabilidades.
-- Entorno reproducible.
-- Packages independientes.
-- Preparación para microservicios.
-- Documentación progresiva.
-- Cero dependencia del “en mi máquina sí funciona”.
-
----
-
-## API objetivo
-
-Las APIs de **`J.A.R.V.I.S.`** seguirán una nomenclatura limpia y versionada:
-
-```txt
-https://api.midominio.com/v1/modulo/resource
-https://api.midominio.com/v1/modulo/resource/id
-```
-
-Ejemplos conceptuales:
-
-```txt
-GET https://api.midominio.com/v1/database/resources/clientes/1
-GET https://api.midominio.com/v1/storage/vaults/facturas/files
-POST https://api.midominio.com/v1/notify/email/send
-```
-
----
-
-## Seguridad
-
-Toda petición desde frontend hacia backend deberá utilizar **`JWT`** como capa base de autenticación.
-
-Capas contempladas:
-
-- **`HTTPS`**
-- **`CORS`** controlado.
-- **`Rate limit`**.
-- **`JWT`**.
-- **`Refresh token`**.
-- Sesiones activas.
-- Roles y permisos.
-- Resource policies.
-- Validación de entrada.
-- Sanitización.
-- Audit log.
-- Respuestas de error seguras.
-
-Reglas base:
-
-```txt
-Nunca confiar en el front.
-Nunca confiar solo en el token.
-Nunca exponer secretos.
-Nunca ejecutar recursos no registrados.
-Nunca devolver errores internos.
-```
-
----
-
-## Configuración y secretos
-
-**`J.A.R.V.I.S.`** separa configuración de secretos.
-
-```txt
-settings.json = configuración no sensible y referencias
-.env = secretos reales y valores sensibles
-```
-
-Ejemplo en **`settings.json`**:
-
-```json
-{
-  "database": {
-    "passwordRef": "SETTINGS_DATABASE_PASSWORD"
-  }
-}
-```
-
-Ejemplo en **`.env`**:
-
-```env
-SETTINGS_DATABASE_PASSWORD=
-```
-
-Los archivos **`.env`** y **`settings.json`** reales no deben subirse a Git.
-
----
-
 ## Versionado
 
 El proyecto usa tags semánticos para marcar avances importantes.
@@ -559,12 +355,23 @@ El proyecto usa tags semánticos para marcar avances importantes.
 Ejemplos:
 
 ```txt
-v0.6.0 = Ciclo de vida inicial de módulos
 v0.7.0 = Primer módulo real de configuración
 v0.8.0 = Registro inicial de servicios en core
+v0.9.0 = Bootstrap inicial de aplicaciones
 ```
 
-Mientras el proyecto esté en etapa temprana, los packages principales pueden alinearse con la versión del release del monorepo.
+---
+
+## Roadmap inmediato
+
+Próximos pasos contemplados:
+
+- Finalizar **`@jarvis/logger`** como primer módulo real de logging.
+- Integrar **`@jarvis/logger`** con valores normalizados por **`@jarvis/bootstrap`**.
+- Ajustar **`apps/sandbox-api/src/main.ts`** para usar bootstrap, config y logger integrados.
+- Preparar integración inicial con **`Fastify`**.
+- Expandir validación de configuración.
+- Resolver referencias hacia **`.env`** desde **`@jarvis/config`** o un package especializado.
 
 ---
 
@@ -577,9 +384,9 @@ Los commits deben escribirse en español usando prefijos tipo Conventional Commi
 Ejemplos:
 
 ```bash
-git commit -m "feat: agregar primer módulo real de configuración"
-git commit -m "docs: homologar documentación de packages"
-git commit -m "fix: corregir carga de settings.json"
+git commit -m "feat: agregar bootstrap inicial de aplicaciones"
+git commit -m "docs: actualizar documentación de bootstrap"
+git commit -m "fix: corregir normalización de configuración"
 ```
 
 ### Documentación
@@ -591,6 +398,7 @@ Reglas:
 - Todo nuevo package debe tener **`README.md`**.
 - Toda nueva app o sandbox debe tener **`README.md`**.
 - Los comentarios importantes dentro del código deben estar en español.
+- Todo lo agregado a archivos debe ir documentado cuando ayude a entender intención, contratos o responsabilidades.
 
 ### Nombres en código
 
@@ -610,7 +418,7 @@ Por eso los imports relativos deben usar extensión **`.js`**, aunque los archiv
 Ejemplo:
 
 ```ts
-import type { JarvisOptions } from './contracts/jarvis-options.js';
+import type { BootstrapOptions } from './contracts/bootstrap-options.js';
 ```
 
 ---
@@ -627,6 +435,8 @@ coverage/
 .pnpm-store/
 .turbo/
 .DS_Store
+logs/
+*.log
 ```
 
 ---
@@ -639,27 +449,14 @@ Actualmente **`J.A.R.V.I.S.`** ya cuenta con:
 - Ambiente Docker base.
 - Package **`@jarvis/core`**.
 - Package **`@jarvis/config`**.
+- Package **`@jarvis/bootstrap`**.
+- Package **`@jarvis/logger`** en construcción.
 - App interna **`sandbox-api`**.
 - Ciclo de vida inicial de módulos.
-- Primer package real montado por el core.
-- Registro inicial de services dentro de **`@jarvis/core`**.
-- Consulta de services mediante **`core.service(name)`**.
+- Registro inicial de servicios en core.
 - Lectura de **`settings.json`** desde **`@jarvis/config`**.
-- Consulta de configuración mediante **`core.service('config')`**.
+- Bootstrap inicial de aplicaciones desde **`@jarvis/bootstrap`**.
 - Documentación base por package y sandbox.
-
----
-
-## Roadmap inmediato
-
-Próximos pasos contemplados:
-
-- Crear package **`@jarvis/logger`**.
-- Integrar logger como segundo módulo real.
-- Reemplazar logs de prueba por un servicio de logger.
-- Preparar integración inicial con **`Fastify`**.
-- Expandir validación de configuración.
-- Resolver referencias hacia **`.env`** desde **`@jarvis/config`**.
 
 ---
 

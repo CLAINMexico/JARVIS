@@ -39,6 +39,14 @@ export interface JarvisAppOptions {
   name: string;
 
   /**
+   * Descripción legible de la aplicación.
+   *
+   * Ejemplo:
+   * JavaScript Architecture Runtime for Versatile Intelligent Services
+   */
+  description: string;
+
+  /**
    * Versión de la aplicación.
    *
    * Ejemplo:

@@ -8,7 +8,7 @@ Este sandbox no representa una aplicación final de negocio. Su objetivo es serv
 
 ## Objetivo
 
-El objetivo de **`Sandbox API`** es validar que **`J.A.R.V.I.S.`** pueda arrancar, montar módulos reales, registrar services y ejecutar su ciclo de vida desde el contexto de una app backend.
+El objetivo de **`Sandbox API`** es validar que **`J.A.R.V.I.S.`** pueda arrancar, montar módulos reales, preparar configuración inicial y ejecutar su ciclo de vida desde el contexto de una app backend.
 
 En palabras simples:
 
@@ -20,15 +20,15 @@ Actualmente permite validar:
 
 - Arranque de una instancia del core mediante **`Jarvis.boot()`**.
 - Recepción de configuración inicial.
+- Bootstrap inicial mediante **`@jarvis/bootstrap`**.
 - Registro de módulos informativos.
 - Registro de módulos vivos del runtime.
-- Registro de services expuestos por módulos vivos.
-- Consulta de services mediante **`core.service(name)`**.
+- Registro de servicios internos.
 - Ejecución de módulos mediante **`boot()`**.
 - Apagado ordenado mediante **`shutdown()`**.
 - Integración de packages reales como **`@jarvis/config`**.
 - Lectura de configuración desde **`settings.json`**.
-- Consulta de **`ConfigService`** mediante **`core.service('config')`**.
+- Normalización de app, server y logger desde **`settings.json`**.
 
 ---
 
@@ -50,8 +50,6 @@ Regla importante:
 Un sandbox prueba un tipo de aplicación.
 No se crea un sandbox nuevo por cada package.
 ```
-
-Por eso **`sandbox-api`** sirve como laboratorio backend/API para validar progresivamente los packages del ecosistema.
 
 ---
 
@@ -111,15 +109,15 @@ Archivo principal de ejecución del sandbox.
 
 Actualmente se usa para probar:
 
+- **`createJarvisBootstrap()`**
 - **`Jarvis.boot()`**
 - **`core.bootModules()`**
 - **`core.info()`**
-- **`core.service(name)`**
 - **`core.shutdown()`**
 - Registro de módulos vivos mediante **`runtimeModules`**.
 - Integración de **`@jarvis/config`**.
 - Lectura de **`settings.json`** mediante **`ConfigService`**.
-- Consulta de **`ConfigService`** desde el core mediante **`core.service('config')`**.
+- Normalización inicial de app, server y logger mediante **`@jarvis/bootstrap`**.
 
 ### settings.example.json
 
@@ -183,10 +181,13 @@ Ejemplo:
 
 ```json
 {
-  "security": {
-    "jwt": {
-      "secretRef": "SETTINGS_SECURITY_JWT_SECRET"
-    }
+  "app": {
+    "name": "Sandbox-API",
+    "description": "Ambiente de pruebas para aplicaciones de tipo API",
+    "version": "1.0.0",
+    "environment": "local",
+    "license": "SETTINGS_LICENSE_KEY",
+    "timeZone": "America/Mexico_City"
   }
 }
 ```
@@ -194,7 +195,7 @@ Ejemplo:
 **`.env`** debe contener los valores reales:
 
 ```env
-SETTINGS_SECURITY_JWT_SECRET=
+SETTINGS_LICENSE_KEY=
 ```
 
 Regla principal:
@@ -204,47 +205,68 @@ settings.json = configuración no sensible y referencias
 .env = secretos reales y valores sensibles
 ```
 
-Los archivos reales no deben subirse a Git:
+---
 
-```txt
-settings.json
-.env
+## Uso actual con @jarvis/bootstrap
+
+Actualmente **`sandbox-api`** puede ejecutar **`@jarvis/bootstrap`** para cargar y normalizar valores antes de arrancar el runtime.
+
+Ejemplo conceptual:
+
+```ts
+import {
+  createJarvisBootstrap
+} from '@jarvis/bootstrap';
+
+const bootstrap = await createJarvisBootstrap({
+  settingsFile: './settings.json'
+});
+
+console.log(bootstrap.app);
+console.log(bootstrap.server);
+console.log(bootstrap.logger);
 ```
 
-Las plantillas sí deben subirse:
+Esto permite validar que:
 
-```txt
-settings.example.json
-.env.example
-```
+- **`settings.json`** se lee correctamente.
+- **`ConfigService`** queda disponible.
+- **`app`** queda normalizado.
+- **`server`** queda normalizado.
+- **`logger`** queda normalizado.
 
 ---
 
 ## Uso actual con @jarvis/config
 
-Actualmente **`sandbox-api`** monta **`@jarvis/config`** como módulo vivo del runtime y consulta su service desde **`@jarvis/core`**.
+Actualmente **`sandbox-api`** puede montar **`@jarvis/config`** como módulo vivo del runtime.
 
 Ejemplo conceptual:
 
 ```ts
-import { Jarvis } from '@jarvis/core';
-import { createConfigModule } from '@jarvis/config';
-import type { ConfigService } from '@jarvis/config';
+import {
+  Jarvis
+} from '@jarvis/core';
+
+import {
+  createConfigModule
+} from '@jarvis/config';
+
+import {
+  createJarvisBootstrap
+} from '@jarvis/bootstrap';
+
+const bootstrap = await createJarvisBootstrap({
+  settingsFile: './settings.json'
+});
 
 const configModule = createConfigModule({
-  file: './settings.json'
+  values: bootstrap.settings
 });
 
 const core = await Jarvis.boot({
-  app: {
-    name: 'Sandbox API for development',
-    version: '0.8.0',
-    environment: 'local'
-  },
-  server: {
-    host: '0.0.0.0',
-    port: 3000
-  },
+  app: bootstrap.app,
+  server: bootstrap.server,
   runtimeModules: [
     configModule
   ]
@@ -252,22 +274,10 @@ const core = await Jarvis.boot({
 
 await core.bootModules();
 
-const config = core.service<ConfigService>('config');
-
-console.log(config?.all());
+console.log(core.info());
 
 await core.shutdown();
 ```
-
-Esto permite validar que:
-
-- **`@jarvis/core`** monta módulos vivos.
-- **`@jarvis/core`** registra services expuestos por módulos vivos.
-- **`@jarvis/core`** permite consultar services mediante **`core.service(name)`**.
-- **`@jarvis/config`** ejecuta **`boot()`**.
-- **`@jarvis/config`** lee **`settings.json`**.
-- **`ConfigService`** expone la configuración cargada.
-- **`sandbox-api`** obtiene **`ConfigService`** desde **`core.service('config')`**.
 
 ---
 
@@ -288,11 +298,11 @@ Compilar packages requeridos
 ↓
 Ejecutar sandbox-api
 ↓
+Preparar bootstrap inicial
+↓
 Arrancar J.A.R.V.I.S.
 ↓
 Bootear módulos vivos
-↓
-Consultar services registrados
 ↓
 Mostrar información del runtime
 ↓
@@ -345,6 +355,13 @@ docker compose exec jarvis-node pnpm --filter @jarvis/config typecheck
 docker compose exec jarvis-node pnpm --filter @jarvis/config build
 ```
 
+### @jarvis/bootstrap
+
+```bash
+docker compose exec jarvis-node pnpm --filter @jarvis/bootstrap typecheck
+docker compose exec jarvis-node pnpm --filter @jarvis/bootstrap build
+```
+
 ---
 
 ## Archivos generados
@@ -354,13 +371,10 @@ Este sandbox puede generar:
 ```txt
 dist/
 node_modules/
+logs/
 ```
 
 Estos archivos no deben subirse a Git.
-
-**`dist/`** se genera con build.
-
-**`node_modules/`** se genera con pnpm.
 
 ---
 
@@ -369,13 +383,6 @@ Estos archivos no deben subirse a Git.
 ### Nombres de archivos
 
 Dentro de **`sandbox-api`** se deben usar nombres claros y en **`kebab-case`** cuando aplique.
-
-Ejemplos:
-
-```txt
-main.ts
-settings.example.json
-```
 
 ### Nombres en código
 
@@ -392,12 +399,6 @@ Este proyecto usa TypeScript con ESM.
 
 Por eso los imports relativos deben usar extensión **`.js`**, aunque los archivos fuente sean **`.ts`**.
 
-Ejemplo:
-
-```ts
-import type { ExampleType } from './example-type.js';
-```
-
 ---
 
 ## Estado actual
@@ -406,16 +407,14 @@ Actualmente **`sandbox-api`** ya puede:
 
 - Arrancar una instancia de **`J.A.R.V.I.S.`**.
 - Usar **`@jarvis/core`**.
+- Usar **`@jarvis/config`**.
+- Usar **`@jarvis/bootstrap`**.
 - Montar módulos vivos mediante **`runtimeModules`**.
 - Ejecutar **`bootModules()`**.
-- Registrar services desde módulos vivos.
-- Consultar services mediante **`core.service(name)`**.
 - Ejecutar **`shutdown()`**.
-- Integrar **`@jarvis/config`**.
 - Cargar **`settings.json`** desde **`@jarvis/config`**.
-- Obtener **`ConfigService`** desde **`core.service('config')`**.
+- Normalizar app, server y logger desde **`@jarvis/bootstrap`**.
 - Mostrar información del runtime.
-- Mostrar configuración cargada desde **`ConfigService`**.
 
 ---
 
