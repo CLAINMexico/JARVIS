@@ -32,6 +32,7 @@ Entre sus responsabilidades principales se contemplan:
 
 - Levantamiento de servicios backend con **`Node.js`**, **`TypeScript`** y **`Fastify`**.
 - Administración de configuración por ambiente.
+- Registro y consulta de servicios internos expuestos por módulos.
 - Seguridad basada en **`JWT`**, roles, permisos y políticas.
 - Conexión con múltiples motores de base de datos.
 - Manejo de almacenamiento de archivos.
@@ -65,6 +66,14 @@ La idea base es:
 Core define reglas.
 Packages implementan capacidades.
 Apps conectan y prueban el ecosistema.
+```
+
+A partir de **`v0.8.0`**, el core también puede registrar servicios expuestos por módulos vivos para que una app los consulte desde una única instancia del runtime.
+
+Ejemplo conceptual:
+
+```ts
+const config = core.service('config');
 ```
 
 Estructura conceptual:
@@ -134,8 +143,10 @@ Actualmente permite validar:
 - Arranque del core.
 - Registro de módulos.
 - Ciclo de vida de módulos.
+- Registro inicial de services dentro de **`@jarvis/core`**.
 - Integración de packages reales.
 - Lectura de configuración mediante **`@jarvis/config`**.
+- Consulta de **`ConfigService`** mediante **`core.service('config')`**.
 - Uso de archivos **`settings.json`** y **`.env`** por app.
 
 ---
@@ -152,6 +163,8 @@ Responsable de:
 - Normalizar configuración inicial.
 - Registrar módulos informativos.
 - Registrar módulos vivos.
+- Registrar services expuestos por módulos vivos.
+- Permitir consulta de services mediante **`core.service(name)`**.
 - Ejecutar **`boot()`** de módulos vivos.
 - Ejecutar **`shutdown()`** en orden inverso.
 - Exponer contratos base para otros packages.
@@ -167,6 +180,7 @@ Responsable de:
 - Guardar valores en **`ConfigService`**.
 - Consultar valores mediante paths como **`app.name`** o **`server.port`**.
 - Exponer un módulo compatible con **`JarvisRuntimeModule`**.
+- Exponer **`ConfigService`** para que pueda ser registrado por **`@jarvis/core`**.
 
 ---
 
@@ -547,6 +561,7 @@ Ejemplos:
 ```txt
 v0.6.0 = Ciclo de vida inicial de módulos
 v0.7.0 = Primer módulo real de configuración
+v0.8.0 = Registro inicial de servicios en core
 ```
 
 Mientras el proyecto esté en etapa temprana, los packages principales pueden alinearse con la versión del release del monorepo.
@@ -627,7 +642,10 @@ Actualmente **`J.A.R.V.I.S.`** ya cuenta con:
 - App interna **`sandbox-api`**.
 - Ciclo de vida inicial de módulos.
 - Primer package real montado por el core.
+- Registro inicial de services dentro de **`@jarvis/core`**.
+- Consulta de services mediante **`core.service(name)`**.
 - Lectura de **`settings.json`** desde **`@jarvis/config`**.
+- Consulta de configuración mediante **`core.service('config')`**.
 - Documentación base por package y sandbox.
 
 ---
@@ -636,10 +654,9 @@ Actualmente **`J.A.R.V.I.S.`** ya cuenta con:
 
 Próximos pasos contemplados:
 
-- Registrar services expuestos por módulos dentro de **`@jarvis/core`**.
-- Permitir acceso futuro tipo **`core.service('config')`**.
 - Crear package **`@jarvis/logger`**.
 - Integrar logger como segundo módulo real.
+- Reemplazar logs de prueba por un servicio de logger.
 - Preparar integración inicial con **`Fastify`**.
 - Expandir validación de configuración.
 - Resolver referencias hacia **`.env`** desde **`@jarvis/config`**.

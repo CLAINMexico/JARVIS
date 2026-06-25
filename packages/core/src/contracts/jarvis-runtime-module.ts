@@ -1,41 +1,40 @@
 /**
- * Contrato base para un módulo vivo dentro del runtime de J.A.R.V.I.S.
+ * Representa un módulo vivo dentro del runtime de J.A.R.V.I.S.
  *
- * A diferencia de JarvisModuleOptions, este contrato no solo describe
- * información del módulo, sino también comportamiento opcional.
+ * Un módulo vivo puede participar en el ciclo de vida del core mediante
+ * boot() y shutdown().
  *
- * Un JarvisRuntimeModule puede tener métodos de ciclo de vida como boot()
- * y shutdown(), los cuales serán ejecutados por el core cuando corresponda.
+ * También puede exponer un servicio para que el core lo registre y pueda
+ * ser consultado por la aplicación.
  */
 export interface JarvisRuntimeModule {
   /**
    * Nombre único del módulo dentro del runtime.
    *
-   * Ejemplos:
-   * config
-   * logger
-   * database
-   * security
+   * Este nombre también se usa como llave para registrar el servicio
+   * cuando el módulo expone la propiedad service.
    */
   name: string;
 
   /**
-   * Arranca o inicializa el módulo.
+   * Servicio expuesto por el módulo.
    *
-   * Este método es opcional porque no todos los módulos necesitan
-   * lógica especial de arranque.
+   * Este valor es opcional porque no todos los módulos necesitan exponer
+   * un servicio consultable desde la app.
+   */
+  service?: unknown;
+
+  /**
+   * Método opcional de arranque del módulo.
    *
-   * Puede ser síncrono o asíncrono.
+   * Se ejecuta cuando el core llama bootModules().
    */
   boot?(): Promise<void> | void;
 
   /**
-   * Apaga o libera recursos usados por el módulo.
+   * Método opcional de apagado del módulo.
    *
-   * Este método es opcional porque no todos los módulos necesitan
-   * lógica especial de apagado.
-   *
-   * Puede ser síncrono o asíncrono.
+   * Se ejecuta cuando el core llama shutdown().
    */
   shutdown?(): Promise<void> | void;
 }

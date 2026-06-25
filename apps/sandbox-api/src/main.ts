@@ -12,9 +12,11 @@ import {
  *
  * createConfigModule() permite crear un módulo vivo de configuración,
  * compatible con el ciclo de vida definido por @jarvis/core.
+ * ConfigService permite cargar la clase del módulo definido por @jarvis/config.
  */
 import {
-  createConfigModule
+  createConfigModule,
+  ConfigService
 } from '@jarvis/config';
 
 /**
@@ -75,6 +77,14 @@ await core.bootModules();
 const instance = core.info();
 
 /**
+ * Se almacena el @jarvis/config como servicio
+ *
+ * Esta acción permite reservar la instancia del módulo de configuración
+ * como servicio dentro del core.
+ */
+const config = core.service<ConfigService>('config');
+
+/**
  * Se imprime información general del runtime.
  *
  * Esta sección valida que @jarvis/core sigue bootstrapped correctamente
@@ -102,7 +112,7 @@ console.log('===================================================================
  * que no deban exponerse en logs.
  */
 console.log('- Package - Config | settings.json:');
-console.log(configModule.service.all());
+console.log(config?.all());
 
 /**
  * Se ejecuta el apagado de los módulos vivos.

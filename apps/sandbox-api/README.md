@@ -8,7 +8,7 @@ Este sandbox no representa una aplicación final de negocio. Su objetivo es serv
 
 ## Objetivo
 
-El objetivo de **`Sandbox API`** es validar que **`J.A.R.V.I.S.`** pueda arrancar, montar módulos reales y ejecutar su ciclo de vida desde el contexto de una app backend.
+El objetivo de **`Sandbox API`** es validar que **`J.A.R.V.I.S.`** pueda arrancar, montar módulos reales, registrar services y ejecutar su ciclo de vida desde el contexto de una app backend.
 
 En palabras simples:
 
@@ -22,10 +22,13 @@ Actualmente permite validar:
 - Recepción de configuración inicial.
 - Registro de módulos informativos.
 - Registro de módulos vivos del runtime.
+- Registro de services expuestos por módulos vivos.
+- Consulta de services mediante **`core.service(name)`**.
 - Ejecución de módulos mediante **`boot()`**.
 - Apagado ordenado mediante **`shutdown()`**.
 - Integración de packages reales como **`@jarvis/config`**.
 - Lectura de configuración desde **`settings.json`**.
+- Consulta de **`ConfigService`** mediante **`core.service('config')`**.
 
 ---
 
@@ -111,10 +114,12 @@ Actualmente se usa para probar:
 - **`Jarvis.boot()`**
 - **`core.bootModules()`**
 - **`core.info()`**
+- **`core.service(name)`**
 - **`core.shutdown()`**
 - Registro de módulos vivos mediante **`runtimeModules`**.
 - Integración de **`@jarvis/config`**.
 - Lectura de **`settings.json`** mediante **`ConfigService`**.
+- Consulta de **`ConfigService`** desde el core mediante **`core.service('config')`**.
 
 ### settings.example.json
 
@@ -217,13 +222,14 @@ settings.example.json
 
 ## Uso actual con @jarvis/config
 
-Actualmente **`sandbox-api`** monta **`@jarvis/config`** como módulo vivo del runtime.
+Actualmente **`sandbox-api`** monta **`@jarvis/config`** como módulo vivo del runtime y consulta su service desde **`@jarvis/core`**.
 
 Ejemplo conceptual:
 
 ```ts
 import { Jarvis } from '@jarvis/core';
 import { createConfigModule } from '@jarvis/config';
+import type { ConfigService } from '@jarvis/config';
 
 const configModule = createConfigModule({
   file: './settings.json'
@@ -232,7 +238,7 @@ const configModule = createConfigModule({
 const core = await Jarvis.boot({
   app: {
     name: 'Sandbox API for development',
-    version: '0.7.0',
+    version: '0.8.0',
     environment: 'local'
   },
   server: {
@@ -246,7 +252,9 @@ const core = await Jarvis.boot({
 
 await core.bootModules();
 
-console.log(configModule.service.all());
+const config = core.service<ConfigService>('config');
+
+console.log(config?.all());
 
 await core.shutdown();
 ```
@@ -254,9 +262,12 @@ await core.shutdown();
 Esto permite validar que:
 
 - **`@jarvis/core`** monta módulos vivos.
+- **`@jarvis/core`** registra services expuestos por módulos vivos.
+- **`@jarvis/core`** permite consultar services mediante **`core.service(name)`**.
 - **`@jarvis/config`** ejecuta **`boot()`**.
 - **`@jarvis/config`** lee **`settings.json`**.
 - **`ConfigService`** expone la configuración cargada.
+- **`sandbox-api`** obtiene **`ConfigService`** desde **`core.service('config')`**.
 
 ---
 
@@ -280,6 +291,8 @@ Ejecutar sandbox-api
 Arrancar J.A.R.V.I.S.
 ↓
 Bootear módulos vivos
+↓
+Consultar services registrados
 ↓
 Mostrar información del runtime
 ↓
@@ -395,9 +408,12 @@ Actualmente **`sandbox-api`** ya puede:
 - Usar **`@jarvis/core`**.
 - Montar módulos vivos mediante **`runtimeModules`**.
 - Ejecutar **`bootModules()`**.
+- Registrar services desde módulos vivos.
+- Consultar services mediante **`core.service(name)`**.
 - Ejecutar **`shutdown()`**.
 - Integrar **`@jarvis/config`**.
 - Cargar **`settings.json`** desde **`@jarvis/config`**.
+- Obtener **`ConfigService`** desde **`core.service('config')`**.
 - Mostrar información del runtime.
 - Mostrar configuración cargada desde **`ConfigService`**.
 

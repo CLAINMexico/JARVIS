@@ -2,7 +2,7 @@
 
 **`@jarvis/core`** es el package principal del runtime de **`J.A.R.V.I.S.`**
 
-Este package define las bases centrales para arrancar una instancia de **`J.A.R.V.I.S.`**, registrar módulos, ejecutar ciclos de vida y exponer información del runtime.
+Este package define las bases centrales para arrancar una instancia de **`J.A.R.V.I.S.`**, registrar módulos, registrar services, ejecutar ciclos de vida y exponer información del runtime.
 
 ---
 
@@ -14,7 +14,7 @@ Este package no debe contener lógica específica de base de datos, configuraci�
 
 En palabras simples:
 
-```
+```txt
 @jarvis/core define cómo vive J.A.R.V.I.S.
 Los demás packages definen qué puede hacer J.A.R.V.I.S.
 ```
@@ -29,6 +29,8 @@ Los demás packages definen qué puede hacer J.A.R.V.I.S.
 - Normalizar opciones iniciales de arranque.
 - Registrar módulos informativos.
 - Registrar módulos vivos del runtime.
+- Registrar services expuestos por módulos vivos.
+- Permitir consulta de services mediante **`core.service(name)`**.
 - Ejecutar el ciclo de vida inicial de módulos con **`bootModules()`**.
 - Ejecutar apagado ordenado con **`shutdown()`**.
 - Reportar información de la instancia mediante **`info()`**.
@@ -63,7 +65,7 @@ Esas responsabilidades deben vivir en packages especializados como:
 
 ## Ubicación dentro del monorepo
 
-```
+```txt
 packages/core
 ```
 
@@ -71,7 +73,7 @@ packages/core
 
 ## Estructura actual
 
-```
+```txt
 packages/core/
   src/
     contracts/
@@ -118,6 +120,8 @@ Esta clase representa una instancia viva de **`J.A.R.V.I.S.`** y se encarga de:
 - Guardar configuración interna normalizada.
 - Registrar módulos informativos.
 - Registrar módulos vivos.
+- Registrar services expuestos por módulos vivos.
+- Obtener services registrados mediante **`service(name)`**.
 - Ejecutar **`boot()`** de módulos vivos.
 - Ejecutar **`shutdown()`** de módulos vivos.
 - Reportar información del runtime mediante **`info()`**.
@@ -155,6 +159,10 @@ Un módulo vivo puede tener comportamiento de ciclo de vida mediante:
 
 - **`boot()`**
 - **`shutdown()`**
+
+A partir de **`v0.8.0`**, un módulo vivo también puede exponer un service mediante:
+
+- **`service`**
 
 ---
 
@@ -215,7 +223,7 @@ console.log(core.modules());
 
 Si un módulo no define **`status`**, **`J.A.R.V.I.S.`** usará:
 
-```
+```txt
 registered
 ```
 
@@ -265,16 +273,72 @@ await core.shutdown();
 
 ---
 
+## Uso con services
+
+Los módulos vivos pueden exponer un service para que **`@jarvis/core`** lo registre y lo haga consultable desde la app.
+
+Ejemplo conceptual:
+
+```ts
+import { Jarvis } from '@jarvis/core';
+
+const configService = {
+  get(path: string) {
+    return path;
+  }
+};
+
+const core = await Jarvis.boot({
+  app: {
+    name: 'MyApp',
+    version: '1.0.0',
+    environment: 'local'
+  },
+  runtimeModules: [
+    {
+      name: 'config',
+      service: configService,
+      boot() {
+        console.log('[config] boot ejecutado');
+      },
+      shutdown() {
+        console.log('[config] shutdown ejecutado');
+      }
+    }
+  ]
+});
+
+await core.bootModules();
+
+const config = core.service<typeof configService>('config');
+
+console.log(config?.get('app.name'));
+
+await core.shutdown();
+```
+
+Regla importante:
+
+```txt
+module.name define la llave del service.
+module.service define el service registrado.
+core.service(name) recupera el service.
+```
+
+---
+
 ## Ciclo de vida de módulos
 
 El ciclo actual es:
 
-```
+```txt
 Jarvis.boot()
 ↓
 core.bootModules()
 ↓
 core.info()
+↓
+core.service(name)
 ↓
 core.shutdown()
 ```
@@ -285,7 +349,7 @@ Ejecuta el método **`boot()`** de cada módulo vivo registrado.
 
 Los módulos se arrancan en el orden en el que fueron registrados.
 
-```
+```txt
 config → logger → database
 ```
 
@@ -295,11 +359,34 @@ Ejecuta el método **`shutdown()`** de cada módulo vivo registrado.
 
 Los módulos se apagan en orden inverso.
 
-```
+```txt
 database → logger → config
 ```
 
 Esto ayuda a respetar dependencias simples entre módulos.
+
+---
+
+## Registro de services
+
+Cuando un módulo vivo expone la propiedad **`service`**, **`@jarvis/core`** registra ese valor internamente usando el nombre del módulo como llave.
+
+Ejemplo:
+
+```ts
+const configModule = {
+  name: 'config',
+  service: configService
+};
+```
+
+Resultado:
+
+```ts
+const config = core.service('config');
+```
+
+Esto permite que una app consulte services desde el core sin depender directamente de variables externas del módulo.
 
 ---
 
@@ -310,6 +397,7 @@ Todo package que quiera conectarse al ciclo de vida del core debe implementar es
 ```ts
 export interface JarvisRuntimeModule {
   name: string;
+  service?: unknown;
   boot?(): Promise<void> | void;
   shutdown?(): Promise<void> | void;
 }
@@ -321,8 +409,11 @@ Ejemplo en un package externo como **`@jarvis/config`**:
 import type { JarvisRuntimeModule } from '@jarvis/core';
 
 export function createConfigModule(): JarvisRuntimeModule {
+  const service = new ConfigService();
+
   return {
     name: 'config',
+    service,
     boot() {
       console.log('[config] módulo iniciado');
     },
@@ -339,7 +430,7 @@ export function createConfigModule(): JarvisRuntimeModule {
 
 La relación correcta es:
 
-```
+```txt
 @jarvis/core
 = define contratos y mecanismos base
 
@@ -358,7 +449,7 @@ apps/sandbox-api
 
 Regla importante:
 
-```
+```txt
 Core define reglas.
 Packages implementan reglas.
 Apps conectan packages con core.
@@ -374,7 +465,7 @@ Los packages concretos sí pueden depender de **`@jarvis/core`** para implementa
 
 Correcto:
 
-```
+```txt
 @jarvis/config → @jarvis/core
 @jarvis/logger → @jarvis/core
 @jarvis/database → @jarvis/core
@@ -382,7 +473,7 @@ Correcto:
 
 Incorrecto:
 
-```
+```txt
 @jarvis/core → @jarvis/config
 @jarvis/core → @jarvis/database
 ```
@@ -417,7 +508,7 @@ docker compose exec jarvis-node pnpm --filter @jarvis/core clean
 
 Este package puede generar:
 
-```
+```txt
 dist/
 node_modules/
 ```
@@ -438,7 +529,7 @@ Dentro de **`@jarvis/core`** se usa prefijo **`jarvis-*`** porque este package d
 
 Ejemplos:
 
-```
+```txt
 jarvis-options.ts
 jarvis-info.ts
 jarvis-module.ts
@@ -448,7 +539,7 @@ jarvis-application.ts
 
 ### Nombres en código
 
-```
+```txt
 camelCase     → variables, funciones y métodos
 PascalCase    → clases, interfaces y types
 kebab-case    → nombres de archivos
@@ -477,10 +568,28 @@ Actualmente **`@jarvis/core`** ya puede:
 - Normalizar opciones iniciales.
 - Registrar módulos simples.
 - Registrar módulos vivos.
+- Registrar services expuestos por módulos vivos.
+- Consultar services mediante **`core.service(name)`**.
 - Ejecutar **`boot()`** en módulos vivos.
 - Ejecutar **`shutdown()`** en orden inverso.
 - Reportar información mediante **`info()`**.
 - Exponer contratos públicos para futuros packages.
+
+---
+
+## Próximo paso
+
+El siguiente paso arquitectónico será crear **`@jarvis/logger`** como segundo package real del ecosistema.
+
+La meta futura es poder hacer:
+
+```ts
+const logger = core.service('logger');
+
+logger?.info('J.A.R.V.I.S. iniciado');
+```
+
+---
 
 ## Notas para desarrollo
 
@@ -488,5 +597,6 @@ Actualmente **`@jarvis/core`** ya puede:
 - No leer secretos directamente desde este package.
 - No acoplar el core a packages concretos.
 - No romper el contrato **`JarvisRuntimeModule`**.
+- Los services se registran usando el nombre del módulo como llave.
 - Mantener comentarios de documentación en español.
 - Mantener commits en español.

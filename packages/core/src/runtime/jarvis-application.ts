@@ -92,6 +92,14 @@ export class JarvisApplication {
   private readonly options: NormalizedJarvisOptions;
 
   /**
+   * Registro interno de servicios expuestos por módulos vivos.
+   *
+   * La llave corresponde al nombre del módulo y el valor corresponde
+   * al servicio que ese módulo expone.
+   */
+  private readonly services = new Map<string, unknown>();
+
+  /**
    * Crea una nueva instancia de J.A.R.V.I.S.
    *
    * Recibe la configuración de entrada, aplica valores por defecto
@@ -99,7 +107,6 @@ export class JarvisApplication {
    */
   public constructor(options: JarvisOptions) {
     const runtimeModules = options.runtimeModules ?? [];
-
     this.options = {
       app: {
         name: options.app.name,
@@ -122,6 +129,11 @@ export class JarvisApplication {
       ],
       runtimeModules
     };
+    for (const module of runtimeModules) {
+      if (module.service !== undefined) {
+        this.services.set(module.name, module.service);
+      }
+    }
   }
 
   /**
@@ -179,5 +191,15 @@ export class JarvisApplication {
    */
   public modules(): JarvisModuleInfo[] {
     return [...this.options.modules];
+  }
+
+  /**
+   * Obtiene un servicio registrado dentro del runtime.
+   *
+   * El nombre recibido debe coincidir con el nombre del módulo vivo que
+   * expuso el servicio.
+   */
+  public service<TService = unknown>(name: string): TService | undefined {
+    return this.services.get(name) as TService | undefined;
   }
 }
