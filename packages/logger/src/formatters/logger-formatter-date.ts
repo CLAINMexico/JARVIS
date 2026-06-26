@@ -1,5 +1,8 @@
 /**
- * Partes completas de fecha usadas por el logger.
+ * Partes de fecha y hora usadas por el logger.
+ *
+ * Se mantienen separadas para construir formatos consistentes en consola,
+ * archivos y rutas relacionadas con logs.
  */
 interface LoggerDateTimeParts {
   year: string;
@@ -12,6 +15,9 @@ interface LoggerDateTimeParts {
 
 /**
  * Obtiene una parte específica generada por Intl.DateTimeFormat.
+ *
+ * Intl.DateTimeFormat puede devolver las partes en distinto orden según
+ * locale o configuración, por eso se busca cada parte por su type.
  */
 function getPart(parts: Intl.DateTimeFormatPart[], type: string): string {
   const value = parts.find((part) => part.type === type)?.value;
@@ -25,6 +31,10 @@ function getPart(parts: Intl.DateTimeFormatPart[], type: string): string {
 
 /**
  * Obtiene partes de fecha y hora usando una zona horaria específica.
+ *
+ * Se usa Intl.DateTimeFormat para respetar timeZone sin modificar el objeto
+ * Date original. El locale en-CA ayuda a obtener valores numéricos estables
+ * y hourCycle h23 evita formatos de 12 horas.
  */
 function getDateTimeParts(date: Date, timeZone: string): LoggerDateTimeParts {
   const formatter = new Intl.DateTimeFormat('en-CA', {
@@ -51,8 +61,9 @@ function getDateTimeParts(date: Date, timeZone: string): LoggerDateTimeParts {
 }
 
 /**
- * Formatea una fecha al estilo:
+ * Formatea una fecha para salidas del logger.
  *
+ * Formato final:
  * YYYY-MM-DD HH:mm:ss
  */
 export function formatLoggerDate(date: Date, timeZone: string): string {

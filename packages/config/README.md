@@ -1,8 +1,8 @@
-## @jarvis/config
+## Introducción
 
-**`@jarvis/config`** es el package de configuración del ecosistema **`J.A.R.V.I.S.`**
+**`@jarvis/config`** es el paquete de configuración del ecosistema **`J.A.R.V.I.S.`**.
 
-Este package permite cargar, almacenar y consultar configuración para aplicaciones construidas sobre el runtime de **`J.A.R.V.I.S.`**
+Este paquete permite cargar, almacenar y consultar configuración para aplicaciones construidas sobre el runtime de **`J.A.R.V.I.S.`**.
 
 ---
 
@@ -10,26 +10,22 @@ Este package permite cargar, almacenar y consultar configuración para aplicacio
 
 El objetivo de **`@jarvis/config`** es centralizar la configuración de una aplicación y exponerla mediante un servicio reutilizable.
 
-Este package está pensado para separar claramente:
+Este paquete está pensado para separar claramente la configuración no sensible de los valores sensibles:
 
-```
+```txt
 settings.json = configuración no sensible y referencias
 .env = secretos reales y valores sensibles
 ```
 
 En palabras simples:
 
-```
-@jarvis/config lee la configuración de la app.
+```txt
+@jarvis/config lee la configuración de la aplicación.
 ConfigService permite consultarla.
 @jarvis/core monta el módulo durante el arranque.
 ```
 
----
-
-## Responsabilidades principales
-
-**`@jarvis/config`** se encarga de:
+Actualmente, este paquete permite:
 
 - Crear un módulo compatible con **`JarvisRuntimeModule`**.
 - Cargar configuración desde un objeto directo.
@@ -41,133 +37,82 @@ ConfigService permite consultarla.
 
 ---
 
-## Lo que NO debe hacer
+## Funcionamiento
 
-**`@jarvis/config`** no debe encargarse directamente de:
+**`@jarvis/config`** se integra al runtime mediante la función **`createConfigModule()`**, la cual crea un módulo compatible con **`@jarvis/core`**.
 
-- Conectarse a bases de datos.
-- Validar licencias.
-- Firmar o validar JWT.
-- Enviar correos o notificaciones.
-- Crear servidores HTTP.
-- Implementar lógica de negocio.
-- Guardar secretos reales dentro de **`settings.json`**.
-
-Esas responsabilidades corresponden a otros packages como:
-
-- **`@jarvis/database`**
-- **`@jarvis/license`**
-- **`@jarvis/security`**
-- **`@jarvis/notify`**
-- **`@jarvis/storage`**
-
----
-
-## Ubicación dentro del monorepo
-
-```
-packages/config
-```
-
----
-
-## Estructura actual
-
-```
-packages/config/
-  src/
-    contracts/
-      config-options.ts
-      config-value.ts
-    runtime/
-      config-file-loader.ts
-      config-module.ts
-      config-service.ts
-    index.ts
-  package.json
-  tsconfig.json
-  README.md
-```
-
----
-
-## Archivos principales
-
-### src/index.ts
-
-Entrada pública del package.
-
-Desde aquí se exportan:
-
-- **`ConfigService`**
-- **`createConfigModule`**
-- **`ConfigModule`**
-- **`ConfigModuleOptions`**
-- **`ConfigObject`**
-- **`ConfigValue`**
-- **`ConfigPrimitiveValue`**
-- **`JarvisConfigPackage`**
-
-### src/contracts/config-value.ts
-
-Define los tipos base de valores permitidos dentro de la configuración.
-
-Incluye:
-
-- **`ConfigPrimitiveValue`**
-- **`ConfigValue`**
-- **`ConfigObject`**
-
-Estos tipos permiten representar estructuras anidadas como un **`settings.json`**.
-
-### src/contracts/config-options.ts
-
-Define las opciones aceptadas por **`createConfigModule()`**.
-
-Actualmente soporta:
+Este módulo puede recibir configuración de dos formas:
 
 ```ts
-values?: ConfigObject;
-file?: string;
+createConfigModule({
+  values: {
+    app: {
+      name: 'MyApp'
+    }
+  }
+});
 ```
 
-### src/runtime/config-service.ts
+o desde un archivo:
 
-Contiene la clase **`ConfigService`**.
+```ts
+createConfigModule({
+  file: './settings.json'
+});
+```
 
-Este servicio se encarga de:
+Durante el arranque, el módulo carga la configuración y la guarda dentro de una instancia de **`ConfigService`**.
 
-- Guardar valores de configuración.
-- Cargar nuevos valores mediante **`load()`**.
-- Consultar valores mediante **`get(path)`**.
-- Devolver todos los valores mediante **`all()`**.
+El servicio principal expone tres operaciones base:
 
-### src/runtime/config-file-loader.ts
+```ts
+config.load(values);
+config.get('app.name');
+config.all();
+```
 
-Contiene la función **`loadConfigFile()`**.
+### Lectura por path
 
-Esta función:
+**`ConfigService.get()`** permite leer valores usando paths separados por punto:
 
-- Recibe una ruta de archivo.
-- Lee el archivo desde disco.
-- Parsea el contenido como JSON.
-- Devuelve el resultado como **`ConfigObject`**.
+```ts
+config.get('app.name');
+config.get('server.port');
+config.get('database.connections.main.driver');
+config.get('modules.logger.enabled');
+```
 
-### src/runtime/config-module.ts
+Si el path no existe, devuelve:
 
-Contiene:
+```txt
+undefined
+```
 
-- La interfaz **`ConfigModule`**.
-- La función **`createConfigModule()`**.
+### Ciclo de vida
 
-Este archivo conecta **`@jarvis/config`** con **`@jarvis/core`**, ya que crea un módulo compatible con **`JarvisRuntimeModule`**.
+Durante **`boot()`**, el módulo:
+
+- Lee **`settings.json`** si se definió **`file`**.
+- Parsea el archivo.
+- Carga los valores dentro de **`ConfigService`**.
+- Deja la configuración lista para consulta.
+
+Durante **`shutdown()`**, el módulo ejecuta su apagado para mantener compatibilidad con el ciclo de vida del runtime.
+
+Actualmente, **`@jarvis/config`** lee el archivo de configuración una sola vez durante **`boot()`**. Si **`settings.json`** cambia mientras la aplicación está corriendo, los cambios no se aplican automáticamente.
+
+Para aplicar cambios, se debe reiniciar la aplicación.
 
 ---
 
-## Uso básico con valores directos
+## Uso
+
+Ejemplo básico con valores directos:
 
 ```ts
-import { createConfigModule } from '@jarvis/config';
+import {
+  createConfigModule
+} from '@jarvis/config';
 
 const configModule = createConfigModule({
   values: {
@@ -191,12 +136,12 @@ console.log(configModule.service.get('server.port'));
 await configModule.shutdown?.();
 ```
 
----
-
-## Uso con settings.json
+Ejemplo con **`settings.json`**:
 
 ```ts
-import { createConfigModule } from '@jarvis/config';
+import {
+  createConfigModule
+} from '@jarvis/config';
 
 const configModule = createConfigModule({
   file: './settings.json'
@@ -210,13 +155,16 @@ console.log(configModule.service.get('server.port'));
 await configModule.shutdown?.();
 ```
 
----
-
-## Uso integrado con @jarvis/core
+Ejemplo integrado con **`@jarvis/core`**:
 
 ```ts
-import { Jarvis } from '@jarvis/core';
-import { createConfigModule } from '@jarvis/config';
+import {
+  Jarvis
+} from '@jarvis/core';
+
+import {
+  createConfigModule
+} from '@jarvis/config';
 
 const configModule = createConfigModule({
   file: './settings.json'
@@ -239,22 +187,20 @@ const core = await Jarvis.boot({
 
 await core.bootModules();
 
+const config = core.service('config');
+
 console.log(configModule.service.get('app.name'));
 console.log(configModule.service.get('server.port'));
 
 await core.shutdown();
 ```
 
----
-
-## ConfigService
-
-**`ConfigService`** es el servicio principal de configuración.
-
-Ejemplo:
+Ejemplo usando **`ConfigService`** directamente:
 
 ```ts
-import { ConfigService } from '@jarvis/config';
+import {
+  ConfigService
+} from '@jarvis/config';
 
 const config = new ConfigService({
   app: {
@@ -272,82 +218,11 @@ console.log(config.all());
 
 ---
 
-## Lectura por path
+## Notas
 
-**`ConfigService.get()`** permite leer valores usando paths separados por punto.
+**`settings.json`** representa la configuración local o real de una aplicación, pero no debe guardar secretos reales.
 
-Ejemplo:
-
-```ts
-config.get('app.name');
-config.get('server.port');
-config.get('database.connections.main.driver');
-config.get('modules.logger.enabled');
-```
-
-Si el path no existe, devuelve:
-
-```
-undefined
-```
-
----
-
-## settings.json
-
-**`settings.json`** representa la configuración local/real de una app.
-
-Ejemplo:
-
-```json
-{
-  "app": {
-    "name": "MyApp",
-    "version": "1.0.0",
-    "environment": "local"
-  },
-  "server": {
-    "host": "0.0.0.0",
-    "port": 3000,
-    "basePath": "/api"
-  },
-  "logger": {
-    "level": "debug",
-    "pretty": true
-  }
-}
-```
-
-Este archivo no debe subirse a Git si contiene configuración local real.
-
-La plantilla segura debe ser:
-
-```
-settings.example.json
-```
-
----
-
-## settings.example.json
-
-**`settings.example.json`** sirve como referencia versionable de configuración.
-
-Este archivo sí puede subirse a Git porque no debe contener secretos reales.
-
-Debe incluir:
-
-- Estructura base de configuración.
-- Valores genéricos.
-- Referencias a variables de entorno.
-- Configuración no sensible.
-
----
-
-## Referencias a secretos
-
-**`settings.json`** no debe guardar secretos reales.
-
-En vez de esto:
+En vez de guardar valores sensibles directamente:
 
 ```json
 {
@@ -367,7 +242,7 @@ se debe usar una referencia:
 }
 ```
 
-Y el valor real debe vivir en `.env`:
+y el valor real debe vivir en **`.env`**:
 
 ```env
 SETTINGS_DATABASE_PASSWORD=
@@ -375,198 +250,45 @@ SETTINGS_DATABASE_PASSWORD=
 
 Regla principal:
 
-```
+```txt
 settings.json = configuración y referencias
 .env = secretos reales
 ```
 
----
+**`settings.example.json`** debe servir como referencia versionable de configuración y puede subirse a Git porque no debe contener secretos reales.
 
-## Ciclo de vida
+Este paquete no debe encargarse directamente de:
 
-**`@jarvis/config`** participa en el ciclo de vida de **`J.A.R.V.I.S.`** mediante **`JarvisRuntimeModule`**.
-
-### boot()
-
-Durante **`boot()`**, el módulo:
-
-- Lee **`settings.json`** si se definió **`file`**.
-- Parsea el archivo.
-- Carga los valores dentro de **`ConfigService`**.
-- Deja la configuración lista para consulta.
-
-### shutdown()
-
-Durante **`shutdown()`**, el módulo ejecuta su apagado.
-
-Actualmente no libera recursos críticos, pero el método existe para mantener compatibilidad con el ciclo de vida del core.
-
----
-
-## Comportamiento actual
-
-Actualmente, **`@jarvis/config`** lee el archivo de configuración una sola vez durante **`boot()`**.
-
-Eso significa:
-
-```
-Si settings.json cambia mientras la app está corriendo,
-los cambios no se aplican automáticamente.
-```
-
-Para aplicar cambios:
-
-```
-Reiniciar la aplicación.
-```
-
-Esto es intencional para mantener una configuración estable durante la ejecución.
-
----
-
-## Comportamiento futuro
-
-Más adelante se puede agregar:
-
-- **`reload()`** manual.
-- Validación de estructura.
-- Lectura de **`.env`**.
-- Resolución de **`secretRef`**, **`passwordRef`**, **`keyRef`**, etc.
-- Soporte opcional para **`watch`**.
-- Helpers tipados como **`getString()`**, **`getNumber()`** y **`getBoolean()`**.
-
----
-
-## Relación con @jarvis/core
+- Conectarse a bases de datos.
+- Validar licencias.
+- Firmar o validar JWT.
+- Enviar correos o notificaciones.
+- Crear servidores HTTP.
+- Implementar lógica de negocio.
+- Guardar secretos reales dentro de **`settings.json`**.
 
 **`@jarvis/config`** depende de **`@jarvis/core`** para implementar **`JarvisRuntimeModule`**.
 
 Relación correcta:
 
-```
-@jarvis/core
-= define contratos base
-
-@jarvis/config
-= implementa un módulo compatible con el core
-```
-
-Correcto:
-
-```
+```txt
 @jarvis/config → @jarvis/core
 ```
 
-Incorrecto:
+Relación incorrecta:
 
-```
+```txt
 @jarvis/core → @jarvis/config
 ```
 
 Esto evita dependencias circulares y mantiene el core limpio.
 
----
+También es importante considerar:
 
-## Scripts disponibles
-
-### Build
-
-```bash
-docker compose exec jarvis-node pnpm --filter @jarvis/config build
-```
-
-### Typecheck
-
-```bash
-docker compose exec jarvis-node pnpm --filter @jarvis/config typecheck
-```
-
-### Clean
-
-```bash
-docker compose exec jarvis-node pnpm --filter @jarvis/config clean
-```
-
----
-
-## Archivos generados
-
-Este package puede generar:
-
-```
-dist/
-node_modules/
-```
-
-Estos archivos no deben subirse a Git.
-
-**`dist/`** se genera con build.
-
-**`node_modules/`** se genera con pnpm.
-
----
-
-## Convenciones
-
-### Nombres de archivos
-
-Dentro de **`@jarvis/config`** se usa prefijo **`config-*`** porque este package define conceptos propios del módulo de configuración.
-
-Ejemplos:
-
-```
-config-options.ts
-config-value.ts
-config-service.ts
-config-module.ts
-config-file-loader.ts
-```
-
-### Nombres en código
-
-```
-camelCase     → variables, funciones y métodos
-PascalCase    → clases, interfaces y types
-kebab-case    → nombres de archivos
-UPPER_CASE    → constantes globales fijas
-```
-
-### Imports ESM
-
-Este proyecto usa TypeScript con ESM.
-
-Por eso los imports relativos deben usar extensión **`.js`**, aunque los archivos fuente sean **`.ts`**.
-
-Ejemplo:
-
-```ts
-import type { ConfigObject } from './contracts/config-value.js';
-```
-
----
-
-## Estado actual
-
-Actualmente **`@jarvis/config`** ya puede:
-
-- Crear un módulo vivo compatible con **`@jarvis/core`**.
-- Cargar configuración desde **`values`**.
-- Cargar configuración desde **`settings.json`**.
-- Guardar valores en **`ConfigService`**.
-- Consultar valores con **`get(path)`**.
-- Devolver toda la configuración con **`all()`**.
-- Arrancar mediante **`bootModules()`** desde **`@jarvis/core`**.
-- Apagarse mediante **`shutdown()`** desde **`@jarvis/core`**.
-
----
-
-## Notas para desarrollo
-
-- No guardar secretos reales dentro de `settings.json`.
-- No subir `settings.json` real a Git.
-- Mantener `settings.example.json` como referencia segura.
-- Mantener `.env` fuera de Git.
-- Mantener `.env.example` como plantilla segura.
+- No subir **`settings.json`** real a Git.
+- Mantener **`settings.example.json`** como referencia segura.
+- Mantener **`.env`** fuera de Git.
+- Mantener **`.env.example`** como plantilla segura.
 - No acoplar **`@jarvis/core`** a **`@jarvis/config`**.
 - Mantener comentarios de documentación en español.
 - Mantener commits en español.

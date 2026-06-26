@@ -1,13 +1,16 @@
 /**
  * Valor primitivo permitido dentro de la configuración.
  *
- * Estos son los valores simples que puede guardar J.A.R.V.I.S.
- * dentro de su configuración.
+ * Representa los valores simples que puede almacenar J.A.R.V.I.S.
+ * dentro de una estructura de configuración.
  */
 export type ConfigPrimitiveValue = string | number | boolean | null;
 
 /**
  * Valor permitido dentro de la configuración.
+ *
+ * Este tipo permite representar estructuras compatibles con JSON,
+ * incluyendo objetos anidados y arreglos.
  *
  * Puede ser:
  * - Un valor primitivo.
@@ -19,7 +22,9 @@ export type ConfigValue = ConfigPrimitiveValue | ConfigValue[] | ConfigObject;
 /**
  * Objeto de configuración.
  *
- * Permite representar estructuras anidadas como:
+ * Permite representar estructuras anidadas como settings.json.
+ *
+ * Ejemplo:
  *
  * {
  *   app: {

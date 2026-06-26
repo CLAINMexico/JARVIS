@@ -1,74 +1,65 @@
-/**
- * Se importa ConfigService porque bootstrap debe entregar un servicio
- * de configuración listo para consultas después de cargar settings.json.
- *
- * Se importa loadConfigFile porque @jarvis/config es el package
- * responsable de leer y parsear archivos de configuración.
- */
 import {
   ConfigService,
   loadConfigFile
 } from '@jarvis/config';
 
-/**
- * Se importa como type porque BootstrapOptions solo describe
- * las opciones recibidas por createJarvisBootstrap().
- */
 import type {
   BootstrapOptions
-} from '../contracts/bootstrap-options.js';
+} from '../contracts/bootstrap-contract-options.js';
 
-/**
- * Se importa como type porque BootstrapResult solo describe
- * la estructura final que devuelve el bootstrap.
- */
 import type {
   BootstrapResult
-} from '../contracts/bootstrap-result.js';
+} from '../contracts/bootstrap-contract-result.js';
 
-/**
- * Utilidades para convertir valores desconocidos de settings.json
- * a tipos seguros y normalizados.
- */
 import {
   getBootstrapBoolean,
   getBootstrapEnvironment,
   getBootstrapLoggerLevel,
   getBootstrapNumber,
   getBootstrapString
-} from '../utils/bootstrap-value-utils.js';
+} from '../utils/bootstrap-util-value.js';
 
-/**
- * Utilidades específicas para construir nombres relacionados con logger.
- */
 import {
   buildBootstrapLoggerAppName,
   buildBootstrapLoggerDefaultModule
-} from '../utils/bootstrap-logger-utils.js';
+} from '../utils/bootstrap-util-logger.js';
 
 /**
  * Crea el bootstrap inicial de una aplicación J.A.R.V.I.S.
  *
- * Esta función se ejecuta antes de arrancar @jarvis/core.
+ * Esta función se ejecuta antes de arrancar @jarvis/core y prepara
+ * los valores base que una aplicación necesita para construir su runtime.
  *
  * Responsabilidades:
  * - Leer settings.json usando @jarvis/config.
- * - Crear ConfigService.
- * - Normalizar configuración principal de app.
- * - Normalizar configuración principal de server.
- * - Normalizar configuración inicial de logger.
+ * - Crear una instancia inicial de ConfigService.
+ * - Normalizar datos principales de la aplicación.
+ * - Normalizar datos principales del servidor.
+ * - Normalizar configuración inicial para @jarvis/logger.
  *
  * Importante:
  * @jarvis/bootstrap no arranca el core, no inicia módulos y no ejecuta
- * lógica de negocio. Solo prepara valores para que la app pueda construir
- * su runtime de forma ordenada.
+ * lógica de negocio. Solo prepara valores para que la aplicación pueda
+ * construir su runtime de forma ordenada.
  */
 export async function createJarvisBootstrap(
   options: BootstrapOptions
 ): Promise<BootstrapResult> {
+  /**
+   * Se carga el archivo de configuración base y se crea un ConfigService
+   * temporal para consultar valores mediante paths.
+   *
+   * Este ConfigService forma parte del resultado del bootstrap, pero todavía
+   * no representa un módulo vivo registrado dentro de @jarvis/core.
+   */
   const settings = await loadConfigFile(options.settingsFile);
   const config = new ConfigService(settings);
 
+  /**
+   * Normalización de datos principales de la aplicación.
+   *
+   * Estos valores se entregan posteriormente a Jarvis.boot().
+   */
   const appName = getBootstrapString(
     config.get('app.name'),
     'J.A.R.V.I.S. | App'
@@ -98,6 +89,12 @@ export async function createJarvisBootstrap(
     'UTC'
   );
 
+  /**
+   * Normalización de datos principales del servidor.
+   *
+   * Estos valores definen la configuración base que el runtime conoce
+   * sobre la aplicación backend.
+   */
   const serverHost = getBootstrapString(
     config.get('server.host'),
     '0.0.0.0'
@@ -108,6 +105,12 @@ export async function createJarvisBootstrap(
     3000
   );
 
+  /**
+   * Normalización de configuración para @jarvis/logger.
+   *
+   * El bootstrap no crea el logger directamente. Solo prepara la estructura
+   * que después se entregará a createLoggerModule().
+   */
   const loggerEnabled = getBootstrapBoolean(
     config.get('modules.logger.enabled'),
     true
@@ -147,6 +150,12 @@ export async function createJarvisBootstrap(
     true
   );
 
+  /**
+   * Construye la configuración final de la aplicación.
+   *
+   * La licencia solo se agrega cuando existe un valor real para evitar
+   * enviar license: undefined cuando exactOptionalPropertyTypes está activo.
+   */
   const app = {
     name: appName,
     description: appDescription,
@@ -156,6 +165,13 @@ export async function createJarvisBootstrap(
     ...(appLicense.length > 0 ? { license: appLicense } : {})
   };
 
+  /**
+   * Devuelve el resultado completo del bootstrap.
+   *
+   * Este objeto permite que la aplicación cree módulos reales y después
+   * arranque @jarvis/core sin que el core tenga que leer archivos ni conocer
+   * detalles específicos de configuración.
+   */
   return {
     settings,
     config,

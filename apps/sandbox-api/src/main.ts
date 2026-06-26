@@ -1,66 +1,36 @@
-/**
- * Se importa el punto de entrada principal de @jarvis/core.
- *
- * Jarvis permite arrancar una instancia del runtime usando Jarvis.boot().
- */
 import {
   Jarvis
 } from '@jarvis/core';
 
-/**
- * Se importa el factory principal de @jarvis/config.
- *
- * createConfigModule() permite crear un módulo vivo de configuración.
- */
 import {
   createConfigModule
 } from '@jarvis/config';
 
-/**
- * Se importa como type porque ConfigService solo se usa para tipar
- * el servicio registrado dentro del core.
- */
 import type {
   ConfigService
 } from '@jarvis/config';
 
-/**
- * Se importa el factory principal de @jarvis/logger.
- *
- * createLoggerModule() permite crear un módulo vivo de logger.
- */
 import {
   createLoggerModule
 } from '@jarvis/logger';
 
-/**
- * Se importa como type porque LoggerService solo se usa para tipar
- * el servicio registrado dentro del core.
- */
 import type {
   LoggerService
 } from '@jarvis/logger';
 
-/**
- * Se importa createJarvisBootstrap para preparar la configuración
- * inicial de la app antes de arrancar el runtime.
- */
 import {
   createJarvisBootstrap
 } from '@jarvis/bootstrap';
 
 /**
- * Se ejecuta el bootstrap inicial de la app.
+ * Prepara la configuración inicial antes de arrancar el runtime.
  *
- * Esta etapa ocurre antes de arrancar @jarvis/core y permite:
- * - Leer settings.json.
- * - Crear ConfigService.
- * - Normalizar app.
- * - Normalizar server.
- * - Normalizar logger.
+ * En esta etapa se lee settings.json, se normalizan los valores base
+ * de la aplicación y se prepara la configuración necesaria para crear
+ * los módulos reales.
  *
- * De esta forma @jarvis/core no necesita saber cómo leer archivos
- * ni depender directamente de @jarvis/config.
+ * @jarvis/core no debe leer archivos ni depender directamente de
+ * paquetes concretos como @jarvis/config o @jarvis/logger.
  */
 const jarvisBootstrap = await createJarvisBootstrap({
   settingsFile: './settings.json'
@@ -85,15 +55,8 @@ const configModule = createConfigModule({
  * Se crea el módulo real de logger.
  *
  * @jarvis/bootstrap normaliza previamente la configuración del logger
- * desde settings.json, por lo que aquí se entrega directamente.
- *
- * Esto permite que @jarvis/logger use:
- * - appName
- * - level
- * - defaultModule
- * - timeZone
- * - console
- * - file
+ * desde settings.json, incluyendo el switch maestro enabled y las
+ * opciones de consola, archivos, nivel, módulo por defecto y zona horaria.
  */
 const loggerModule = createLoggerModule(
   jarvisBootstrap.logger
@@ -122,14 +85,15 @@ const core = await Jarvis.boot({
 });
 
 /**
- * Se ejecuta el arranque de los módulos vivos.
+ * Ejecuta el arranque de los módulos vivos.
  *
- * Cada módulo que tenga método boot() será inicializado por el core.
+ * Cada módulo que tenga método boot() será inicializado por el core
+ * en el orden en el que fue registrado.
  */
 await core.bootModules();
 
 /**
- * Se obtiene la información normalizada de la instancia arrancada.
+ * Obtiene la información normalizada de la instancia arrancada.
  *
  * A partir de este punto, los valores opcionales ya fueron resueltos
  * por el core, por ejemplo environment, host, port y status de módulos.
@@ -137,7 +101,7 @@ await core.bootModules();
 const instance = core.info();
 
 /**
- * Se obtiene @jarvis/config como servicio registrado en el core.
+ * Obtiene @jarvis/config como servicio registrado en el core.
  *
  * Esto permite consultar la configuración cargada desde settings.json
  * usando ConfigService.
@@ -145,14 +109,14 @@ const instance = core.info();
 const config = core.service<ConfigService>('config');
 
 /**
- * Se obtiene @jarvis/logger como servicio registrado en el core.
+ * Obtiene @jarvis/logger como servicio registrado en el core.
  *
  * Esto permite escribir logs de consola y archivo usando LoggerService.
  */
 const logger = core.service<LoggerService>('logger');
 
 /**
- * Se imprime información general del runtime.
+ * Imprime información general del runtime.
  *
  * Esta sección valida que @jarvis/core sigue arrancando correctamente
  * después de montar módulos reales.
@@ -167,15 +131,16 @@ logger?.debug(`- Server: ${instance.server.host}:${instance.server.port}`);
 logger?.debug(`- Status: ${instance.status}`);
 
 /**
- * Se confirma que @jarvis/config quedó disponible como servicio.
+ * Confirma que @jarvis/config quedó disponible como servicio.
  *
  * config?.all() devuelve la configuración completa disponible desde
  * el servicio registrado en core.
  *
  * Nota:
- * Esta salida es útil para el sandbox, pero en una app real no se debe
- * imprimir configuración completa si contiene datos sensibles o referencias
- * que no deban exponerse en logs.
+ * Esta salida es útil únicamente para el sandbox.
+ *
+ * En una aplicación real no se debe imprimir la configuración completa,
+ * ya que podría contener referencias, rutas internas o valores sensibles.
  */
 logger?.info('================================================================================');
 logger?.info('- Package - Config | Inicializado:');
@@ -186,7 +151,7 @@ logger?.info('Configuración cargada desde settings.json.', {
 });
 
 /**
- * Se confirma que @jarvis/logger quedó disponible como servicio
+ * Confirma que @jarvis/logger quedó disponible como servicio
  * dentro del runtime.
  *
  * Esta salida valida la integración real del módulo logger sin generar
@@ -198,10 +163,14 @@ logger?.info('==================================================================
 logger?.info('Package - Logger | Servicio disponible desde core.service().');
 
 /**
- * Se imprime una muestra controlada de metadata.
+ * Imprime una muestra controlada de metadata.
  *
  * Esta salida permite validar que @jarvis/logger puede escribir contexto
  * adicional usando objetos serializados en formato JSON legible.
+ *
+ * Nota:
+ * Esta metadata está pensada para pruebas del sandbox. En aplicaciones
+ * reales se debe evitar registrar configuración completa o sensible.
  */
 logger?.debug('Package - Logger | Metadata de arranque normalizada.', {
   module: `${instance.name} | ${instance.app.name}`,
@@ -213,7 +182,7 @@ logger?.debug('Package - Logger | Metadata de arranque normalizada.', {
 });
 
 /**
- * Se ejecuta el apagado de los módulos vivos.
+ * Ejecuta el apagado de los módulos vivos.
  *
  * El core apagará los módulos en orden inverso al arranque.
  */

@@ -1,44 +1,27 @@
-/**
- * Se importa como type porque solo se usa para definir
- * la forma de la información que devuelve J.info().
- */
 import type {
   JarvisInfo
-} from '../contracts/jarvis-info.js';
+} from '../contracts/core-contract-info.js';
 
-/**
- * Se importa como type porque solo se usa para describir
- * los módulos ya normalizados dentro del runtime.
- */
 import type {
   JarvisModuleInfo
-} from '../contracts/jarvis-module.js';
+} from '../contracts/core-contract-module.js';
 
-/**
- * Se importa como type porque solo se usa para describir
- * módulos vivos que pueden ejecutar ciclo de vida.
- */
 import type {
   JarvisRuntimeModule
-} from '../contracts/jarvis-runtime-module.js';
+} from '../contracts/core-contract-runtime-module.js';
 
-/**
- * Se importan como type porque solo se usan para validar
- * la configuración recibida y el ambiente de ejecución.
- */
 import type {
   JarvisEnvironment,
   JarvisOptions
-} from '../contracts/jarvis-options.js';
+} from '../contracts/core-contract-options.js';
 
 /**
  * Configuración interna normalizada de J.A.R.V.I.S.
  *
- * A diferencia de JarvisOptions, aquí todos los valores opcionales
- * ya fueron resueltos con valores por defecto.
+ * A diferencia de JarvisOptions, aquí todos los valores opcionales ya fueron
+ * resueltos con valores por defecto.
  *
- * Este tipo no se exporta porque solo lo usa internamente
- * JarvisApplication.
+ * Este tipo no se exporta porque solo lo usa internamente JarvisApplication.
  */
 interface NormalizedJarvisOptions {
   /**
@@ -67,8 +50,8 @@ interface NormalizedJarvisOptions {
   /**
    * Lista de módulos vivos registrados en el runtime.
    *
-   * Estos módulos pueden tener comportamiento como boot()
-   * y shutdown().
+   * Estos módulos pueden tener comportamiento de ciclo de vida mediante
+   * boot() y shutdown().
    */
   runtimeModules: JarvisRuntimeModule[];
 }
@@ -76,38 +59,40 @@ interface NormalizedJarvisOptions {
 /**
  * Representa una instancia viva del runtime de J.A.R.V.I.S.
  *
- * Esta clase recibe las opciones de arranque, las normaliza
- * y expone métodos para consultar o ejecutar el estado actual
- * del runtime.
+ * Esta clase recibe las opciones de arranque, las normaliza y expone métodos
+ * para consultar información, acceder a servicios registrados y ejecutar el
+ * ciclo de vida de los módulos vivos.
  */
 export class JarvisApplication {
   /**
    * Configuración interna del runtime.
    *
-   * Es private porque nadie fuera de la clase debe modificarla
-   * directamente.
-   *
-   * Es readonly porque la referencia principal de configuración
-   * no debe reemplazarse después de construir la instancia.
+   * Es private porque nadie fuera de la clase debe modificarla directamente.
+   * Es readonly porque la referencia principal de configuración no debe
+   * reemplazarse después de construir la instancia.
    */
   private readonly options: NormalizedJarvisOptions;
 
   /**
    * Registro interno de servicios expuestos por módulos vivos.
    *
-   * La llave corresponde al nombre del módulo y el valor corresponde
-   * al servicio que ese módulo expone.
+   * La llave corresponde al nombre del módulo y el valor corresponde al
+   * servicio que ese módulo expone.
    */
   private readonly services = new Map<string, unknown>();
 
   /**
    * Crea una nueva instancia de J.A.R.V.I.S.
    *
-   * Recibe la configuración de entrada, aplica valores por defecto
-   * y guarda una versión normalizada para uso interno.
+   * Recibe la configuración de entrada, aplica valores por defecto y guarda
+   * una versión normalizada para uso interno.
+   *
+   * También registra los servicios expuestos por módulos vivos usando el
+   * nombre del módulo como llave.
    */
   public constructor(options: JarvisOptions) {
     const runtimeModules = options.runtimeModules ?? [];
+
     this.options = {
       app: {
         name: options.app.name,
@@ -131,6 +116,7 @@ export class JarvisApplication {
       ],
       runtimeModules
     };
+
     for (const module of runtimeModules) {
       if (module.service !== undefined) {
         this.services.set(module.name, module.service);
@@ -141,8 +127,7 @@ export class JarvisApplication {
   /**
    * Ejecuta el método boot() de todos los módulos vivos que lo tengan.
    *
-   * Este método permite que los módulos inicialicen recursos internos,
-   * conexiones o cualquier preparación necesaria.
+   * Los módulos se arrancan en el orden en el que fueron registrados.
    */
   public async bootModules(): Promise<void> {
     for (const module of this.options.runtimeModules) {
@@ -165,7 +150,7 @@ export class JarvisApplication {
   /**
    * Devuelve información general de la instancia actual.
    *
-   * Este método representa la respuesta pública de J.info().
+   * Este método representa la respuesta pública de core.info().
    */
   public info(): JarvisInfo {
     return {
@@ -189,8 +174,8 @@ export class JarvisApplication {
   /**
    * Devuelve los módulos registrados en el runtime.
    *
-   * Se devuelve una copia del arreglo para evitar que código externo
-   * modifique directamente la lista interna de módulos.
+   * Se devuelve una copia superficial del arreglo para evitar que código
+   * externo modifique directamente la lista interna de módulos.
    */
   public modules(): JarvisModuleInfo[] {
     return [...this.options.modules];

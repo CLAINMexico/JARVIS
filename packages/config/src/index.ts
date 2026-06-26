@@ -1,68 +1,63 @@
 /**
- * Contratos públicos de valores de configuración.
+ * Contratos públicos de @jarvis/config.
  *
- * Estos tipos describen qué valores puede almacenar y exponer
- * el servicio de configuración.
+ * Estos types describen los valores permitidos dentro de la configuración
+ * y las opciones disponibles para crear el módulo de configuración.
  */
 export type {
   ConfigObject,
   ConfigPrimitiveValue,
   ConfigValue
-} from './contracts/config-value.js';
+} from './contracts/config-contract-value.js';
 
-/**
- * Contratos públicos de opciones del módulo de configuración.
- *
- * Estos tipos definen cómo se puede crear una instancia de
- * @jarvis/config.
- */
 export type {
   ConfigModuleOptions
-} from './contracts/config-options.js';
+} from './contracts/config-contract-options.js';
 
 /**
  * Servicio principal de configuración.
  *
- * Permite consultar valores mediante paths como:
+ * Permite cargar, consultar y exponer valores de configuración mediante
+ * paths separados por punto.
+ *
+ * Ejemplo:
  * config.get('app.name')
  */
 export {
   ConfigService
-} from './runtime/config-service.js';
+} from './runtime/config-runtime-service.js';
 
 /**
  * Módulo vivo de configuración.
  *
- * createConfigModule() crea un módulo compatible con JarvisRuntimeModule
- * para que @jarvis/core pueda registrarlo, arrancarlo y apagarlo.
+ * ConfigModule describe el módulo compatible con JarvisRuntimeModule.
+ * createConfigModule() crea una instancia lista para ser registrada,
+ * arrancada y apagada por @jarvis/core.
  */
 export type {
   ConfigModule
-} from './runtime/config-module.js';
+} from './runtime/config-runtime-module.js';
 
-/**
- * Entrada pública del package @jarvis/config.
- *
- * Este package permite crear un módulo vivo de configuración
- * compatible con el runtime de J.A.R.V.I.S.
- */
 export {
   createConfigModule
-} from './runtime/config-module.js';
+} from './runtime/config-runtime-module.js';
 
 /**
- * Se exporta loadConfigFile para que otros packages superiores,
- * como @jarvis/bootstrap, puedan cargar settings.json sin duplicar
- * lógica de lectura y parseo de archivos.
+ * Utilidad pública para cargar archivos de configuración.
+ *
+ * Se exporta para que paquetes superiores, como @jarvis/bootstrap,
+ * puedan leer settings.json sin duplicar lógica de lectura, parseo
+ * y validación.
  */
 export {
   loadConfigFile
-} from './runtime/config-file-loader.js';
+} from './runtime/config-runtime-file-loader.js';
 
 /**
- * Información estática del package.
+ * Información pública del package @jarvis/config.
  *
- * Se usa solo como referencia interna o para pruebas rápidas.
+ * Este objeto permite identificar el package desde pruebas, diagnósticos
+ * o futuras herramientas internas del ecosistema J.A.R.V.I.S.
  */
 export const JarvisConfigPackage = {
   name: '@jarvis/config',

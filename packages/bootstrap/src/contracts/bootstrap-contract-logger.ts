@@ -1,0 +1,82 @@
+import type {
+  LoggerLevel
+} from '@jarvis/logger';
+
+/**
+ * Representa la configuración normalizada del logger durante el bootstrap.
+ *
+ * Esta estructura se construye a partir de settings.json y se entrega lista
+ * para crear el módulo real de @jarvis/logger mediante createLoggerModule().
+ */
+export interface BootstrapLogger {
+  /**
+   * Indica si el módulo logger está habilitado.
+   *
+   * Este valor funciona como switch maestro. Cuando es false, el servicio
+   * logger puede seguir existiendo, pero no debe escribir en consola ni archivos.
+   */
+  enabled: boolean;
+
+  /**
+   * Nombre normalizado de la aplicación para generar archivos de log.
+   *
+   * Ejemplo:
+   * JARVIS_SANDBOXAPI
+   */
+  appName: string;
+
+  /**
+   * Nivel mínimo de log que será procesado por el logger.
+   */
+  level: LoggerLevel;
+
+  /**
+   * Nombre del módulo por defecto para logs generados desde la aplicación.
+   */
+  defaultModule: string;
+
+  /**
+   * Zona horaria usada para formatear fechas y construir rutas de logs.
+   */
+  timeZone: string;
+
+  /**
+   * Configuración de salida en consola.
+   */
+  console: {
+    /**
+     * Indica si el logger puede escribir en consola.
+     */
+    enabled: boolean;
+
+    /**
+     * Indica si la salida en consola debe usar colores.
+     */
+    colors: boolean;
+  };
+
+  /**
+   * Configuración de salida en archivos.
+   */
+  file: {
+    /**
+     * Indica si el logger puede escribir archivos de log.
+     */
+    enabled: boolean;
+
+    /**
+     * Ruta base donde se crearán los archivos de log.
+     */
+    path: string;
+
+    /**
+     * Indica si se deben crear archivos separados por nivel.
+     */
+    splitByLevel: boolean;
+
+    /**
+     * Indica si todos los logs deben escribirse también en un archivo general.
+     */
+    writeAll: boolean;
+  };
+}

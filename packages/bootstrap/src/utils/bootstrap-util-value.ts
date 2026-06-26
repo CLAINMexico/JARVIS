@@ -7,10 +7,13 @@ import type {
 } from '@jarvis/logger';
 
 /**
- * Convierte un valor desconocido a string.
+ * Obtiene un string seguro a partir de un valor desconocido.
  *
- * Si el valor recibido no es string o viene vacío, se devuelve
- * el valor por defecto.
+ * Se usa durante el bootstrap para normalizar valores leídos desde
+ * settings.json antes de entregarlos al runtime.
+ *
+ * Si el valor recibido no es string o está vacío después de aplicar trim(),
+ * se devuelve el valor por defecto.
  */
 export function getBootstrapString(value: unknown, defaultValue: string): string {
   if (typeof value !== 'string') {
@@ -27,10 +30,12 @@ export function getBootstrapString(value: unknown, defaultValue: string): string
 }
 
 /**
- * Convierte un valor desconocido a number.
+ * Obtiene un number seguro a partir de un valor desconocido.
  *
- * Si el valor recibido no es number válido, se devuelve
- * el valor por defecto.
+ * Acepta números reales y strings que puedan convertirse a número.
+ *
+ * Si el valor recibido no puede convertirse a un número finito,
+ * se devuelve el valor por defecto.
  */
 export function getBootstrapNumber(value: unknown, defaultValue: number): number {
   if (typeof value === 'number' && Number.isFinite(value)) {
@@ -49,10 +54,19 @@ export function getBootstrapNumber(value: unknown, defaultValue: number): number
 }
 
 /**
- * Convierte un valor desconocido a boolean.
+ * Obtiene un boolean seguro a partir de un valor desconocido.
  *
- * Acepta booleanos reales y strings comunes como:
- * true, false, 1, 0, yes, no.
+ * Acepta booleanos reales y strings comunes para representar valores
+ * verdaderos o falsos.
+ *
+ * Valores verdaderos:
+ * true, 1, yes, y, on
+ *
+ * Valores falsos:
+ * false, 0, no, n, off
+ *
+ * Si el valor recibido no coincide con ninguna forma soportada,
+ * se devuelve el valor por defecto.
  */
 export function getBootstrapBoolean(value: unknown, defaultValue: boolean): boolean {
   if (typeof value === 'boolean') {
@@ -77,9 +91,11 @@ export function getBootstrapBoolean(value: unknown, defaultValue: boolean): bool
 }
 
 /**
- * Normaliza el ambiente de ejecución de J.A.R.V.I.S.
+ * Obtiene un ambiente seguro para el runtime de J.A.R.V.I.S.
  *
- * Si el valor recibido no coincide con un ambiente soportado,
+ * Solo permite ambientes soportados por @jarvis/core.
+ *
+ * Si el valor recibido no coincide con un ambiente permitido,
  * se devuelve local.
  */
 export function getBootstrapEnvironment(value: unknown): JarvisEnvironment {
@@ -99,9 +115,11 @@ export function getBootstrapEnvironment(value: unknown): JarvisEnvironment {
 }
 
 /**
- * Normaliza el nivel mínimo del logger.
+ * Obtiene un nivel seguro para @jarvis/logger.
  *
- * Si el valor recibido no coincide con un nivel soportado,
+ * Solo permite niveles soportados por LoggerLevel.
+ *
+ * Si el valor recibido no coincide con un nivel permitido,
  * se devuelve info.
  */
 export function getBootstrapLoggerLevel(value: unknown): LoggerLevel {

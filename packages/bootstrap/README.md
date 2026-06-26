@@ -1,78 +1,53 @@
-## @jarvis/bootstrap
+## Introducción
 
-**`@jarvis/bootstrap`** es el package encargado de preparar la configuración inicial de una aplicación **`J.A.R.V.I.S.`** antes de arrancar el runtime.
+**`@jarvis/bootstrap`** es el paquete encargado de preparar la configuración inicial de una aplicación **`J.A.R.V.I.S.`** antes de arrancar el runtime.
 
----
-
-## Logger
-
-**`@jarvis/bootstrap`** normaliza la configuración inicial de **`@jarvis/logger`** desde **`settings.json`**.
-
-Esto permite crear el módulo logger de forma directa:
-
-```ts
-const loggerModule = createLoggerModule(jarvisBootstrap.logger);
-```
-
-Valores normalizados:
-
-- **`enabled`**
-- **`appName`**
-- **`level`**
-- **`defaultModule`**
-- **`timeZone`**
-- **`console`**
-- **`file`**
+Este paquete permite centralizar la lectura y normalización de valores iniciales, evitando que **`@jarvis/core`** tenga que encargarse directamente de leer archivos de configuración o preparar datos específicos de una aplicación.
 
 ---
 
-## Switch maestro de logger
+## Objetivo
 
-El valor:
+El objetivo de **`@jarvis/bootstrap`** es preparar los valores base que necesita una aplicación antes de iniciar el runtime de **`J.A.R.V.I.S.`**.
 
-```txt
-modules.logger.enabled
-```
+Actualmente, este paquete permite:
 
-se entrega a **`@jarvis/logger`** como **`enabled`**.
-
-Cuando es **`false`**, **`@jarvis/logger`** conserva el servicio disponible pero no escribe en consola ni archivos.
-
-Esto permite que otros packages puedan usar:
-
-```ts
-core.service('logger')
-```
-
-sin romper flujo, incluso cuando el logger este apagado por configuración.
+- Leer **`settings.json`**.
+- Crear una instancia de **`ConfigService`**.
+- Normalizar datos de la aplicación.
+- Normalizar datos del servidor.
+- Normalizar la configuración inicial de **`@jarvis/logger`**.
+- Entregar un resultado listo para construir módulos y arrancar **`@jarvis/core`**.
 
 ---
 
-## Resultado del bootstrap
+## Funcionamiento
 
-**`createJarvisBootstrap()`** devuelve:
+La función **`createJarvisBootstrap()`** devuelve un objeto con la configuración inicial normalizada:
 
 ```ts
 {
-  settings,
-  config,
   app,
   server,
-  logger
+  config,
+  logger,
+  settings
 }
 ```
 
 Donde:
 
-- **`settings`** contiene el objeto completo cargado desde **`settings.json`**.
-- **`config`** contiene una instancia de **`ConfigService`**.
 - **`app`** contiene datos normalizados para **`Jarvis.boot()`**.
 - **`server`** contiene datos normalizados para **`Jarvis.boot()`**.
+- **`config`** contiene una instancia de **`ConfigService`**.
 - **`logger`** contiene opciones normalizadas para **`createLoggerModule()`**.
+- **`settings`** contiene el objeto completo cargado desde **`settings.json`**.
 
 ---
 
-## Uso con @jarvis/core, @jarvis/config y @jarvis/logger
+## Uso
+
+Ejemplo de uso con **`@jarvis/core`**, **`@jarvis/config`** y **`@jarvis/logger`**:
 
 ```ts
 const jarvisBootstrap = await createJarvisBootstrap({
@@ -97,15 +72,22 @@ const core = await Jarvis.boot({
 
 ---
 
-## Estado actual
+## Notas
 
-Actualmente **`@jarvis/bootstrap`** ya puede:
+**`@jarvis/bootstrap`** no debe arrancar el runtime directamente.
 
-- Leer **`settings.json`**.
-- Crear **`ConfigService`**.
-- Normalizar datos de app.
-- Normalizar datos de server.
-- Normalizar datos de logger.
-- Entregar **`logger.enabled`** como switch maestro.
-- Devolver un **`BootstrapResult`**.
-- Ser consumido desde **`apps/sandbox-api`** para preparar config y logger.
+Su responsabilidad es preparar los valores iniciales para que una aplicación pueda construir sus módulos y después arrancar **`@jarvis/core`** de forma limpia y ordenada.
+
+El flujo esperado es:
+
+```txt
+settings.json
+↓
+@jarvis/bootstrap
+↓
+@jarvis/config
+↓
+@jarvis/logger
+↓
+@jarvis/core
+```

@@ -1,44 +1,55 @@
 import type {
   LoggerContext
-} from '../contracts/logger-context.js';
+} from '../contracts/logger-contract-context.js';
 
 import type {
   LoggerEntry
-} from '../contracts/logger-entry.js';
+} from '../contracts/logger-contract-entry.js';
 
 import type {
   LoggerLevel
-} from '../contracts/logger-level.js';
+} from '../contracts/logger-contract-level.js';
 
 import type {
   LoggerTransport
-} from '../contracts/logger-transport.js';
+} from '../contracts/logger-contract-transport.js';
 
 import {
   shouldLog
-} from '../utils/logger-level-utils.js';
+} from '../utils/logger-util-level.js';
 
 /**
  * Opciones internas del servicio de logger.
+ *
+ * Estas opciones ya deben llegar normalizadas desde createLoggerModule().
  */
 export interface LoggerServiceOptions {
   /**
    * Nivel mínimo que será procesado por el logger.
+   *
+   * Los eventos con menor prioridad serán ignorados antes de enviarse
+   * a los transports.
    */
   level: LoggerLevel;
 
   /**
-   * Módulo por defecto usado cuando el log no recibe uno explícito.
+   * Módulo por defecto usado cuando el log no recibe uno explícito
+   * mediante context.module.
    */
   defaultModule: string;
 
   /**
    * Zona horaria usada para representar fechas del logger.
+   *
+   * El Date original no se modifica; la zona horaria solo se usa
+   * al momento de formatear la salida.
    */
   timeZone: string;
 
   /**
    * Lista de salidas donde se escribirá cada evento de log.
+   *
+   * Puede incluir consola, archivos u otros transports futuros.
    */
   transports: LoggerTransport[];
 }
@@ -46,16 +57,44 @@ export interface LoggerServiceOptions {
 /**
  * Servicio principal de logging de J.A.R.V.I.S.
  *
- * Este servicio crea eventos normalizados de log y los distribuye
- * hacia los transports configurados.
+ * Este servicio crea eventos normalizados de log y los distribuye hacia
+ * los transports configurados.
+ *
+ * También mantiene una cola interna de escritura para conservar el orden
+ * de los logs cuando se registran varios eventos de forma consecutiva.
  */
 export class LoggerService {
+  /**
+   * Nivel mínimo configurado para procesar eventos.
+   */
   private readonly level: LoggerLevel;
+
+  /**
+   * Módulo por defecto usado cuando no se especifica context.module.
+   */
   private readonly defaultModule: string;
+
+  /**
+   * Lista de destinos donde se escribirán los eventos procesados.
+   */
   private readonly transports: LoggerTransport[];
+
+  /**
+   * Zona horaria usada por los formatters para representar fechas.
+   */
   private readonly timeZone: string;
+
+  /**
+   * Cola interna de escritura.
+   *
+   * Permite encadenar escrituras para evitar que los logs se mezclen
+   * fuera de orden, especialmente en transports asíncronos como archivos.
+   */
   private writeQueue: Promise<void> = Promise.resolve();
 
+  /**
+   * Crea una nueva instancia de LoggerService.
+   */
   public constructor(options: LoggerServiceOptions) {
     this.level = options.level;
     this.defaultModule = options.defaultModule;
@@ -101,6 +140,9 @@ export class LoggerService {
   /**
    * Crea un logger hijo asociado a un módulo específico.
    *
+   * El logger hijo comparte nivel, zona horaria y transports con el logger
+   * principal, pero cambia el módulo por defecto.
+   *
    * Esto permite evitar repetir { module: 'Config' } en cada log.
    */
   public child(module: string): LoggerService {
@@ -115,8 +157,12 @@ export class LoggerService {
   /**
    * Agrega una escritura a la cola interna del logger.
    *
-   * Esto conserva el orden de los logs aunque se llamen varios métodos
-   * seguidos sin await.
+   * Los métodos públicos no esperan la escritura directamente. En su lugar,
+   * encadenan el trabajo para conservar el orden de salida sin obligar al
+   * consumidor a usar await en cada log.
+   *
+   * Si ocurre un error interno durante la escritura, se reporta en consola
+   * para evitar que la cola quede rota silenciosamente.
    */
   private enqueue(
     level: LoggerLevel,
@@ -132,6 +178,9 @@ export class LoggerService {
 
   /**
    * Construye una entrada normalizada y la envía a los transports.
+   *
+   * Antes de crear el evento, valida si el nivel recibido debe procesarse
+   * según el nivel mínimo configurado.
    */
   private async write(
     level: LoggerLevel,

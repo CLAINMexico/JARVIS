@@ -1,5 +1,61 @@
 # CHANGELOG | J.A.R.V.I.S.
 
+## **`0.11.0`** <sup><small>(26/Junio/2026)</small></sup>
+
+### Resumen
+
+Se realiza una homologación documental y estructural en los paquetes principales de **`J.A.R.V.I.S.`**, alineando nombres de archivos, comentarios internos, README y documentación técnica bajo una misma convención.
+
+Esta versión deja una base más limpia, consistente y mantenible para continuar el crecimiento del ecosistema.
+
+---
+
+### Cambios
+
+- Se homologó la documentación interna de **`@jarvis/core`**.
+- Se homologó la documentación interna de **`@jarvis/config`**.
+- Se homologó la documentación interna de **`@jarvis/bootstrap`**.
+- Se homologó la documentación interna de **`@jarvis/logger`**.
+- Se actualizó el README raíz con una estructura más clara y consistente.
+- Se actualizaron los README de paquetes usando la estructura:
+  - **Introducción**
+  - **Objetivo**
+  - **Funcionamiento**
+  - **Uso**
+  - **Notas**
+- Se reforzó la nomenclatura interna de archivos por responsabilidad y carpeta.
+- Se dejó como regla documental que todo archivo nuevo debe crearse con comentarios claros, consistentes y en español.
+
+---
+
+### Mejoras
+
+- Se mejoró la claridad de contratos, runtime, utilidades, formatters y transports.
+- Se aclaró la diferencia entre módulos informativos y módulos vivos del runtime.
+- Se reforzó la documentación del ciclo de vida de módulos mediante **`boot()`** y **`shutdown()`**.
+- Se documentó con mayor precisión el registro y consulta de servicios mediante **`core.service(name)`**.
+- Se mejoró la documentación del flujo entre **`@jarvis/bootstrap`**, **`@jarvis/config`**, **`@jarvis/logger`** y **`@jarvis/core`**.
+- Se mejoró la documentación del logger, incluyendo niveles, transports, formatters, contexto, errores, zona horaria y escritura ordenada.
+- Se reforzaron notas de seguridad sobre no imprimir secretos ni configuración sensible en logs.
+- Se dejó más clara la responsabilidad de cada paquete para evitar mezcla de lógica entre módulos.
+
+---
+
+### Correcciones
+
+- Se corrigieron inconsistencias de nombres y comentarios entre archivos.
+- Se eliminaron comentarios redundantes o desactualizados.
+- Se corrigieron referencias documentales incorrectas, como menciones a métodos o responsabilidades que ya no aplicaban.
+- Se ajustó la documentación de **`settings.json`** y **`.env`** para separar configuración no sensible de secretos reales.
+- Se validó que **`settings.json`** cargado por **`@jarvis/config`** tenga un objeto JSON válido como raíz.
+- Se verificó correctamente el proyecto mediante:
+
+```bash
+docker compose exec jarvis-node pnpm verify
+```
+
+---
+
 ## **`0.10.2`** <sup><small>(25/Junio/2026)</small></sup>
 
 ### Resumen

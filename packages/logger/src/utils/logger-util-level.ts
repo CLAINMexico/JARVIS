@@ -1,11 +1,14 @@
 import type {
   LoggerLevel
-} from '../contracts/logger-level.js';
+} from '../contracts/logger-contract-level.js';
 
 /**
  * Prioridad numérica de cada nivel de log.
  *
  * Mientras mayor sea el número, más importante es el nivel.
+ *
+ * Orden:
+ * debug < info < warn < error < fatal
  */
 const LoggerLevelPriority: Record<LoggerLevel, number> = {
   debug: 10,
@@ -17,6 +20,10 @@ const LoggerLevelPriority: Record<LoggerLevel, number> = {
 
 /**
  * Indica si un evento debe ser procesado según el nivel mínimo configurado.
+ *
+ * Ejemplo:
+ * - level: debug, minimumLevel: info -> false
+ * - level: error, minimumLevel: info -> true
  */
 export function shouldLog(level: LoggerLevel, minimumLevel: LoggerLevel): boolean {
   return LoggerLevelPriority[level] >= LoggerLevelPriority[minimumLevel];
@@ -24,6 +31,12 @@ export function shouldLog(level: LoggerLevel, minimumLevel: LoggerLevel): boolea
 
 /**
  * Convierte un nivel a texto estándar para salida visual.
+ *
+ * El padEnd mantiene alineados los niveles dentro del formato final:
+ * [INFO ]
+ * [WARN ]
+ * [ERROR]
+ * [FATAL]
  */
 export function formatLoggerLevel(level: LoggerLevel): string {
   return level.toUpperCase().padEnd(5, ' ');

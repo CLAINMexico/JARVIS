@@ -1,24 +1,28 @@
 import type {
   LoggerEntry
-} from '../contracts/logger-entry.js';
+} from '../contracts/logger-contract-entry.js';
 
 import {
   formatLoggerDate
-} from './logger-date-formatter.js';
+} from './logger-formatter-date.js';
 
 import {
   formatLoggerLevel
-} from '../utils/logger-level-utils.js';
+} from '../utils/logger-util-level.js';
 
 import {
   formatLoggerContext
-} from '../utils/logger-context-utils.js';
+} from '../utils/logger-util-context.js';
 
 /**
- * Formatea una entrada de log para archivo.
+ * Formatea una entrada de log para salida en archivo.
  *
- * No usa colores ni símbolos para mantener archivos limpios,
- * fáciles de leer, buscar y procesar.
+ * Esta función no escribe directamente en disco. Solo convierte un
+ * LoggerEntry en texto plano, dejando la escritura real al transport
+ * de archivos.
+ *
+ * No usa colores ANSI ni símbolos visuales para mantener archivos limpios,
+ * fáciles de leer, buscar y procesar por herramientas externas.
  */
 export function formatLoggerFileEntry(entry: LoggerEntry): string {
   const level = `[${formatLoggerLevel(entry.level)}]`;

@@ -1,28 +1,29 @@
 import type {
   LoggerEntry
-} from '../contracts/logger-entry.js';
+} from '../contracts/logger-contract-entry.js';
 
 import type {
   LoggerLevel
-} from '../contracts/logger-level.js';
+} from '../contracts/logger-contract-level.js';
 
 import {
   formatLoggerDate
-} from './logger-date-formatter.js';
+} from './logger-formatter-date.js';
 
 import {
   formatLoggerLevel
-} from '../utils/logger-level-utils.js';
+} from '../utils/logger-util-level.js';
 
 import {
   formatLoggerContext
-} from '../utils/logger-context-utils.js';
+} from '../utils/logger-util-context.js';
 
 /**
  * Colores ANSI básicos para salida en consola.
  *
- * Se usan códigos estándar para mantener compatibilidad
- * entre terminales comunes.
+ * Estos códigos se aplican según el nivel del log y permiten distinguir
+ * visualmente eventos debug, informativos, advertencias, errores y eventos
+ * fatales dentro de terminales compatibles.
  */
 const LoggerLevelColors: Record<LoggerLevel, string> = {
   debug: '\x1b[90m',
@@ -33,12 +34,18 @@ const LoggerLevelColors: Record<LoggerLevel, string> = {
 };
 
 /**
- * Código ANSI para resetear color.
+ * Código ANSI usado para restaurar el color original de la consola.
  */
 const ResetColor = '\x1b[0m';
 
 /**
- * Formatea una entrada de log para consola.
+ * Formatea una entrada de log para salida en consola.
+ *
+ * Esta función no escribe directamente en consola. Solo convierte un
+ * LoggerEntry en texto, dejando la escritura real al transport de consola.
+ *
+ * Cuando colors está habilitado, el color se aplica a toda la salida,
+ * incluyendo el mensaje principal y el contexto adicional.
  */
 export function formatLoggerConsoleEntry(entry: LoggerEntry, colors: boolean): string {
   const level = `[${formatLoggerLevel(entry.level)}]`;

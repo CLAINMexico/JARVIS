@@ -4,116 +4,99 @@
 
 ---
 
-## J.A.R.V.I.S.
+## Introducción
 
-**`J.A.R.V.I.S.`** significa:
-
-```txt
-JavaScript Architecture Runtime for Versatile Intelligent Services
-```
-
-**`J.A.R.V.I.S.`** es un proyecto backend modular, escalable y orientado a servicios, creado como núcleo tecnológico para aplicaciones empresariales modernas de **CLAIN México, S.A. de C.V.**
+**`J.A.R.V.I.S. | JavaScript Architecture Runtime for Versatile Intelligent Services`** es un proyecto modular, escalable y orientado a servicios, creado como núcleo tecnológico para aplicaciones empresariales modernas de **CLAIN México, S.A. de C.V.**
 
 ---
 
 ## Objetivo
 
-El objetivo de **`J.A.R.V.I.S.`** es proporcionar un kernel backend capaz de centralizar y estandarizar funcionalidades comunes para distintos proyectos, aplicaciones y servicios internos.
-
-Responsabilidades contempladas:
-
-- Levantamiento de servicios backend con **`Node.js`**, **`TypeScript`** y **`Fastify`**.
-- Preparación inicial de aplicaciones mediante **`@jarvis/bootstrap`**.
-- Administración de configuración por ambiente mediante **`@jarvis/config`**.
-- Sistema oficial de logging mediante **`@jarvis/logger`**.
-- Registro de servicios expuestos por módulos vivos desde **`@jarvis/core`**.
-- Preparación para arquitecturas modulares y microservicios.
+El objetivo de **`J.A.R.V.I.S.`** es proporcionar un núcleo capaz de centralizar y estandarizar funcionalidades comunes para distintos proyectos, aplicaciones y servicios internos.
 
 ---
 
-## Arquitectura
+## Instalación
 
-```txt
-Core define reglas.
-Packages implementan capacidades.
-Bootstrap prepara la app.
-Apps conectan y prueban el ecosistema.
-```
+Para realizar la instalación de **`J.A.R.V.I.S.`**, se deben seguir los siguientes pasos:
 
----
-
-## Packages actuales
-
-### @jarvis/core
-
-Núcleo principal del runtime. Arranca una instancia de **`J.A.R.V.I.S.`**, registra módulos vivos, ejecuta ciclo de vida y expone servicios mediante **`core.service()`**.
-
-### @jarvis/config
-
-Package de configuración. Carga **`settings.json`**, crea **`ConfigService`** y permite consultas por path.
-
-### @jarvis/bootstrap
-
-Prepara una app antes de arrancar el runtime. Lee **`settings.json`**, crea **`ConfigService`**, normaliza **`app`**, **`server`** y **`logger`**.
-
-### @jarvis/logger
-
-Sistema oficial de logging. Escribe logs en consola y archivos, usando niveles, zona horaria, metadata en JSON, archivo **`ALL.log`** y archivos separados por nivel.
-
----
-
-## Flujo actual
-
-```txt
-settings.json
-↓
-@jarvis/bootstrap
-↓
-@jarvis/config
-↓
-@jarvis/logger
-↓
-@jarvis/core
-↓
-apps/sandbox-api
-```
-
-Ejemplo conceptual:
-
-```ts
-const jarvisBootstrap = await createJarvisBootstrap({
-  settingsFile: './settings.json'
-});
-
-const configModule = createConfigModule({
-  values: jarvisBootstrap.settings
-});
-
-const loggerModule = createLoggerModule(jarvisBootstrap.logger);
-
-const core = await Jarvis.boot({
-  app: jarvisBootstrap.app,
-  server: jarvisBootstrap.server,
-  runtimeModules: [
-    configModule,
-    loggerModule
-  ]
-});
-```
-
----
-
-## Scripts principales
+### 1. Clonar el repositorio
 
 ```bash
-docker compose exec jarvis-node pnpm dev
-docker compose exec jarvis-node pnpm build
-docker compose exec jarvis-node pnpm typecheck
-docker compose exec jarvis-node pnpm clean
+git clone https://github.com/CLAINMexico/JARVIS.git
+```
+
+### 2. Entrar al directorio del proyecto
+
+```bash
+cd JARVIS
+```
+
+### 3. Copiar el archivo de variables de entorno
+
+```bash
+cp .env.example .env
+```
+
+### 4. Levantar el ambiente de desarrollo
+
+```bash
+docker compose up -d --build
+```
+
+### 5. Instalar las dependencias del monorepo
+
+```bash
+docker compose exec jarvis-node pnpm install
+```
+
+### 6. Verificar la instalación
+
+```bash
 docker compose exec jarvis-node pnpm verify
 ```
 
-**`verify`** ejecuta:
+Si el comando finaliza correctamente, el ambiente base de **`J.A.R.V.I.S.`** estará listo para desarrollo.
+
+---
+
+## Paquetes
+
+Los paquetes de **`J.A.R.V.I.S.`** representan módulos internos del ecosistema, diseñados para separar responsabilidades y mantener una arquitectura limpia, escalable y reutilizable.
+
+Cada paquete cumple una función específica dentro del runtime o dentro del flujo de una aplicación, permitiendo que el proyecto crezca de forma ordenada sin concentrar toda la lógica en un solo lugar.
+
+Con esta estructura, **`J.A.R.V.I.S.`** puede integrar nuevos paquetes de forma progresiva, como seguridad, base de datos, almacenamiento, notificaciones y cliente frontend, manteniendo siempre una separación clara entre cada capacidad del sistema.
+
+### @jarvis/core
+
+Paquete principal encargado de gestionar el núcleo del runtime. Arranca una instancia de **`J.A.R.V.I.S.`**, registra módulos, ejecuta el ciclo de vida y expone servicios internos del runtime.
+
+### @jarvis/config
+
+Paquete principal para cargar, normalizar y exponer configuración para aplicaciones que usen el runtime de **`J.A.R.V.I.S.`**.
+
+### @jarvis/bootstrap
+
+Paquete principal encargado de preparar la configuración inicial de una app antes de arrancar el runtime de **`J.A.R.V.I.S.`**.
+
+### @jarvis/logger
+
+Paquete principal para gestionar el registro de eventos, bitácoras, errores y mensajes de diagnóstico generados durante la ejecución del runtime de **`J.A.R.V.I.S.`**.
+
+---
+
+## Scripts
+
+```bash
+docker compose exec jarvis-node pnpm clean
+docker compose exec jarvis-node pnpm build
+docker compose exec jarvis-node pnpm typecheck
+docker compose exec jarvis-node pnpm dev
+docker compose exec jarvis-node pnpm verify
+```
+
+El comando **`docker compose exec jarvis-node pnpm verify`** ejecuta:
 
 ```txt
 clean
@@ -121,55 +104,6 @@ build
 typecheck
 dev
 ```
-
----
-
-## Estado actual
-
-Actualmente **`J.A.R.V.I.S.`** ya cuenta con:
-
-- Monorepo con **`pnpm workspaces`**.
-- Ambiente Docker base.
-- Package **`@jarvis/core`**.
-- Package **`@jarvis/config`**.
-- Package **`@jarvis/bootstrap`**.
-- Package **`@jarvis/logger`**.
-- App interna **`sandbox-api`**.
-- Ciclo de vida inicial de módulos.
-- Registro inicial de servicios en core.
-- Bootstrap inicial.
-- Logging en consola y archivos.
-- Metadata de logs como JSON legible.
-- Switch maestro **`modules.logger.enabled`** funcionando.
-
----
-
-## Archivos generados
-
-No deben subirse a Git:
-
-```txt
-node_modules/
-dist/
-build/
-coverage/
-.pnpm-store/
-.turbo/
-.DS_Store
-logs/
-*.log
-```
-
----
-
-## Convenciones
-
-- Documentación en español.
-- Commits en español.
-- Todo nuevo package debe tener **`README.md`**.
-- Toda nueva app o sandbox debe tener **`README.md`**.
-- Comentarios útiles dentro del código deben estar en español.
-- Imports ESM relativos deben usar extensión **`.js`**.
 
 ---
 

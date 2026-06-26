@@ -17,15 +17,27 @@
     "typescript",
     "typescriptreact"
   ],
+  "files.exclude": {
+    "**/.DS_Store": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/coverage/**": true,
+    "**/.pnpm-store/**": true,
+    "**/.turbo/**": true,
+    "**/logs/**": true,
+    "**/*.log": true
+  },
   "search.exclude": {
     "**/node_modules": true,
     "**/dist": true,
     "**/build": true,
+    "**/coverage": true,
     "**/.pnpm-store": true,
-    "**/coverage": true
-  },
-  "files.exclude": {
-    "**/.DS_Store": true
+    "**/.turbo": true,
+    "**/logs": true
   },
   "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"

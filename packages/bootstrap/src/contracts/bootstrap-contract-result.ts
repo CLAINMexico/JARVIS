@@ -5,15 +5,15 @@ import type {
 
 import type {
   BootstrapApp
-} from './bootstrap-app.js';
+} from './bootstrap-contract-app.js';
 
 import type {
   BootstrapLogger
-} from './bootstrap-logger.js';
+} from './bootstrap-contract-logger.js';
 
 import type {
   BootstrapServer
-} from './bootstrap-server.js';
+} from './bootstrap-contract-server.js';
 
 /**
  * Resultado normalizado del bootstrap inicial.

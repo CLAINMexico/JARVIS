@@ -1,24 +1,16 @@
-/**
- * Se importa como type porque solo se usa para describir
- * la información de los módulos registrados en el runtime.
- */
 import type {
   JarvisModuleInfo
-} from './jarvis-module.js';
+} from './core-contract-module.js';
 
-/**
- * Se importa como type porque solo se usa para indicar
- * el ambiente en el que está corriendo la aplicación.
- */
 import type {
   JarvisEnvironment
-} from './jarvis-options.js';
+} from './core-contract-options.js';
 
 /**
  * Información normalizada de la aplicación arrancada por J.A.R.V.I.S.
  *
- * Esta información viene de JarvisOptions, pero aquí ya se reporta
- * completa y normalizada después del arranque.
+ * Esta información proviene de JarvisOptions, pero aquí se reporta
+ * completa y normalizada después del arranque del runtime.
  */
 export interface JarvisAppInfo {
   /**
@@ -45,17 +37,17 @@ export interface JarvisAppInfo {
 /**
  * Información normalizada del servidor usado por el runtime.
  *
- * Aquí host y port son obligatorios porque J.A.R.V.I.S.
- * ya resolvió sus valores por defecto durante el arranque.
+ * host y port son obligatorios porque J.A.R.V.I.S. ya resolvió sus valores
+ * por defecto durante el arranque.
  */
 export interface JarvisServerInfo {
   /**
-   * Host donde escucha el servidor.
+   * Host configurado para el servidor.
    */
   host: string;
 
   /**
-   * Puerto donde escucha el servidor.
+   * Puerto configurado para el servidor.
    */
   port: number;
 }
@@ -63,7 +55,7 @@ export interface JarvisServerInfo {
 /**
  * Información general reportada por una instancia viva de J.A.R.V.I.S.
  *
- * Este contrato representa la respuesta de J.info().
+ * Este contrato representa la respuesta de core.info().
  */
 export interface JarvisInfo {
   /**
@@ -77,12 +69,12 @@ export interface JarvisInfo {
   description: 'JavaScript Architecture Runtime for Versatile Intelligent Services';
 
   /**
-   * Información de la aplicación arrancada.
+   * Información normalizada de la aplicación arrancada.
    */
   app: JarvisAppInfo;
 
   /**
-   * Información del servidor configurado.
+   * Información normalizada del servidor configurado.
    */
   server: JarvisServerInfo;
 
@@ -94,8 +86,8 @@ export interface JarvisInfo {
   /**
    * Estado actual del runtime.
    *
-   * Por ahora solo usamos "bootstrapped" porque J.A.R.V.I.S.
-   * ya completó su arranque inicial.
+   * Por ahora se usa bootstrapped para indicar que J.A.R.V.I.S.
+   * completó su arranque inicial.
    */
   status: 'bootstrapped';
 }

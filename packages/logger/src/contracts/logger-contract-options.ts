@@ -1,30 +1,33 @@
 import type {
   LoggerLevel
-} from './logger-level.js';
+} from './logger-contract-level.js';
 
 /**
- * Define las opciones disponibles para configurar @jarvis/logger.
+ * Opciones disponibles para configurar @jarvis/logger.
  *
- * Estas opciones permiten controlar el estado general del logger,
- * el nivel mínimo de escritura, el módulo por defecto, la zona horaria
- * y los transports disponibles.
+ * Estas opciones permiten controlar el estado general del logger, el nivel
+ * mínimo de escritura, el módulo por defecto, la zona horaria y los transports
+ * disponibles.
  */
 export interface LoggerOptions {
   /**
-   * Permite prender o apagar el logger completo.
+   * Habilita o deshabilita el logger completo.
+   *
+   * Este valor funciona como switch maestro del módulo.
    *
    * Cuando enabled es false:
    * - El servicio logger sigue existiendo.
    * - No se escribe en consola.
    * - No se escriben archivos.
-   * - No se imprimen mensajes de boot/shutdown.
+   * - No se imprimen mensajes internos de boot/shutdown.
    *
-   * Esto mantiene seguro el uso de core.service('logger') para otros packages.
+   * Esto permite que otros paquetes puedan seguir usando core.service('logger')
+   * sin romper el flujo, incluso cuando el logger esté apagado.
    */
   enabled?: boolean;
 
   /**
-   * Nombre de la aplicación usado para construir nombres de archivos.
+   * Nombre de la aplicación usado para construir nombres de archivos de log.
    *
    * Ejemplo:
    * JARVIS_APPNAME
@@ -34,7 +37,10 @@ export interface LoggerOptions {
   /**
    * Nivel mínimo que será procesado por el logger.
    *
-   * Si level es info, se ignoran logs debug.
+   * Los eventos con menor prioridad serán ignorados.
+   *
+   * Ejemplo:
+   * Si level es info, los logs debug no se procesan.
    */
   level?: LoggerLevel;
 
@@ -53,6 +59,9 @@ export interface LoggerOptions {
 
   /**
    * Configuración de salida en consola.
+   *
+   * Este bloque solo controla el transport de consola. Si enabled está en false,
+   * el logger completo permanecerá apagado aunque console.enabled sea true.
    */
   console?: {
     /**
@@ -68,6 +77,9 @@ export interface LoggerOptions {
 
   /**
    * Configuración de salida en archivos.
+   *
+   * Este bloque solo controla el transport de archivos. Si enabled está en false,
+   * el logger completo permanecerá apagado aunque file.enabled sea true.
    */
   file?: {
     /**
@@ -81,12 +93,12 @@ export interface LoggerOptions {
     path?: string;
 
     /**
-     * Si está activo, crea archivos separados por nivel.
+     * Indica si se deben crear archivos separados por nivel.
      */
     splitByLevel?: boolean;
 
     /**
-     * Si está activo, escribe todos los logs en un archivo ALL.
+     * Indica si todos los logs deben escribirse también en un archivo ALL.
      */
     writeAll?: boolean;
   };

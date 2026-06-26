@@ -1,33 +1,24 @@
-/**
- * Se importa como type porque solo se usa para describir la forma
- * de los módulos que puede recibir J.A.R.V.I.S. al arrancar.
- *
- * Al usar import type, TypeScript sabe que este import no necesita
- * existir como código JavaScript en tiempo de ejecución.
- */
 import type {
   JarvisModuleOptions
-} from './jarvis-module.js';
+} from './core-contract-module.js';
 
-/**
- * Se importa como type porque solo se usa para describir módulos vivos
- * que pueden participar en el ciclo de vida del runtime.
- */
 import type {
   JarvisRuntimeModule
-} from './jarvis-runtime-module.js';
+} from './core-contract-runtime-module.js';
 
 /**
  * Ambientes soportados por el runtime de J.A.R.V.I.S.
  *
- * Estos valores ayudan a identificar en qué contexto está corriendo
- * la aplicación: local, desarrollo, pruebas, staging o producción.
+ * Estos valores permiten identificar el contexto donde se está ejecutando
+ * una aplicación.
  */
 export type JarvisEnvironment = 'local' | 'development' | 'testing' | 'staging' | 'production';
 
 /**
- * Configuración principal de la aplicación que será arrancada
- * por J.A.R.V.I.S.
+ * Configuración principal de la aplicación que será arrancada por J.A.R.V.I.S.
+ *
+ * Esta estructura permite que el runtime conozca la identidad base de la
+ * aplicación antes de iniciar módulos o exponer servicios.
  */
 export interface JarvisAppOptions {
   /**
@@ -42,7 +33,7 @@ export interface JarvisAppOptions {
    * Descripción legible de la aplicación.
    *
    * Ejemplo:
-   * JavaScript Architecture Runtime for Versatile Intelligent Services
+   * Ambiente de pruebas para aplicaciones de tipo API.
    */
   description: string;
 
@@ -57,19 +48,22 @@ export interface JarvisAppOptions {
   /**
    * Ambiente actual de ejecución.
    *
-   * Si no se define, J.A.R.V.I.S. usará "local" por defecto.
+   * Si no se define, J.A.R.V.I.S. usará local por defecto.
    */
   environment?: JarvisEnvironment;
 }
 
 /**
- * Configuración opcional del servidor usado por el runtime.
+ * Configuración opcional del servidor asociado al runtime.
+ *
+ * Esta configuración describe dónde debería escuchar la aplicación backend
+ * cuando exista una capa HTTP conectada al runtime.
  */
 export interface JarvisServerOptions {
   /**
    * Host donde escuchará el servidor.
    *
-   * Si no se define, J.A.R.V.I.S. usará "0.0.0.0" por defecto.
+   * Si no se define, J.A.R.V.I.S. usará 0.0.0.0 por defecto.
    */
   host?: string;
 
@@ -84,15 +78,15 @@ export interface JarvisServerOptions {
 /**
  * Configuración raíz aceptada por Jarvis.boot().
  *
- * Este contrato define todo lo que se puede enviar al momento
- * de arrancar una instancia de J.A.R.V.I.S.
+ * Este contrato define los valores que una aplicación puede entregar al
+ * momento de arrancar una instancia de J.A.R.V.I.S.
  */
 export interface JarvisOptions {
   /**
    * Información principal de la aplicación.
    *
-   * Esta propiedad es obligatoria porque J.A.R.V.I.S. necesita
-   * saber qué aplicación está arrancando.
+   * Esta propiedad es obligatoria porque J.A.R.V.I.S. necesita saber qué
+   * aplicación está arrancando.
    */
   app: JarvisAppOptions;
 
@@ -104,18 +98,19 @@ export interface JarvisOptions {
   server?: JarvisServerOptions;
 
   /**
-   * Lista inicial de módulos informativos que serán registrados
-   * en el runtime.
+   * Lista inicial de módulos informativos registrados en el runtime.
    *
-   * Estos módulos solo describen nombre y estado.
+   * Estos módulos solo describen nombre y estado. No ejecutan boot(),
+   * shutdown() ni exponen servicios.
    */
   modules?: JarvisModuleOptions[];
 
   /**
    * Lista inicial de módulos vivos del runtime.
    *
-   * Estos módulos pueden incluir comportamiento de ciclo de vida,
-   * por ejemplo boot() y shutdown().
+   * Estos módulos pueden participar en el ciclo de vida mediante boot()
+   * y shutdown(). También pueden exponer un service para ser consultado
+   * desde core.service(name).
    */
   runtimeModules?: JarvisRuntimeModule[];
 }
