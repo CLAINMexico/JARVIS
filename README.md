@@ -33,8 +33,6 @@ Responsabilidades contempladas:
 
 ## Arquitectura
 
-La idea base es:
-
 ```txt
 Core define reglas.
 Packages implementan capacidades.
@@ -48,27 +46,19 @@ Apps conectan y prueban el ecosistema.
 
 ### @jarvis/core
 
-**`@jarvis/core`** es el núcleo principal del runtime.
-
-Responsable de arrancar una instancia de **`J.A.R.V.I.S.`**, registrar módulos vivos, ejecutar ciclo de vida y exponer servicios mediante **`core.service()`**.
+Núcleo principal del runtime. Arranca una instancia de **`J.A.R.V.I.S.`**, registra módulos vivos, ejecuta ciclo de vida y expone servicios mediante **`core.service()`**.
 
 ### @jarvis/config
 
-**`@jarvis/config`** es el package de configuración.
-
-Responsable de cargar **`settings.json`**, crear **`ConfigService`** y permitir consultas por path.
+Package de configuración. Carga **`settings.json`**, crea **`ConfigService`** y permite consultas por path.
 
 ### @jarvis/bootstrap
 
-**`@jarvis/bootstrap`** prepara una app antes de arrancar el runtime.
-
-Responsable de leer **`settings.json`**, crear **`ConfigService`**, normalizar **`app`**, **`server`** y **`logger`**.
+Prepara una app antes de arrancar el runtime. Lee **`settings.json`**, crea **`ConfigService`**, normaliza **`app`**, **`server`** y **`logger`**.
 
 ### @jarvis/logger
 
-**`@jarvis/logger`** es el sistema oficial de logging.
-
-Responsable de escribir logs en consola y archivos, usando niveles, zona horaria, metadata en JSON, archivo **`ALL.log`** y archivos separados por nivel.
+Sistema oficial de logging. Escribe logs en consola y archivos, usando niveles, zona horaria, metadata en JSON, archivo **`ALL.log`** y archivos separados por nivel.
 
 ---
 
@@ -115,33 +105,11 @@ const core = await Jarvis.boot({
 
 ## Scripts principales
 
-### Desarrollo
-
 ```bash
 docker compose exec jarvis-node pnpm dev
-```
-
-### Build
-
-```bash
 docker compose exec jarvis-node pnpm build
-```
-
-### Typecheck
-
-```bash
 docker compose exec jarvis-node pnpm typecheck
-```
-
-### Clean
-
-```bash
 docker compose exec jarvis-node pnpm clean
-```
-
-### Verify
-
-```bash
 docker compose exec jarvis-node pnpm verify
 ```
 
@@ -156,14 +124,23 @@ dev
 
 ---
 
-## Versionado
+## Estado actual
 
-```txt
-v0.7.0 = Primer módulo real de configuración
-v0.8.0 = Registro inicial de servicios en core
-v0.9.0 = Bootstrap inicial de aplicaciones
-v0.10.0 = Primer módulo real de logger
-```
+Actualmente **`J.A.R.V.I.S.`** ya cuenta con:
+
+- Monorepo con **`pnpm workspaces`**.
+- Ambiente Docker base.
+- Package **`@jarvis/core`**.
+- Package **`@jarvis/config`**.
+- Package **`@jarvis/bootstrap`**.
+- Package **`@jarvis/logger`**.
+- App interna **`sandbox-api`**.
+- Ciclo de vida inicial de módulos.
+- Registro inicial de servicios en core.
+- Bootstrap inicial.
+- Logging en consola y archivos.
+- Metadata de logs como JSON legible.
+- Switch maestro **`modules.logger.enabled`** funcionando.
 
 ---
 
@@ -182,26 +159,6 @@ coverage/
 logs/
 *.log
 ```
-
----
-
-## Estado actual
-
-Actualmente **`J.A.R.V.I.S.`** ya cuenta con:
-
-- Monorepo con **`pnpm workspaces`**.
-- Ambiente Docker base.
-- Package **`@jarvis/core`**.
-- Package **`@jarvis/config`**.
-- Package **`@jarvis/bootstrap`**.
-- Package **`@jarvis/logger`**.
-- App interna **`sandbox-api`**.
-- Ciclo de vida inicial de módulos.
-- Registro inicial de servicios en core.
-- Lectura de **`settings.json`**.
-- Bootstrap inicial.
-- Logging en consola y archivos.
-- Metadata de logs como JSON legible.
 
 ---
 

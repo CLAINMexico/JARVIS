@@ -23,22 +23,22 @@ import {
 } from './logger-service.js';
 
 /**
- * Módulo vivo de logger para J.A.R.V.I.S.
- *
- * Expone LoggerService como service para que @jarvis/core
- * pueda registrarlo y permitir su consulta mediante core.service('logger').
+ * Define el módulo vivo de logger compatible con @jarvis/core.
  */
 export interface LoggerModule extends JarvisRuntimeModule {
+  name: 'logger';
   service: LoggerService;
 }
 
 /**
- * Crea un módulo vivo de logger.
+ * Crea el módulo real de logger para integrarlo al runtime de J.A.R.V.I.S.
  *
- * Este módulo configura los transports necesarios, crea LoggerService
- * y lo expone como service para el runtime.
+ * Cuando options.enabled es false, el servicio se sigue creando para que
+ * otros packages puedan solicitar core.service('logger') sin romper flujo,
+ * pero no se registran transports ni se escriben mensajes de boot/shutdown.
  */
 export function createLoggerModule(options: LoggerOptions = {}): LoggerModule {
+  const enabled = options.enabled ?? true;
   const appName = options.appName ?? 'JARVIS';
   const level = options.level ?? 'info';
   const defaultModule = options.defaultModule ?? 'Logger';
@@ -46,7 +46,7 @@ export function createLoggerModule(options: LoggerOptions = {}): LoggerModule {
 
   const transports: LoggerTransport[] = [];
 
-  if (options.console?.enabled ?? true) {
+  if (enabled && (options.console?.enabled ?? true)) {
     transports.push(
       new LoggerConsoleTransport({
         colors: options.console?.colors ?? true
@@ -54,7 +54,7 @@ export function createLoggerModule(options: LoggerOptions = {}): LoggerModule {
     );
   }
 
-  if (options.file?.enabled ?? false) {
+  if (enabled && (options.file?.enabled ?? false)) {
     transports.push(
       new LoggerFileTransport({
         appName,
@@ -76,8 +76,14 @@ export function createLoggerModule(options: LoggerOptions = {}): LoggerModule {
     name: 'logger',
     service,
     boot() {
+      if (!enabled) {
+        return;
+      }
     },
     shutdown() {
+      if (!enabled) {
+        return;
+      }
     }
   };
 }

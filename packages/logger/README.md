@@ -34,64 +34,75 @@ En palabras simples:
 - Formatear contexto adicional como JSON legible.
 - Normalizar errores para que puedan imprimirse correctamente.
 - Permitir loggers hijos mediante **`child(module)`**.
+- Respetar **`enabled: false`** como switch maestro del módulo.
 
 ---
 
-## Lo que NO debe hacer
+## Switch maestro enabled
 
-**`@jarvis/logger`** no debe encargarse directamente de:
+**`modules.logger.enabled`** controla el estado general del módulo logger.
 
-- Leer **`settings.json`**.
-- Leer **`.env`**.
-- Arrancar **`@jarvis/core`**.
-- Ejecutar lógica de negocio.
-- Conectarse a bases de datos.
-- Resolver configuración de otros packages.
+Cuando está en **`true`**, el logger puede escribir en los transports habilitados.
 
----
+Cuando está en **`false`**, el servicio logger sigue existiendo para que otros packages puedan solicitarlo sin romper el flujo:
 
-## Ubicación dentro del monorepo
+```ts
+const logger = core.service<LoggerService>('logger');
+```
+
+pero no escribe nada.
+
+Comportamiento esperado:
 
 ```txt
-packages/logger
+enabled false
+↓
+LoggerService disponible
+↓
+sin consola
+↓
+sin archivos
+↓
+sin boot/shutdown
 ```
 
 ---
 
-## Estructura actual
+## Diferencia entre enabled del módulo y enabled de transports
 
 ```txt
-packages/logger/
-  src/
-    contracts/
-      logger-context.ts
-      logger-entry.ts
-      logger-level.ts
-      logger-options.ts
-      logger-transport.ts
-    formatters/
-      logger-console-formatter.ts
-      logger-date-formatter.ts
-      logger-file-formatter.ts
-    runtime/
-      logger-module.ts
-      logger-service.ts
-    transports/
-      logger-console-transport.ts
-      logger-file-transport.ts
-    utils/
-      logger-context-utils.ts
-      logger-level-utils.ts
-      logger-path-utils.ts
-    index.ts
-  package.json
-  tsconfig.json
-  README.md
+modules.logger.enabled
+```
+
+Controla el logger completo.
+
+```txt
+modules.logger.console.enabled
+```
+
+Controla unicamente la salida a consola.
+
+```txt
+modules.logger.file.enabled
+```
+
+Controla unicamente la salida a archivos.
+
+Tabla de comportamiento:
+
+```txt
+logger.enabled | console.enabled | file.enabled | consola | archivos | servicio
+true           | true            | true         | si      | si       | si
+true           | false           | true         | no      | si       | si
+true           | true            | false        | si      | no       | si
+true           | false           | false        | no      | no       | si
+false          | true            | true         | no      | no       | si
+false          | false           | false        | no      | no       | si
 ```
 
 ---
 
-## Uso básico
+## Uso basico
 
 ```ts
 import {
@@ -99,6 +110,7 @@ import {
 } from '@jarvis/logger';
 
 const loggerModule = createLoggerModule({
+  enabled: true,
   appName: 'JARVIS_SANDBOXAPI',
   level: 'debug',
   defaultModule: 'SandboxAPI',
@@ -120,9 +132,35 @@ loggerModule.service.info('Logger inicializado');
 
 ---
 
+## Uso con logger apagado
+
+```ts
+const loggerModule = createLoggerModule({
+  enabled: false,
+  appName: 'JARVIS_SANDBOXAPI',
+  level: 'debug',
+  defaultModule: 'SandboxAPI',
+  timeZone: 'America/Mexico_City',
+  console: {
+    enabled: true,
+    colors: true
+  },
+  file: {
+    enabled: true,
+    path: './logs',
+    splitByLevel: true,
+    writeAll: true
+  }
+});
+```
+
+Aunque **`console.enabled`** y **`file.enabled`** esten en **`true`**, el valor maestro **`enabled: false`** evita toda escritura.
+
+---
+
 ## Uso con @jarvis/bootstrap
 
-**`@jarvis/bootstrap`** puede normalizar la configuración del logger desde **`settings.json`**.
+**`@jarvis/bootstrap`** normaliza la configuración del logger desde **`settings.json`**.
 
 ```ts
 const loggerModule = createLoggerModule(jarvisBootstrap.logger);
@@ -335,6 +373,43 @@ docker compose exec jarvis-node pnpm --filter @jarvis/logger run clean
 
 ---
 
+## Validacion recomendada
+
+### Logger apagado
+
+```json
+{
+  "modules": {
+    "logger": {
+      "enabled": false,
+      "console": {
+        "enabled": true
+      },
+      "file": {
+        "enabled": true
+      }
+    }
+  }
+}
+```
+
+Comando:
+
+```bash
+docker compose exec jarvis-node rm -rf apps/sandbox-api/logs
+docker compose exec jarvis-node pnpm verify
+```
+
+Resultado esperado:
+
+```txt
+No hay salida de logger en consola.
+No se crea apps/sandbox-api/logs.
+LoggerService sigue disponible.
+```
+
+---
+
 ## Estado actual
 
 Actualmente **`@jarvis/logger`** ya puede:
@@ -351,21 +426,7 @@ Actualmente **`@jarvis/logger`** ya puede:
 - Normalizar errores.
 - Mantener orden de escritura.
 - Integrarse con **`@jarvis/bootstrap`**.
-- Ser consumido desde **`apps/sandbox-api`**.
-
----
-
-## Futuro
-
-Más adelante se puede agregar:
-
-- Rotación de logs por tamaño.
-- Compresión de logs antiguos.
-- Retención de logs por días.
-- Transport HTTP.
-- Transport a base de datos.
-- Integración con servicios externos.
-- Redacción de datos sensibles antes de escribir logs.
+- Respetar **`enabled: false`** como switch maestro.
 
 ---
 

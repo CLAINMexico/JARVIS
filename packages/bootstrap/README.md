@@ -26,6 +26,28 @@ Valores normalizados:
 
 ---
 
+## Switch maestro de logger
+
+El valor:
+
+```txt
+modules.logger.enabled
+```
+
+se entrega a **`@jarvis/logger`** como **`enabled`**.
+
+Cuando es **`false`**, **`@jarvis/logger`** conserva el servicio disponible pero no escribe en consola ni archivos.
+
+Esto permite que otros packages puedan usar:
+
+```ts
+core.service('logger')
+```
+
+sin romper flujo, incluso cuando el logger este apagado por configuración.
+
+---
+
 ## Resultado del bootstrap
 
 **`createJarvisBootstrap()`** devuelve:
@@ -84,5 +106,6 @@ Actualmente **`@jarvis/bootstrap`** ya puede:
 - Normalizar datos de app.
 - Normalizar datos de server.
 - Normalizar datos de logger.
+- Entregar **`logger.enabled`** como switch maestro.
 - Devolver un **`BootstrapResult`**.
 - Ser consumido desde **`apps/sandbox-api`** para preparar config y logger.

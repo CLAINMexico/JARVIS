@@ -21,6 +21,7 @@ Actualmente permite validar:
 - Apagado ordenado mediante **`shutdown()`**.
 - Normalización de app, server y logger desde **`settings.json`**.
 - Escritura de metadata como JSON legible.
+- Prueba de **`modules.logger.enabled`** como switch maestro.
 
 ---
 
@@ -57,6 +58,83 @@ cp apps/sandbox-api/.env.example apps/sandbox-api/.env
 
 ---
 
+## Logger
+
+El sandbox permite validar tres niveles de control del logger:
+
+```txt
+modules.logger.enabled
+modules.logger.console.enabled
+modules.logger.file.enabled
+```
+
+### Switch maestro
+
+Cuando **`modules.logger.enabled`** está en **`false`**, el logger no debe escribir en consola ni archivos, aunque los transports esten habilitados.
+
+```json
+{
+  "modules": {
+    "logger": {
+      "enabled": false,
+      "level": "debug",
+      "console": {
+        "enabled": true,
+        "colors": true
+      },
+      "file": {
+        "enabled": true,
+        "path": "./logs",
+        "splitByLevel": true,
+        "writeAll": true
+      }
+    }
+  }
+}
+```
+
+Resultado esperado:
+
+```txt
+Sin salida de logger en consola.
+Sin carpeta logs.
+LoggerService disponible desde core.service('logger').
+```
+
+### Consola apagada
+
+```txt
+modules.logger.enabled = true
+modules.logger.console.enabled = false
+modules.logger.file.enabled = true
+```
+
+Resultado esperado:
+
+```txt
+Sin salida de logger en consola.
+Con archivos de log.
+LoggerService disponible.
+```
+
+### Archivo apagado
+
+```txt
+modules.logger.enabled = true
+modules.logger.console.enabled = true
+modules.logger.file.enabled = false
+```
+
+Resultado esperado:
+
+```txt
+Con salida de logger en consola.
+Sin archivos de log.
+LoggerService disponible.
+```
+
+---
+
 ## Logging
 
 Cuando **`@jarvis/logger`** está habilitado, el sandbox puede escribir logs en consola y archivos.
@@ -82,61 +160,24 @@ El archivo **`ALL.log`** concentra el flujo completo de ejecución.
 
 ---
 
-## Ejecución
+## Validacion manual de logger
 
-Desde la raíz del monorepo:
-
-```bash
-docker compose exec jarvis-node pnpm dev
-```
-
-Para validación completa:
+Antes de probar combinaciones, limpiar logs previos:
 
 ```bash
-docker compose exec jarvis-node pnpm verify
+docker compose exec jarvis-node rm -rf apps/sandbox-api/logs
 ```
 
-**`verify`** ejecuta:
-
-```txt
-clean
-build
-typecheck
-dev
-```
-
----
-
-## Scripts disponibles
-
-### Desarrollo desde la raíz
-
-```bash
-docker compose exec jarvis-node pnpm dev
-```
-
-### Verificación completa
+Despues ejecutar:
 
 ```bash
 docker compose exec jarvis-node pnpm verify
 ```
 
-### Build
+Para confirmar si se crearon archivos:
 
 ```bash
-docker compose exec jarvis-node pnpm --filter @jarvis/sandbox-api build
-```
-
-### Typecheck
-
-```bash
-docker compose exec jarvis-node pnpm --filter @jarvis/sandbox-api typecheck
-```
-
-### Clean
-
-```bash
-docker compose exec jarvis-node pnpm --filter @jarvis/sandbox-api run clean
+docker compose exec jarvis-node ls apps/sandbox-api/logs
 ```
 
 ---
@@ -156,9 +197,7 @@ Actualmente **`sandbox-api`** ya puede:
 - Ejecutar **`shutdown()`**.
 - Cargar **`settings.json`**.
 - Normalizar app, server y logger.
-- Generar logs en consola.
-- Generar logs en archivos.
-- Imprimir metadata como JSON legible.
+- Validar **`enabled`** de modulo, consola y archivo.
 
 ---
 

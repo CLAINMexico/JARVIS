@@ -3,9 +3,26 @@ import type {
 } from './logger-level.js';
 
 /**
- * Opciones de configuración para @jarvis/logger.
+ * Define las opciones disponibles para configurar @jarvis/logger.
+ *
+ * Estas opciones permiten controlar el estado general del logger,
+ * el nivel mínimo de escritura, el módulo por defecto, la zona horaria
+ * y los transports disponibles.
  */
 export interface LoggerOptions {
+  /**
+   * Permite prender o apagar el logger completo.
+   *
+   * Cuando enabled es false:
+   * - El servicio logger sigue existiendo.
+   * - No se escribe en consola.
+   * - No se escriben archivos.
+   * - No se imprimen mensajes de boot/shutdown.
+   *
+   * Esto mantiene seguro el uso de core.service('logger') para otros packages.
+   */
+  enabled?: boolean;
+
   /**
    * Nombre de la aplicación usado para construir nombres de archivos.
    *
