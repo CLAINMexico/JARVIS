@@ -1,5 +1,51 @@
 # CHANGELOG | J.A.R.V.I.S.
 
+## **`0.12.0`** <sup><small>(26/Junio/2026)</small></sup>
+
+### Resumen
+
+Se refuerza el arranque de **`apps/sandbox-api`** mediante una estructura controlada basada en **`main()`**, manejo seguro de errores y apagado ordenado del runtime.
+
+Esta versión convierte el sandbox de un flujo lineal de prueba a una base más robusta para futuras aplicaciones backend construidas sobre **`J.A.R.V.I.S.`**.
+
+---
+
+### Cambios
+
+- Se refactorizó **`apps/sandbox-api/src/main.ts`** para concentrar el flujo principal dentro de una función **`main()`**.
+- Se agregó manejo de errores mediante **`try/catch/finally`**.
+- Se agregó control para errores ocurridos antes de inicializar **`LoggerService`**.
+- Se agregó control para errores ocurridos después de inicializar **`LoggerService`**.
+- Se agregó apagado seguro del runtime mediante **`core.shutdown()`** dentro de **`finally`**.
+- Se protegió la impresión completa de configuración cuando la aplicación corre en ambiente **`production`**.
+
+---
+
+### Mejoras
+
+- Se mejora la estabilidad del flujo de arranque de **`Sandbox API`**.
+- Se evita que un error durante el arranque deje módulos vivos sin ejecutar su apagado.
+- Se separa el reporte de errores según disponibilidad del logger:
+  - **`console.error()`** para errores tempranos.
+  - **`logger.fatal()`** para errores posteriores a la inicialización del logger.
+- Se mejora la preparación de **`apps/sandbox-api`** como base para futuras integraciones HTTP.
+- Se mantiene la separación de responsabilidades entre **`@jarvis/bootstrap`**, **`@jarvis/config`**, **`@jarvis/logger`** y **`@jarvis/core`**.
+
+---
+
+### Correcciones
+
+- Se evita que **`core.shutdown()`** dependa de que todo el flujo haya terminado correctamente.
+- Se evita imprimir configuración completa en ambiente **`production`**.
+- Se validó el manejo de errores controlados antes y después de inicializar el logger.
+- Se verificó correctamente el proyecto mediante:
+
+```bash
+docker compose exec jarvis-node pnpm verify
+```
+
+---
+
 ## **`0.11.0`** <sup><small>(26/Junio/2026)</small></sup>
 
 ### Resumen

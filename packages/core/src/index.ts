@@ -90,8 +90,8 @@ export class Jarvis {
    */
   public static about(): Pick<JarvisInfo, 'name' | 'description'> {
     return {
-      name: 'J.A.R.V.I.S.',
-      description: 'JavaScript Architecture Runtime for Versatile Intelligent Services'
+      name: '@jarvis/core',
+      description: 'J.A.R.V.I.S. | Package - Core'
     };
   }
 }

@@ -61,12 +61,12 @@ export interface JarvisInfo {
   /**
    * Nombre oficial del runtime.
    */
-  name: 'J.A.R.V.I.S.';
+  name: string;
 
   /**
    * Descripción oficial del runtime.
    */
-  description: 'JavaScript Architecture Runtime for Versatile Intelligent Services';
+  description: string;
 
   /**
    * Información normalizada de la aplicación arrancada.
@@ -85,9 +85,6 @@ export interface JarvisInfo {
 
   /**
    * Estado actual del runtime.
-   *
-   * Por ahora se usa bootstrapped para indicar que J.A.R.V.I.S.
-   * completó su arranque inicial.
    */
-  status: 'bootstrapped';
+  status: string;
 }
