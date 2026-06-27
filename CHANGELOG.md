@@ -1,5 +1,54 @@
 # CHANGELOG | J.A.R.V.I.S.
 
+## **`0.13.0`** <sup><small>(26/Junio/2026)</small></sup>
+
+### Resumen
+
+Se agrega el primer servidor HTTP de **`J.A.R.V.I.S.`** dentro de **`apps/sandbox-api`** usando **Fastify**.
+
+Esta versión permite validar que el runtime no solo arranca internamente, sino que también puede exponer información básica por HTTP mediante rutas iniciales del sandbox.
+
+---
+
+### Cambios
+
+- Se agregó **Fastify** como dependencia de **`apps/sandbox-api`**.
+- Se actualizó **`apps/sandbox-api/src/main.ts`** para crear un servidor HTTP.
+- Se agregó ruta raíz **`GET /`** para mostrar información general de la API.
+- Se agregó ruta **`GET /health`** para validar que el servidor está activo.
+- Se agregó ruta **`GET /info`** para exponer la información general del runtime mediante **`core.info()`**.
+- Se agregó ruta **`GET /modules`** para exponer los módulos registrados mediante **`core.modules()`**.
+- Se adaptó el apagado seguro para cerrar primero el servidor HTTP y después ejecutar **`core.shutdown()`**.
+
+---
+
+### Mejoras
+
+- **`Sandbox API`** deja de ser únicamente un flujo de consola y comienza a funcionar como una API backend inicial.
+- Se valida que **`J.A.R.V.I.S.`** puede arrancar, montar módulos y responder peticiones HTTP.
+- Se mantiene el manejo seguro de errores agregado en **`v0.12.0`**.
+- Se mantiene la separación de responsabilidades entre **`@jarvis/bootstrap`**, **`@jarvis/config`**, **`@jarvis/logger`**, **`@jarvis/core`** y la aplicación **`apps/sandbox-api`**.
+- Se prepara la base para futuras rutas HTTP, health checks, plugins, controladores y middlewares.
+
+---
+
+### Correcciones
+
+- Se evita ejecutar **`core.shutdown()`** al finalizar el flujo normal, ya que ahora el servidor HTTP debe permanecer activo.
+- Se ajustó el apagado seguro para responder a señales del sistema como **`SIGINT`** y **`SIGTERM`**.
+- Se verificó que las rutas base respondan correctamente:
+  - **`GET /`**
+  - **`GET /health`**
+  - **`GET /info`**
+  - **`GET /modules`**
+- Se verificó correctamente el proyecto mediante:
+
+```bash
+docker compose exec jarvis-node pnpm verify
+```
+
+---
+
 ## **`0.12.0`** <sup><small>(26/Junio/2026)</small></sup>
 
 ### Resumen

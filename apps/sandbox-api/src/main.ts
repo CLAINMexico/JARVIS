@@ -1,3 +1,9 @@
+import Fastify from 'fastify';
+
+import type {
+  FastifyInstance
+} from 'fastify';
+
 import {
   Jarvis
 } from '@jarvis/core';
@@ -27,15 +33,57 @@ import {
 } from '@jarvis/bootstrap';
 
 /**
- * Ejecuta el arranque principal de Sandbox API.
+ * Ejecuta el arranque principal de Sandbox-API.
  *
  * Esta función concentra el flujo completo de arranque para mantener
  * controlado el bootstrap, la creación de módulos, el arranque del core,
- * la validación de servicios y el apagado seguro.
+ * la validación de servicios, el servidor HTTP y el apagado seguro.
  */
 async function main(): Promise<void> {
   let core: JarvisApplication | undefined;
   let logger: LoggerService | undefined;
+  let server: FastifyInstance | undefined;
+  let shuttingDown = false;
+
+  /**
+   * Ejecuta el apagado seguro de Sandbox-API.
+   *
+   * El orden es importante:
+   * - Primero se cierra el servidor HTTP para dejar de recibir peticiones.
+   * - Después se apaga el runtime de J.A.R.V.I.S. mediante core.shutdown().
+   */
+  async function shutdown(reason: string): Promise<void> {
+    if (shuttingDown) {
+      return;
+    }
+    shuttingDown = true;
+    try {
+      logger?.warn(`Sandbox-API | Apagado iniciado.`, {
+        module: reason
+      });
+      if (server) {
+        await server.close();
+        logger?.warn('Sandbox-API | Servidor HTTP cerrado correctamente.', {
+          module: reason
+        });
+      }
+      if (core) {
+        await core.shutdown();
+        logger?.warn('Sandbox-API | Runtime de J.A.R.V.I.S. apagado correctamente.', {
+          module: reason
+        });
+      }
+    } catch (error: unknown) {
+      if (logger) {
+        logger.error('Sandbox-API | Error durante el apagado de J.A.R.V.I.S.', {
+          module: reason,
+          error
+        });
+        return;
+      }
+      console.error('Sandbox-API | Error durante el apagado de J.A.R.V.I.S.', error);
+    }
+  }
 
   try {
     /**
@@ -138,13 +186,11 @@ async function main(): Promise<void> {
      * después de montar módulos reales.
      */
     logger?.debug('================================================================================');
-    logger?.debug(`- App: ${instance.name} | ${instance.app.name}`);
-    logger?.debug(`- Description: ${instance.app.description}`);
-    logger?.debug(`- Version: ${instance.app.version}`);
-    logger?.debug(`- Environment: ${instance.app.environment}`);
-    logger?.debug('================================================================================');
-    logger?.debug(`- Server: ${instance.server.host}:${instance.server.port}`);
-    logger?.debug(`- Status: ${instance.status}`);
+    logger?.debug(`* App: ${instance.name} | ${instance.app.name}`);
+    logger?.debug(`* Description: ${instance.app.description}`);
+    logger?.debug(`* Version: ${instance.app.version}`);
+    logger?.debug(`* Environment: ${instance.app.environment}`);
+    logger?.debug(`* Status: ${instance.status}`);
 
     /**
      * Confirma que @jarvis/config quedó disponible como servicio.
@@ -159,15 +205,13 @@ async function main(): Promise<void> {
      * ya que podría contener referencias, rutas internas o valores sensibles.
      */
     logger?.info('================================================================================');
-    logger?.info('- Package - Config | Inicializado:');
-    logger?.info('================================================================================');
-
+    logger?.info('* Package - Config | Inicializado.');
     if (instance.app.environment === 'production') {
-      logger?.info('Configuración cargada desde settings.json. La salida completa fue omitida por ambiente production.', {
+      logger?.info('* Package - Config | Configuración cargada desde settings.json.', {
         module: `${instance.name} | ${instance.app.name}`
       });
     } else {
-      logger?.info('Configuración cargada desde settings.json.', {
+      logger?.info('* Package - Config | Configuración cargada desde settings.json.', {
         module: `${instance.name} | ${instance.app.name}`,
         data: config?.all()
       });
@@ -181,28 +225,104 @@ async function main(): Promise<void> {
      * errores falsos durante una ejecución normal del sandbox.
      */
     logger?.info('================================================================================');
-    logger?.info('- Package - Logger | Inicializado:');
-    logger?.info('================================================================================');
-    logger?.info('Package - Logger | Servicio disponible desde core.service().');
+    logger?.info('* Package - Logger | Inicializado');
+    if (instance.app.environment === 'production') {
+      logger?.info('* Package - Logger | Metadata de arranque normalizada.');
+    } else {
+      logger?.info('* Package - Logger | Metadata de arranque normalizada.', {
+        module: `${instance.name} | ${instance.app.name}`,
+        data: {
+          app: jarvisBootstrap.app,
+          server: jarvisBootstrap.server,
+          logger: jarvisBootstrap.logger
+        }
+      });
+    }
+
+
+
+
 
     /**
-     * Imprime una muestra controlada de metadata.
+     * Crea el servidor HTTP inicial de Sandbox-API.
      *
-     * Esta salida permite validar que @jarvis/logger puede escribir contexto
-     * adicional usando objetos serializados en formato JSON legible.
-     *
-     * Nota:
-     * Esta metadata está pensada para pruebas del sandbox. En aplicaciones
-     * reales se debe evitar registrar configuración completa o sensible.
+     * En esta versión el servidor vive dentro del sandbox y expone rutas
+     * mínimas para validar que J.A.R.V.I.S. puede responder por HTTP.
      */
-    logger?.debug('Package - Logger | Metadata de arranque normalizada.', {
-      module: `${instance.name} | ${instance.app.name}`,
-      data: {
-        app: jarvisBootstrap.app,
-        server: jarvisBootstrap.server,
-        logger: jarvisBootstrap.logger
-      }
+    server = Fastify({
+      logger: false
     });
+    /**
+     * Ruta raíz de Sandbox-API.
+     *
+     * Permite validar rápidamente que la API está disponible y muestra
+     * las rutas base expuestas por esta versión del sandbox.
+     */
+    server.get('/', async () => ({
+      name: `${instance.name} | ${instance.app.name}`,
+      status: 'running',
+      runtime: instance.name,
+      app: instance.app.name,
+      environment: instance.app.environment,
+      routes: [
+        '/',
+        '/health',
+        '/info',
+        '/modules'
+      ]
+    }));
+    /**
+     * Ruta básica de salud.
+     *
+     * Permite validar que el servidor HTTP está vivo.
+     */
+    server.get('/health', async () => ({
+      status: 'ok',
+      app: instance.app.name,
+      runtime: instance.name,
+      environment: instance.app.environment
+    }));
+    /**
+     * Ruta de información general del runtime.
+     *
+     * Devuelve la misma información expuesta por core.info().
+     */
+    server.get('/info', async () => core?.info());
+    /**
+     * Ruta de módulos registrados.
+     *
+     * Devuelve la lista de módulos conocidos por el runtime.
+     */
+    server.get('/modules', async () => core?.modules());
+    /**
+     * Registra señales del sistema para apagar de forma segura.
+     *
+     * SIGINT normalmente ocurre al detener el proceso manualmente.
+     * SIGTERM normalmente ocurre cuando Docker o el sistema solicitan apagar.
+     */
+    process.once('SIGINT', () => {
+      void shutdown('SIGINT');
+    });
+    process.once('SIGTERM', () => {
+      void shutdown('SIGTERM');
+    });
+    /**
+     * Arranca el servidor HTTP usando host y port normalizados por J.A.R.V.I.S.
+     */
+    await server.listen({
+      host: instance.server.host,
+      port: instance.server.port
+    });
+    logger?.info('================================================================================');
+    logger?.info('* Dependence - Fastify | Inicializado');
+    logger?.info(`* Dependence - Fastify | Servidor HTTP: http://${instance.server.host}:${instance.server.port}`, {
+      module: `${instance.name} | ${instance.app.name}`
+    });
+
+
+
+
+
   } catch (error: unknown) {
     /**
      * Maneja errores ocurridos durante el arranque.
@@ -212,40 +332,15 @@ async function main(): Promise<void> {
      * como salida mínima de emergencia.
      */
     if (logger) {
-      logger.fatal('Sandbox API | Error durante el arranque de J.A.R.V.I.S.', {
-        module: 'Sandbox API',
+      logger.fatal('Sandbox-API | Error durante el arranque de J.A.R.V.I.S.', {
+        module: 'Sandbox-API',
         error
       });
-
+      await shutdown('STARTUPERR');
       return;
     }
-
-    console.error('[Sandbox API] Error durante el arranque de J.A.R.V.I.S.', error);
-  } finally {
-    /**
-     * Ejecuta el apagado seguro del runtime.
-     *
-     * Si core alcanzó a arrancar, se intenta ejecutar shutdown() sin importar
-     * si el flujo terminó correctamente o con error.
-     */
-    if (!core) {
-      return;
-    }
-
-    try {
-      await core.shutdown();
-    } catch (error: unknown) {
-      if (logger) {
-        logger.error('Sandbox API | Error durante el apagado de J.A.R.V.I.S.', {
-          module: 'Sandbox API',
-          error
-        });
-
-        return;
-      }
-
-      console.error('[Sandbox API] Error durante el apagado de J.A.R.V.I.S.', error);
-    }
+    console.error('Sandbox-API | Error durante el arranque de J.A.R.V.I.S.', error);
+    await shutdown('STARTUPERR');
   }
 }
 
