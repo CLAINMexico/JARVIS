@@ -1,5 +1,42 @@
 # CHANGELOG | J.A.R.V.I.S.
 
+## CHANGELOG para `0.13.1`
+
+```md
+## **`0.13.1`** <sup><small>(26/Junio/2026)</small></sup>
+
+### Resumen
+
+Se agregan pruebas HTTP versionables para **`apps/sandbox-api`** usando archivos compatibles con la extensión **REST Client** de VS Code.
+
+---
+
+### Cambios
+
+- Se agregó la carpeta **`apps/sandbox-api/http/`**.
+- Se agregó el archivo **`sandbox-api.http`** con peticiones base del sandbox.
+- Se documentó el uso de pruebas HTTP desde VS Code.
+
+---
+
+### Mejoras
+
+- Se facilita la validación manual de rutas HTTP.
+- Se agregan pruebas versionables junto al código del sandbox.
+- Se refuerza la documentación ejecutable para las rutas:
+  - **`GET /`**
+  - **`GET /health`**
+  - **`GET /info`**
+  - **`GET /modules`**
+
+---
+
+### Correcciones
+
+- No aplica.
+
+---
+
 ## **`0.13.0`** <sup><small>(26/Junio/2026)</small></sup>
 
 ### Resumen
