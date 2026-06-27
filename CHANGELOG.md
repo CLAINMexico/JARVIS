@@ -1,8 +1,56 @@
 # CHANGELOG | J.A.R.V.I.S.
 
-## CHANGELOG para `0.13.1`
+## **`0.14.0`** <sup><small>(26/Junio/2026)</small></sup>
 
-```md
+### Resumen
+
+Se separa la responsabilidad HTTP de **`apps/sandbox-api/src/main.ts`** en archivos dedicados para servidor y rutas.
+
+Esta versión mantiene el mismo comportamiento público agregado en **`v0.13.0`**, pero mejora la estructura interna de **`Sandbox-API`** para preparar el crecimiento ordenado de rutas, configuración HTTP y futuras integraciones.
+
+---
+
+### Cambios
+
+- Se agregó la carpeta **`apps/sandbox-api/src/http/`**.
+- Se agregó **`sandbox-http-server.ts`** para centralizar la creación del servidor HTTP con **`Fastify`**.
+- Se agregó **`sandbox-http-routes.ts`** para centralizar el registro de rutas HTTP base.
+- Se actualizó **`main.ts`** para delegar la creación del servidor y el registro de rutas.
+- Se conservaron las rutas existentes:
+  - **`GET /`**
+  - **`GET /health`**
+  - **`GET /info`**
+  - **`GET /modules`**
+
+---
+
+### Mejoras
+
+- **`main.ts`** queda enfocado como orquestador del arranque general de **`Sandbox-API`**.
+- La creación del servidor HTTP queda aislada en **`sandbox-http-server.ts`**.
+- El registro de rutas HTTP queda aislado en **`sandbox-http-routes.ts`**.
+- Se mejora la mantenibilidad de **`Sandbox-API`** antes de agregar configuración HTTP avanzada, HTTPS, seguridad o rutas de negocio.
+- Se conserva el apagado seguro de servidor HTTP y runtime.
+- Se mantiene compatibilidad con las pruebas HTTP versionables mediante **`sandbox-api.http`**.
+
+---
+
+### Correcciones
+
+- No se modifica el comportamiento público de las rutas HTTP existentes.
+- Se validó que las rutas base siguen respondiendo correctamente desde REST Client:
+  - **`GET /`**
+  - **`GET /health`**
+  - **`GET /info`**
+  - **`GET /modules`**
+- Se verificó correctamente el proyecto mediante:
+
+```bash
+docker compose exec jarvis-node pnpm verify
+```
+
+---
+
 ## **`0.13.1`** <sup><small>(26/Junio/2026)</small></sup>
 
 ### Resumen
@@ -61,7 +109,7 @@ Esta versión permite validar que el runtime no solo arranca internamente, sino 
 
 ### Mejoras
 
-- **`Sandbox API`** deja de ser únicamente un flujo de consola y comienza a funcionar como una API backend inicial.
+- **`Sandbox-API`** deja de ser únicamente un flujo de consola y comienza a funcionar como una API backend inicial.
 - Se valida que **`J.A.R.V.I.S.`** puede arrancar, montar módulos y responder peticiones HTTP.
 - Se mantiene el manejo seguro de errores agregado en **`v0.12.0`**.
 - Se mantiene la separación de responsabilidades entre **`@jarvis/bootstrap`**, **`@jarvis/config`**, **`@jarvis/logger`**, **`@jarvis/core`** y la aplicación **`apps/sandbox-api`**.
@@ -109,7 +157,7 @@ Esta versión convierte el sandbox de un flujo lineal de prueba a una base más 
 
 ### Mejoras
 
-- Se mejora la estabilidad del flujo de arranque de **`Sandbox API`**.
+- Se mejora la estabilidad del flujo de arranque de **`Sandbox-API`**.
 - Se evita que un error durante el arranque deje módulos vivos sin ejecutar su apagado.
 - Se separa el reporte de errores según disponibilidad del logger:
   - **`console.error()`** para errores tempranos.
