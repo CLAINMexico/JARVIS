@@ -17,7 +17,9 @@ import type {
  * de J.A.R.V.I.S. mediante core.info().
  */
 export type {
-  JarvisInfo
+  JarvisAppInfo,
+  JarvisInfo,
+  JarvisServerInfo
 } from './contracts/core-contract-info.js';
 
 /**
@@ -51,7 +53,9 @@ export type {
   JarvisAppOptions,
   JarvisEnvironment,
   JarvisOptions,
-  JarvisServerOptions
+  JarvisServerHttpsOptions,
+  JarvisServerOptions,
+  JarvisServerProtocol
 } from './contracts/core-contract-options.js';
 
 /**

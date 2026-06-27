@@ -13,7 +13,7 @@
  * - Agrega el prefijo JARVIS_ cuando no exista.
  *
  * Ejemplos:
- * - Sandbox API -> JARVIS_SANDBOX_API
+ * - Sandbox-API -> JARVIS_SANDBOX_API
  * - SandboxAPI -> JARVIS_SANDBOXAPI
  * - My App -> JARVIS_MY_APP
  */

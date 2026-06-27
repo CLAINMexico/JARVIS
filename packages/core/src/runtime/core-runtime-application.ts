@@ -12,7 +12,9 @@ import type {
 
 import type {
   JarvisEnvironment,
-  JarvisOptions
+  JarvisOptions,
+  JarvisServerHttpsOptions,
+  JarvisServerProtocol
 } from '../contracts/core-contract-options.js';
 
 /**
@@ -36,10 +38,16 @@ interface NormalizedJarvisOptions {
 
   /**
    * Configuración del servidor ya normalizada.
+   *
+   * Esta información no crea servidores por sí misma. Solo describe la
+   * configuración que una aplicación HTTP puede usar para arrancar su capa
+   * de transporte.
    */
   server: {
     host: string;
     port: number;
+    protocol: JarvisServerProtocol;
+    https: JarvisServerHttpsOptions;
   };
 
   /**
@@ -54,6 +62,44 @@ interface NormalizedJarvisOptions {
    * boot() y shutdown().
    */
   runtimeModules: JarvisRuntimeModule[];
+}
+
+/**
+ * Normaliza la configuración HTTPS del servidor.
+ *
+ * El core no lee certificados ni valida su existencia en disco. Solo conserva
+ * la configuración recibida y asegura una estructura estable para core.info().
+ *
+ * keyFile y certFile solo se agregan cuando tienen valor real para evitar
+ * propiedades opcionales con valor undefined.
+ */
+function normalizeServerHttpsOptions(
+  options: JarvisOptions
+): JarvisServerHttpsOptions {
+  const https = options.server?.https;
+
+  if (!https) {
+    return {
+      enabled: false
+    };
+  }
+
+  return {
+    enabled: https.enabled,
+    ...(https.keyFile ? { keyFile: https.keyFile } : {}),
+    ...(https.certFile ? { certFile: https.certFile } : {})
+  };
+}
+
+/**
+ * Normaliza el protocolo configurado para el servidor.
+ *
+ * Si no se recibe un protocolo válido, J.A.R.V.I.S. usa http por defecto.
+ */
+function normalizeServerProtocol(
+  options: JarvisOptions
+): JarvisServerProtocol {
+  return options.server?.protocol ?? 'http';
 }
 
 /**
@@ -102,7 +148,9 @@ export class JarvisApplication {
       },
       server: {
         host: options.server?.host ?? '0.0.0.0',
-        port: options.server?.port ?? 3000
+        port: options.server?.port ?? 3000,
+        protocol: normalizeServerProtocol(options),
+        https: normalizeServerHttpsOptions(options)
       },
       modules: [
         ...(options.modules ?? []).map((module) => ({
@@ -164,7 +212,9 @@ export class JarvisApplication {
       },
       server: {
         host: this.options.server.host,
-        port: this.options.server.port
+        port: this.options.server.port,
+        protocol: this.options.server.protocol,
+        https: this.options.server.https
       },
       modules: this.modules(),
       status: 'bootstrapped'

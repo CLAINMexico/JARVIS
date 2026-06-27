@@ -3,7 +3,9 @@ import type {
 } from './core-contract-module.js';
 
 import type {
-  JarvisEnvironment
+  JarvisEnvironment,
+  JarvisServerHttpsOptions,
+  JarvisServerProtocol
 } from './core-contract-options.js';
 
 /**
@@ -37,8 +39,8 @@ export interface JarvisAppInfo {
 /**
  * Información normalizada del servidor usado por el runtime.
  *
- * host y port son obligatorios porque J.A.R.V.I.S. ya resolvió sus valores
- * por defecto durante el arranque.
+ * host, port y protocol son obligatorios porque J.A.R.V.I.S. ya resolvió sus
+ * valores por defecto durante el arranque.
  */
 export interface JarvisServerInfo {
   /**
@@ -50,6 +52,22 @@ export interface JarvisServerInfo {
    * Puerto configurado para el servidor.
    */
   port: number;
+
+  /**
+   * Protocolo configurado para la capa HTTP de la aplicación.
+   *
+   * Esta información permite que una aplicación conectada al runtime decida
+   * si debe crear un servidor HTTP o HTTPS.
+   */
+  protocol: JarvisServerProtocol;
+
+  /**
+   * Configuración HTTPS normalizada.
+   *
+   * El core solo reporta esta información. La aplicación HTTP es responsable
+   * de leer certificados y crear el servidor seguro cuando corresponda.
+   */
+  https: JarvisServerHttpsOptions;
 }
 
 /**

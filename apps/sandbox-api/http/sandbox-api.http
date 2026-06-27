@@ -1,13 +1,14 @@
-@baseUrl = http://localhost:3000
+@protocol = https
+@baseUrl = {{protocol}}://localhost:3000
 
-### Sandbox API | Root
+### Sandbox-API | Root
 GET {{baseUrl}}/
 
-### Sandbox API | Health
+### Sandbox-API | Health
 GET {{baseUrl}}/health
 
-### Sandbox API | Runtime Info
+### Sandbox-API | Runtime Info
 GET {{baseUrl}}/info
 
-### Sandbox API | Runtime Modules
+### Sandbox-API | Runtime Modules
 GET {{baseUrl}}/modules

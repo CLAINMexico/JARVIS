@@ -15,6 +15,44 @@ import type {
 export type JarvisEnvironment = 'local' | 'development' | 'testing' | 'staging' | 'production';
 
 /**
+ * Protocolos soportados por la configuración base del servidor.
+ *
+ * Esta configuración permite que una aplicación conectada al runtime pueda
+ * declarar si su capa de transporte HTTP debe arrancar usando HTTP o HTTPS.
+ */
+export type JarvisServerProtocol = 'http' | 'https';
+
+/**
+ * Configuración HTTPS asociada al servidor de una aplicación J.A.R.V.I.S.
+ *
+ * Esta estructura no obliga al core a crear servidores HTTPS ni a leer
+ * certificados. Únicamente permite transportar la configuración normalizada
+ * hacia la aplicación que sí implementa la capa HTTP.
+ */
+export interface JarvisServerHttpsOptions {
+  /**
+   * Indica si HTTPS está habilitado explícitamente.
+   *
+   * Cuando protocol sea https, este valor debe estar en true.
+   */
+  enabled: boolean;
+
+  /**
+   * Ruta local del archivo de llave privada.
+   *
+   * Este valor debe ser interpretado por la aplicación HTTP, no por el core.
+   */
+  keyFile?: string;
+
+  /**
+   * Ruta local del archivo de certificado.
+   *
+   * Este valor debe ser interpretado por la aplicación HTTP, no por el core.
+   */
+  certFile?: string;
+}
+
+/**
  * Configuración principal de la aplicación que será arrancada por J.A.R.V.I.S.
  *
  * Esta estructura permite que el runtime conozca la identidad base de la
@@ -25,7 +63,7 @@ export interface JarvisAppOptions {
    * Nombre legible de la aplicación.
    *
    * Ejemplo:
-   * J.A.R.V.I.S. Sandbox API
+   * J.A.R.V.I.S. Sandbox-API
    */
   name: string;
 
@@ -73,6 +111,21 @@ export interface JarvisServerOptions {
    * Si no se define, J.A.R.V.I.S. usará 3000 por defecto.
    */
   port?: number;
+
+  /**
+   * Protocolo esperado para la capa HTTP de la aplicación.
+   *
+   * Si no se define, J.A.R.V.I.S. usará http por defecto.
+   */
+  protocol?: JarvisServerProtocol;
+
+  /**
+   * Configuración HTTPS asociada al servidor.
+   *
+   * El core solo conserva esta información. La lectura de certificados y la
+   * creación real del servidor HTTPS pertenecen a la aplicación HTTP.
+   */
+  https?: JarvisServerHttpsOptions;
 }
 
 /**

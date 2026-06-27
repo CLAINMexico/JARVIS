@@ -1,16 +1,77 @@
+# =================================================================================
+# Dependencies
+# =================================================================================
+
+# Dependencias instaladas localmente por Node.js / pnpm.
 node_modules
+
+# Store local de pnpm cuando se genera dentro del proyecto.
+.pnpm-store
+
+
+# =================================================================================
+# Build outputs
+# =================================================================================
+
+# Salidas de compilación generadas por TypeScript, bundlers o herramientas futuras.
 dist
 build
+
+# Cache de TurboRepo si se integra o ejecuta en el monorepo.
+.turbo
+
+
+# =================================================================================
+# Environment files
+# =================================================================================
+
+# Variables de entorno locales.
+# Estos archivos pueden contener secretos, credenciales o valores sensibles.
 .env
 .env.local
 .env.*.local
+
+# Configuración local real de J.A.R.V.I.S.
+# El repo debe versionar archivos de ejemplo, no settings.json reales.
 settings.json
+
+
+# =================================================================================
+# Operating system files
+# =================================================================================
+
+# Archivos generados automáticamente por macOS.
 .DS_Store
+
+
+# =================================================================================
+# Test and coverage outputs
+# =================================================================================
+
+# Reportes de cobertura generados por herramientas de testing.
 coverage
-.pnpm-store
-.turbo
+
+
+# =================================================================================
+# VS Code
+# =================================================================================
+
+# Ignora configuración local de VS Code.
 .vscode/*
+
+# Permite versionar recomendaciones de extensiones del proyecto.
 !.vscode/extensions.json
+
+# Permite versionar configuración compartida del workspace.
 !.vscode/settings.json
+
+
+# =================================================================================
+# Logs
+# =================================================================================
+
+# Directorio local de bitácoras generado por @jarvis/logger.
 logs
+
+# Archivos sueltos de log.
 *.log

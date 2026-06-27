@@ -38,6 +38,10 @@ import {
   registerSandboxHttpRoutes
 } from './http/sandbox-http-routes.js';
 
+import {
+  resolveSandboxHttpOptions
+} from './http/sandbox-http-options.js';
+
 /**
  * Ejecuta el arranque principal de Sandbox-API.
  *
@@ -149,6 +153,20 @@ async function main(): Promise<void> {
     const config = core.service<ConfigService>('config');
 
     /**
+     * Resuelve las opciones finales del servidor HTTP/HTTPS.
+     *
+     * La configuración viene desde core.info().server, después de haber sido
+     * leída por @jarvis/bootstrap y normalizada por @jarvis/core.
+     *
+     * A partir de estas opciones, Sandbox-API decide si debe crear Fastify en
+     * modo HTTP o HTTPS, qué host/puerto debe usar y qué URL debe reportar
+     * en las bitácoras.
+     */
+    const httpOptions = resolveSandboxHttpOptions(
+      instance.server
+    );
+
+    /**
      * Obtiene @jarvis/logger como servicio registrado en el core.
      */
     logger = core.service<LoggerService>('logger');
@@ -196,7 +214,9 @@ async function main(): Promise<void> {
      * La creación del servidor vive en src/http/sandbox-http-server.ts para
      * mantener main.ts como orquestador del arranque general.
      */
-    server = createSandboxHttpServer();
+    server = await createSandboxHttpServer(
+      httpOptions
+    );
 
     /**
      * Registra las rutas HTTP base de Sandbox-API.
@@ -224,13 +244,13 @@ async function main(): Promise<void> {
      * Arranca el servidor HTTP usando host y port normalizados por J.A.R.V.I.S.
      */
     await server.listen({
-      host: instance.server.host,
-      port: instance.server.port
+      host: httpOptions.host,
+      port: httpOptions.port
     });
 
     logger?.info('================================================================================');
     logger?.info('* Dependence - Fastify | Inicializado');
-    logger?.info(`* Dependence - Fastify | Servidor HTTP: http://${instance.server.host}:${instance.server.port}`, {
+    logger?.info(`* Dependence - Fastify | Servidor ${httpOptions.protocol.toUpperCase()}: ${httpOptions.url}`, {
       module: `${instance.name} | ${instance.app.name}`
     });
   } catch (error: unknown) {

@@ -1,5 +1,64 @@
 # CHANGELOG | J.A.R.V.I.S.
 
+## **`0.15.0`** <sup><small>(26/Junio/2026)</small></sup>
+
+### Resumen
+
+Se agrega soporte inicial para **HTTP/HTTPS configurable** en **`J.A.R.V.I.S.`** y **`Sandbox-API`**.
+
+Esta versión permite definir desde **`settings.json`** si la aplicación debe arrancar usando **HTTP** o **HTTPS**, normalizando la configuración desde **`@jarvis/bootstrap`**, exponiéndola desde **`@jarvis/core`** y consumiéndola desde **`apps/sandbox-api`** para crear el servidor Fastify correspondiente.
+
+---
+
+### Cambios
+
+- Se agregó soporte para **`server.protocol`** con valores **`http`** y **`https`**.
+- Se agregó soporte para **`server.https.enabled`**.
+- Se agregó soporte para **`server.https.keyFile`**.
+- Se agregó soporte para **`server.https.certFile`**.
+- Se actualizó **`@jarvis/core`** para transportar y reportar configuración HTTP/HTTPS desde **`core.info().server`**.
+- Se actualizó **`@jarvis/bootstrap`** para leer, normalizar y validar la configuración HTTP/HTTPS desde **`settings.json`**.
+- Se actualizó **`Sandbox-API`** para crear Fastify en modo HTTP o HTTPS según la configuración normalizada del runtime.
+- Se agregó **`sandbox-http-options.ts`** para resolver opciones HTTP/HTTPS de **`Sandbox-API`** desde **`core.info().server`**.
+- Se actualizó **`sandbox-http-server.ts`** para leer certificados locales cuando HTTPS está activo.
+- Se actualizó **`sandbox-api.http`** para permitir pruebas con **HTTP** o **HTTPS** desde REST Client.
+- Se agregó carpeta **`apps/sandbox-api/certs/`** para certificados locales de prueba.
+- Se agregó documentación para generar certificados autofirmados locales.
+- Se actualizó **`.gitignore`** para evitar publicar certificados, llaves privadas y archivos sensibles de certificados.
+
+---
+
+### Mejoras
+
+- La configuración de transporte deja de estar resuelta únicamente por **`Sandbox-API`** y pasa a formar parte de la configuración formal del runtime.
+- **`@jarvis/bootstrap`** valida errores de configuración antes de arrancar el core.
+- **`@jarvis/core`** expone una estructura de servidor más completa mediante **`core.info().server`**.
+- **`Sandbox-API`** consume la configuración oficial del runtime en lugar de interpretar directamente **`settings.json`**.
+- Se mantiene una segunda validación local en **`Sandbox-API`** antes de crear el servidor HTTP/HTTPS.
+- Se mejora la seguridad de pruebas locales al permitir HTTPS con certificados autofirmados.
+- Se mantiene compatibilidad con HTTP para escenarios simples de desarrollo.
+- Se prepara la base técnica para futuras integraciones de seguridad como **`@jarvis/security`**.
+
+---
+
+### Correcciones
+
+- Se evitó publicar certificados reales o llaves privadas en el repositorio.
+- Se ajustaron propiedades opcionales para respetar **`exactOptionalPropertyTypes`**.
+- Se evitó agregar propiedades opcionales con valor **`undefined`** en configuraciones HTTPS.
+- Se validó el funcionamiento de las rutas base usando HTTP y HTTPS:
+  - **`GET /`**
+  - **`GET /health`**
+  - **`GET /info`**
+  - **`GET /modules`**
+- Se verificó correctamente el proyecto mediante:
+
+```bash
+docker compose exec jarvis-node pnpm verify
+```
+
+---
+
 ## **`0.14.0`** <sup><small>(26/Junio/2026)</small></sup>
 
 ### Resumen

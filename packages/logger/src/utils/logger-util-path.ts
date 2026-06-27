@@ -65,7 +65,7 @@ function getDateParts(date: Date, timeZone: string): LoggerDateParts {
  * transport de archivos vuelve a normalizarlo para evitar nombres inválidos.
  *
  * Ejemplos:
- * - Sandbox API -> SANDBOX_API
+ * - Sandbox-API -> SANDBOX_API
  * - JARVIS_SANDBOXAPI -> JARVIS_SANDBOXAPI
  */
 export function normalizeLoggerAppName(appName: string): string {

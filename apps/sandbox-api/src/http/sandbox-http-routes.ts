@@ -7,7 +7,7 @@ import type {
 } from '@jarvis/core';
 
 /**
- * Registra las rutas HTTP base de Sandbox API.
+ * Registra las rutas HTTP base de Sandbox-API.
  *
  * Estas rutas permiten validar que el servidor HTTP está activo y que puede
  * exponer información básica del runtime de J.A.R.V.I.S.

@@ -8,16 +8,22 @@
     "timeZone": "America/Mexico_City"
   },
   "server": {
-    "host": "localhost",
-    "port": 3000
+    "host": "0.0.0.0",
+    "port": 3000,
+    "protocol": "https",
+    "https": {
+      "enabled": true,
+      "keyFile": "./certs/local.key",
+      "certFile": "./certs/local.crt"
+    }
   },
   "api": {
     "version": "v1",
     "cors": {
       "enabled": true,
       "origins": [
-        "http://localhost:5173",
-        "http://localhost:3000"
+        "http://0.0.0.0:5173",
+        "http://0.0.0.0:3000"
       ]
     },
     "jwt": {
@@ -48,7 +54,7 @@
       "connections": {
         "mssql": {
           "driver": "mssql",
-          "host": "localhost",
+          "host": "0.0.0.0",
           "port": 1433,
           "database": "SETTINGS_DATABASE_NAME",
           "username": "SETTINGS_DATABASE_USERNAME",
@@ -76,7 +82,7 @@
       "channels": {
         "email": {
           "provider": "smtp",
-          "host": "localhost",
+          "host": "0.0.0.0",
           "port": 1025,
           "secure": false,
           "username": "SETTINGS_NOTIFICATIONS_EMAIL_USERNAME",

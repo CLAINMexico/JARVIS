@@ -1,3 +1,7 @@
+import type {
+  JarvisServerProtocol
+} from '@jarvis/core';
+
 import {
   ConfigService,
   loadConfigFile
@@ -23,6 +27,54 @@ import {
   buildBootstrapLoggerAppName,
   buildBootstrapLoggerDefaultModule
 } from '../utils/bootstrap-util-logger.js';
+
+/**
+ * Resuelve el protocolo configurado para el servidor.
+ *
+ * Cualquier valor distinto de https se interpreta como http para conservar
+ * compatibilidad con configuraciones previas.
+ */
+function resolveBootstrapServerProtocol(value: unknown): JarvisServerProtocol {
+  const protocol = getBootstrapString(
+    value,
+    'http'
+  );
+
+  if (protocol === 'https') {
+    return 'https';
+  }
+
+  return 'http';
+}
+
+/**
+ * Valida la configuración HTTP/HTTPS del servidor.
+ *
+ * Esta validación se realiza durante el bootstrap para detectar errores de
+ * configuración antes de arrancar @jarvis/core o crear el servidor HTTP.
+ */
+function validateBootstrapServerOptions(
+  protocol: JarvisServerProtocol,
+  httpsEnabled: boolean,
+  httpsKeyFile: string,
+  httpsCertFile: string
+): void {
+  if (protocol === 'https' && !httpsEnabled) {
+    throw new Error('J.A.R.V.I.S. Bootstrap | server.protocol está configurado como https, pero server.https.enabled no está activo.');
+  }
+
+  if (protocol === 'http' && httpsEnabled) {
+    throw new Error('J.A.R.V.I.S. Bootstrap | server.https.enabled está activo, pero server.protocol no está configurado como https.');
+  }
+
+  if (protocol === 'https' && httpsKeyFile.length === 0) {
+    throw new Error('J.A.R.V.I.S. Bootstrap | HTTPS está activo, pero no se configuró server.https.keyFile.');
+  }
+
+  if (protocol === 'https' && httpsCertFile.length === 0) {
+    throw new Error('J.A.R.V.I.S. Bootstrap | HTTPS está activo, pero no se configuró server.https.certFile.');
+  }
+}
 
 /**
  * Crea el bootstrap inicial de una aplicación J.A.R.V.I.S.
@@ -105,6 +157,32 @@ export async function createJarvisBootstrap(
     3000
   );
 
+  const serverProtocol = resolveBootstrapServerProtocol(
+    config.get('server.protocol')
+  );
+
+  const serverHttpsEnabled = getBootstrapBoolean(
+    config.get('server.https.enabled'),
+    false
+  );
+
+  const serverHttpsKeyFile = getBootstrapString(
+    config.get('server.https.keyFile'),
+    ''
+  );
+
+  const serverHttpsCertFile = getBootstrapString(
+    config.get('server.https.certFile'),
+    ''
+  );
+
+  validateBootstrapServerOptions(
+    serverProtocol,
+    serverHttpsEnabled,
+    serverHttpsKeyFile,
+    serverHttpsCertFile
+  );
+
   /**
    * Normalización de configuración para @jarvis/logger.
    *
@@ -166,6 +244,23 @@ export async function createJarvisBootstrap(
   };
 
   /**
+   * Construye la configuración final del servidor.
+   *
+   * keyFile y certFile solo se agregan cuando tienen valor real para evitar
+   * enviar propiedades opcionales como undefined.
+   */
+  const server = {
+    host: serverHost,
+    port: serverPort,
+    protocol: serverProtocol,
+    https: {
+      enabled: serverHttpsEnabled,
+      ...(serverHttpsKeyFile.length > 0 ? { keyFile: serverHttpsKeyFile } : {}),
+      ...(serverHttpsCertFile.length > 0 ? { certFile: serverHttpsCertFile } : {})
+    }
+  };
+
+  /**
    * Devuelve el resultado completo del bootstrap.
    *
    * Este objeto permite que la aplicación cree módulos reales y después
@@ -176,10 +271,7 @@ export async function createJarvisBootstrap(
     settings,
     config,
     app,
-    server: {
-      host: serverHost,
-      port: serverPort
-    },
+    server,
     logger: {
       enabled: loggerEnabled,
       appName: buildBootstrapLoggerAppName(appName),
