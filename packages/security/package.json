@@ -1,0 +1,29 @@
+{
+  "name": "@jarvis/security",
+  "description": "Security | Paquete base para autenticación, tokens JWT y utilidades de seguridad dentro del ecosistema J.A.R.V.I.S.",
+  "version": "1.0.0",
+  "author": "CLAIN México, S.A. de C.V.",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@jarvis/http": "workspace:*",
+    "jose": "^6.0.13"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

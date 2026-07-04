@@ -1,5 +1,87 @@
 # CHANGELOG | J.A.R.V.I.S.
 
+## **`0.18.0`** <sup><small>(04/Julio/2026)</small></sup>
+
+### Resumen
+
+Se creó **`@jarvis/security`** como paquete base de seguridad para el ecosistema **`J.A.R.V.I.S.`**.
+
+Esta primera versión incorpora soporte inicial para **JWT**, permitiendo firmar y verificar tokens mediante un servicio dedicado, usando **`jose`** como librería JWT moderna compatible con TypeScript y ESM.
+
+La versión también integra errores controlados mediante **`@jarvis/http`** para tokens inválidos, expirados o ausentes.
+
+---
+
+### Cambios
+
+- Se creó el paquete **`packages/security`**.
+- Se agregó el package workspace **`@jarvis/security`**.
+- Se agregó la dependencia **`jose`**.
+- Se agregó dependencia interna a **`@jarvis/http`**.
+- Se actualizó el **`package.json`** raíz a versión **`0.18.0`**.
+- Se agregó **`@jarvis/security`** a los scripts raíz:
+  - **`clean:packages`**
+  - **`build:packages`**
+  - **`typecheck:packages`**.
+- Se creó el contrato **`SecurityJwtPayload`**.
+- Se creó el contrato **`SecurityJwtOptions`**.
+- Se creó el contrato **`SecurityJwtSignOptions`**.
+- Se creó el contrato **`SecurityJwtVerifyResult`**.
+- Se creó el servicio **`SecurityJwtService`**.
+- Se crearon utilidades JWT:
+  - **`encodeSecurityJwtSecret()`**
+  - **`assertSecurityJwtSecret()`**.
+- Se agregaron exports públicos desde **`packages/security/src/index.ts`**.
+- Se agregó **`JarvisSecurityPackage`** como metadata pública del paquete.
+
+---
+
+### Mejoras
+
+- Se agregó firma de tokens JWT con algoritmo **`HS256`**.
+- Se agregó soporte para claims estándar:
+  - **`sub`**
+  - **`iat`**
+  - **`exp`**
+  - **`iss`**
+  - **`aud`**.
+- Se agregó verificación de tokens JWT.
+- Se agregó normalización del resultado de verificación.
+- Se agregó soporte para **`issuer`** y **`audience`** por configuración.
+- Se agregó soporte para expiración configurable mediante **`accessTokenExpiresIn`**.
+- Se agregó soporte para opciones específicas de firma mediante **`SecurityJwtSignOptions`**.
+- Se agregó validación de secreto JWT vacío.
+- Se agregó validación de token vacío.
+- Se preparó el paquete para futuras etapas de seguridad:
+  - middleware HTTP
+  - login
+  - hash de contraseñas
+  - refresh tokens
+  - sesiones
+  - roles
+  - permisos
+  - policies
+  - guards
+  - OAuth 2.0.
+
+---
+
+### Correcciones
+
+- Se resolvió compatibilidad con **`exactOptionalPropertyTypes`** usando propiedades internas como **`string | undefined`** cuando corresponde.
+- Se validó que **`SecurityJwtService`** pueda firmar y verificar tokens correctamente.
+- Se validó que un token inválido produzca un error controlado **`UNAUTHORIZED`** desde **`@jarvis/http`**.
+- Se validó que un token ausente produzca un error controlado específico.
+- Se removió el archivo temporal de prueba JWT antes del cierre técnico.
+- Se removió el script temporal **`test:jwt`** antes del cierre técnico.
+- Se validó la integración completa mediante:
+  - **`pnpm --filter @jarvis/security build`**
+  - **`pnpm --filter @jarvis/security typecheck`**
+  - **`pnpm build`**
+  - **`pnpm typecheck`**.
+
+---
+
 ## **`0.17.0`** <sup><small>(04/Julio/2026)</small></sup>
 
 ### Resumen
