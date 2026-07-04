@@ -56,9 +56,40 @@ export interface LoggerModule extends JarvisRuntimeModule {
  */
 export function createLoggerModule(options: LoggerOptions = {}): LoggerModule {
   const enabled = options.enabled ?? true;
-  const appName = options.appName ?? 'JARVIS';
+
+  /**
+   * Nombre de aplicación usado en la impresión homologada.
+   *
+   * Este valor representa el bloque:
+   *
+   * [J.A.R.V.I.S. | App]
+   *
+   * dentro de consola y archivos.
+   */
+  const appName = options.appName ?? 'J.A.R.V.I.S. | App';
+
+  /**
+   * Nivel mínimo que será procesado por el logger.
+   */
   const level = options.level ?? 'info';
+
+  /**
+   * Paquete por defecto usado cuando un log no define context.package.
+   *
+   * Este valor representa el bloque [PACKAGE] dentro del formato homologado.
+   */
+  const defaultPackage = options.defaultPackage ?? '@jarvis/logger';
+
+  /**
+   * Módulo por defecto usado cuando un log no define context.module.
+   *
+   * Se conserva para compatibilidad y diagnóstico interno.
+   */
   const defaultModule = options.defaultModule ?? 'Logger';
+
+  /**
+   * Zona horaria usada para formatear fechas y rutas de logs.
+   */
   const timeZone = options.timeZone ?? 'UTC';
 
   /**
@@ -80,7 +111,6 @@ export function createLoggerModule(options: LoggerOptions = {}): LoggerModule {
   if (enabled && (options.file?.enabled ?? false)) {
     transports.push(
       new LoggerFileTransport({
-        appName,
         path: options.file?.path ?? './logs',
         splitByLevel: options.file?.splitByLevel ?? true,
         writeAll: options.file?.writeAll ?? true
@@ -95,7 +125,9 @@ export function createLoggerModule(options: LoggerOptions = {}): LoggerModule {
    * incluso cuando el logger esté deshabilitado por configuración.
    */
   const service = new LoggerService({
+    appName,
     level,
+    defaultPackage,
     defaultModule,
     timeZone,
     transports

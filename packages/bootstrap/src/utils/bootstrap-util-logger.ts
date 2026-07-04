@@ -1,66 +1,55 @@
 /**
- * Construye el nombre normalizado de la aplicación para archivos de log.
+ * Construye el nombre visual de la aplicación para logs.
  *
- * Este valor se usa como parte del nombre físico de los archivos generados
- * por @jarvis/logger, por lo que debe evitar espacios, símbolos especiales
- * o caracteres que puedan generar rutas inconsistentes.
+ * Este valor se imprime dentro del formato homologado de @jarvis/logger:
  *
- * Reglas:
- * - Elimina espacios al inicio y al final.
- * - Convierte el nombre a mayúsculas.
- * - Reemplaza espacios internos por guiones bajos.
- * - Elimina caracteres que no sean letras, números o guiones bajos.
- * - Agrega el prefijo JARVIS_ cuando no exista.
+ * [YYYY-MM-DD HH:mm:ss] [TYPE] [PACKAGE] [J.A.R.V.I.S. | APP] - MESSAGE
+ *
+ * Ya no se usa para construir nombres físicos de archivos.
  *
  * Ejemplos:
- * - Sandbox-API -> JARVIS_SANDBOX_API
- * - SandboxAPI -> JARVIS_SANDBOXAPI
- * - My App -> JARVIS_MY_APP
+ * - Sandbox-API -> J.A.R.V.I.S. | Sandbox-API
+ * - Sandbox API -> J.A.R.V.I.S. | Sandbox API
+ * - App -> J.A.R.V.I.S. | App
  */
 export function buildBootstrapLoggerAppName(appName: string): string {
   const normalizedAppName = appName
-    .trim()
-    .toUpperCase()
-    .replaceAll(/\s+/g, '_')
-    .replaceAll(/[^A-Z0-9_]/g, '');
+    .trim();
 
   if (normalizedAppName.length === 0) {
-    return 'JARVIS';
+    return 'J.A.R.V.I.S. | App';
   }
 
-  if (normalizedAppName.startsWith('JARVIS_')) {
+  if (normalizedAppName.startsWith('J.A.R.V.I.S. |')) {
     return normalizedAppName;
   }
 
-  if (normalizedAppName === 'JARVIS') {
-    return normalizedAppName;
-  }
-
-  return `JARVIS_${normalizedAppName}`;
+  return `J.A.R.V.I.S. | ${normalizedAppName}`;
 }
 
 /**
  * Construye el nombre del módulo por defecto para logs de aplicación.
  *
- * Este valor no se usa para nombres de archivo. Se usa como etiqueta visible
- * dentro de cada mensaje generado por @jarvis/logger cuando no se especifica
- * un módulo concreto.
+ * Este valor se conserva como contexto interno y fallback de compatibilidad.
+ * La etiqueta visual principal ahora se resuelve mediante:
  *
- * Formato esperado:
+ * - appName
+ * - package
  *
- * [LEVEL] YYYY-MM-DD HH:mm:ss | [Module] Mensaje
+ * dentro de @jarvis/logger.
  *
- * Ejemplo:
- * J.A.R.V.I.S. | SandboxAPI
+ * Ejemplos:
+ * - Sandbox-API -> Sandbox-API
+ * - Sandbox API -> Sandbox API
+ * - App -> App
  */
 export function buildBootstrapLoggerDefaultModule(appName: string): string {
   const normalizedAppName = appName
-    .trim()
-    .replaceAll(/\s+/g, '');
+    .trim();
 
   if (normalizedAppName.length === 0) {
     return 'App';
   }
 
-  return `J.A.R.V.I.S. | ${normalizedAppName}`;
+  return normalizedAppName;
 }

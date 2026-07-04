@@ -276,6 +276,7 @@ export async function createJarvisBootstrap(
       enabled: loggerEnabled,
       appName: buildBootstrapLoggerAppName(appName),
       level: loggerLevel,
+      defaultPackage: buildBootstrapLoggerDefaultModule(appName),
       defaultModule: buildBootstrapLoggerDefaultModule(appName),
       timeZone: appTimeZone,
       console: {

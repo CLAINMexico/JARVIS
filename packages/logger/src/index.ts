@@ -105,13 +105,12 @@ export {
  * Utilidades públicas para rutas y nombres de archivos de log.
  *
  * Permiten construir carpetas, nombres de archivo y rutas completas usando
- * fecha, zona horaria, nombre de aplicación y nivel de log.
+ * fecha, zona horaria y nivel de log.
  */
 export {
   getLoggerDirectory,
   getLoggerFileName,
-  getLoggerFilePath,
-  normalizeLoggerAppName
+  getLoggerFilePath
 } from './utils/logger-util-path.js';
 
 /**

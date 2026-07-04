@@ -38,14 +38,23 @@ function hasObjectKeys(value: Record<string, unknown>): boolean {
  * Prepara el contexto del logger para impresión.
  *
  * Reglas:
- * - module no se imprime como metadata porque ya aparece en el encabezado
+ * - package no se imprime como metadata porque ya aparece en el encabezado
  *   principal del log.
+ * - module no se imprime como metadata porque se conserva dentro del entry
+ *   normalizado y puede ser usado por transports o integraciones futuras.
+ * - event no se imprime como metadata porque ya pertenece al entry
+ *   normalizado.
+ * - statusCode no se imprime como metadata porque ya aparece en la línea
+ *   principal cuando existe.
  * - error se normaliza para evitar salidas vacías o poco útiles.
  * - El resto del contexto se conserva como metadata adicional.
  */
 function normalizeLoggerContext(context: LoggerContext): Record<string, unknown> {
   const {
+    package: _package,
     module,
+    event,
+    statusCode,
     error,
     ...metadata
   } = context;

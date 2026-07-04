@@ -1,5 +1,91 @@
 # CHANGELOG | J.A.R.V.I.S.
 
+## **`0.17.0`** <sup><small>(04/Julio/2026)</small></sup>
+
+### Resumen
+
+Se homologó **`@jarvis/logger`** como sistema oficial de bitácoras para el ecosistema **`J.A.R.V.I.S.`**, incorporando un formato estándar para consola y archivos, soporte explícito para paquete origen, aplicación, eventos técnicos y códigos de estado HTTP opcionales.
+
+Esta versión también simplifica la estructura física de archivos de log y valida la integración real entre **`@jarvis/logger`**, **`@jarvis/http`** y **`Sandbox-API`**.
+
+---
+
+### Cambios
+
+- Se actualizó el contrato **`LoggerContext`** para soportar formalmente **`package`**, **`module`**, **`event`**, **`statusCode`**, **`error`** y metadata adicional.
+- Se actualizó el contrato **`LoggerEntry`** para incluir campos normalizados: **`appName`**, **`package`**, **`module`**, **`event`** y **`statusCode`**.
+- Se agregó **`defaultPackage`** a **`LoggerOptions`**.
+- Se actualizó **`LoggerServiceOptions`** para recibir **`appName`**, **`defaultPackage`**, **`defaultModule`**, **`timeZone`** y **`transports`**.
+- Se actualizó **`LoggerService`** para construir entradas de log homologadas.
+- Se agregó el método **`package(packageName)`** en **`LoggerService`** para crear loggers asociados a un paquete específico.
+- Se actualizó **`createLoggerModule()`** para normalizar y entregar **`appName`** y **`defaultPackage`** al servicio.
+- Se actualizó **`@jarvis/bootstrap`** para generar valores visuales de logger: **`appName: J.A.R.V.I.S. | App`**, **`defaultPackage`** y **`defaultModule`**.
+- Se actualizó **`BootstrapLogger`** para incluir **`defaultPackage`**.
+- Se ajustó **`Sandbox-API`** para usar el nuevo contexto del logger en sus mensajes principales.
+- Se agregaron logs de prueba en las rutas **`GET /http/success`** y **`GET /http/error`**.
+
+---
+
+### Mejoras
+
+- Se homologó el formato oficial de logs:
+
+```txt
+[YYYY-MM-DD HH:mm:ss] [TYPE] [PACKAGE] [J.A.R.V.I.S. | APP] | [STATUSCODE] - MESSAGE
+```
+
+- Se agregó soporte para omitir **`statusCode`** cuando el evento no pertenece a una operación HTTP:
+
+```txt
+[YYYY-MM-DD HH:mm:ss] [TYPE] [PACKAGE] [J.A.R.V.I.S. | APP] - MESSAGE
+```
+
+- Se eliminó el padding visual en niveles de log: antes **`[INFO ]`**, ahora **`[INFO]`**.
+- Se simplificó la estructura de archivos de log.
+- La ruta conserva la fecha:
+
+```txt
+logs/YYYY/MM/DD/
+```
+
+- Los archivos ahora se nombran únicamente por nivel:
+
+```txt
+all.log
+debug.log
+info.log
+warn.log
+error.log
+fatal.log
+```
+
+- Se eliminó el uso de nombres largos de archivo como **`YYYY_MM_DD_APP_LEVEL.log`**.
+- Se estableció la regla interna:
+
+```txt
+La ruta organiza por fecha.
+El archivo organiza por nivel.
+La línea del log contiene el contexto.
+```
+
+- Se limpió el contexto adicional para evitar duplicar campos ya impresos en la línea principal: **`package`**, **`module`**, **`event`** y **`statusCode`**.
+- Se mantiene la normalización de errores para evitar salidas vacías al serializar instancias de **`Error`**.
+- Se documentó el nuevo formato de **`@jarvis/logger`**.
+- Se documentaron las rutas de prueba de **`Sandbox-API`** para validar integración entre **`@jarvis/http`** y **`@jarvis/logger`**.
+
+---
+
+### Correcciones
+
+- Se corrigió el uso de **`appName`** dentro de **`@jarvis/bootstrap`**, dejando de usar valores técnicos como **`JARVIS_SANDBOXAPI`** para impresión visual.
+- Se corrigió la salida visual de logs para mostrar **`[J.A.R.V.I.S. | Sandbox-API]`** en lugar de **`[JARVIS_SANDBOXAPI]`**.
+- Se corrigió la exportación pública de utilidades de path en **`@jarvis/logger`**, removiendo referencias a utilidades eliminadas.
+- Se ajustó **`LoggerFileTransport`** para dejar de depender de **`appName`** en la construcción de nombres de archivo.
+- Se corrigieron advertencias de TypeScript en **`Sandbox-API`** validando explícitamente los servicios **`config`** y **`logger`** antes de usarlos.
+- Se validó la integración completa mediante builds, typechecks y pruebas reales en runtime con **`Sandbox-API`**.
+
+---
+
 ## **`0.16.0`** <sup><small>(03/Julio/2026)</small></sup>
 
 ### Resumen

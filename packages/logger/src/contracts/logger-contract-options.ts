@@ -6,8 +6,8 @@ import type {
  * Opciones disponibles para configurar @jarvis/logger.
  *
  * Estas opciones permiten controlar el estado general del logger, el nivel
- * mínimo de escritura, el módulo por defecto, la zona horaria y los transports
- * disponibles.
+ * mínimo de escritura, el paquete por defecto, el módulo por defecto, la zona
+ * horaria y los transports disponibles.
  */
 export interface LoggerOptions {
   /**
@@ -27,10 +27,10 @@ export interface LoggerOptions {
   enabled?: boolean;
 
   /**
-   * Nombre de la aplicación usado para construir nombres de archivos de log.
+   * Nombre de la aplicación usado para impresión visual en logs.
    *
    * Ejemplo:
-   * JARVIS_APPNAME
+   * J.A.R.V.I.S. | Sandbox API
    */
   appName?: string;
 
@@ -45,7 +45,21 @@ export interface LoggerOptions {
   level?: LoggerLevel;
 
   /**
+   * Paquete por defecto usado cuando el log no recibe uno explícito.
+   *
+   * Este valor se imprime como el bloque [PACKAGE] dentro del formato
+   * homologado.
+   *
+   * Ejemplo:
+   * @jarvis/logger
+   */
+  defaultPackage?: string;
+
+  /**
    * Módulo por defecto usado cuando el log no recibe uno explícito.
+   *
+   * Se conserva como contexto interno y fallback para mantener compatibilidad
+   * con logs existentes.
    */
   defaultModule?: string;
 
@@ -80,6 +94,16 @@ export interface LoggerOptions {
    *
    * Este bloque solo controla el transport de archivos. Si enabled está en false,
    * el logger completo permanecerá apagado aunque file.enabled sea true.
+   *
+   * La estructura interna de archivos no es configurable. @jarvis/logger usa
+   * una estructura estándar:
+   *
+   * logs/YYYY/MM/DD/all.log
+   * logs/YYYY/MM/DD/debug.log
+   * logs/YYYY/MM/DD/info.log
+   * logs/YYYY/MM/DD/warn.log
+   * logs/YYYY/MM/DD/error.log
+   * logs/YYYY/MM/DD/fatal.log
    */
   file?: {
     /**
@@ -98,7 +122,7 @@ export interface LoggerOptions {
     splitByLevel?: boolean;
 
     /**
-     * Indica si todos los logs deben escribirse también en un archivo ALL.
+     * Indica si todos los logs deben escribirse también en un archivo all.log.
      */
     writeAll?: boolean;
   };

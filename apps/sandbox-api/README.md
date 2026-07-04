@@ -8,7 +8,17 @@ Este sandbox no representa una aplicación final de negocio. Su objetivo es serv
 
 ## Objetivo
 
-El objetivo de **`Sandbox-API`** es validar que **`J.A.R.V.I.S.`** pueda arrancar, montar módulos reales, preparar configuración inicial, registrar servicios y ejecutar su ciclo de vida desde el contexto de una aplicación backend.
+El objetivo de **`Sandbox-API`** es validar que **`J.A.R.V.I.S.`** pueda arrancar, montar módulos reales, preparar configuración inicial, registrar servicios, ejecutar su ciclo de vida y exponer rutas HTTP/HTTPS desde el contexto de una aplicación backend.
+
+También permite validar integraciones entre paquetes del ecosistema, por ejemplo:
+
+```txt
+@jarvis/bootstrap
+@jarvis/core
+@jarvis/config
+@jarvis/logger
+@jarvis/http
+```
 
 ---
 
@@ -33,6 +43,12 @@ Para ejecutar **`Sandbox-API`** desde la raíz del monorepo:
 docker compose exec jarvis-node pnpm dev
 ```
 
+También puede ejecutarse filtrando directamente la aplicación:
+
+```bash
+docker compose exec jarvis-node pnpm --filter @jarvis/sandbox-api dev
+```
+
 ---
 
 ## Validación
@@ -52,7 +68,16 @@ typecheck
 dev
 ```
 
+Para validar solamente **`Sandbox-API`**:
+
+```bash
+docker compose exec jarvis-node pnpm --filter @jarvis/sandbox-api build
+docker compose exec jarvis-node pnpm --filter @jarvis/sandbox-api typecheck
+```
+
 Si la validación finaliza correctamente, significa que **`Sandbox-API`** puede arrancar usando los paquetes actuales de **`J.A.R.V.I.S.`**.
+
+---
 
 ## Configuración HTTP/HTTPS
 
@@ -192,6 +217,12 @@ GET {{baseUrl}}/info
 
 ### Sandbox-API | Runtime Modules
 GET {{baseUrl}}/modules
+
+### Sandbox-API | HTTP Success Response
+GET {{baseUrl}}/http/success
+
+### Sandbox-API | HTTP Error Response
+GET {{baseUrl}}/http/error
 ```
 
 Para probar HTTP, cambiar:
@@ -215,6 +246,127 @@ GET /
 GET /health
 GET /info
 GET /modules
+GET /http/success
+GET /http/error
+```
+
+### GET /
+
+Valida que la API esté activa y muestra información base del runtime y las rutas disponibles.
+
+### GET /health
+
+Valida que el servidor HTTP/HTTPS esté vivo.
+
+### GET /info
+
+Devuelve la información general expuesta por **`core.info()`**.
+
+### GET /modules
+
+Devuelve los módulos registrados dentro del runtime.
+
+### GET /http/success
+
+Ruta de prueba para validar respuestas exitosas usando **`@jarvis/http`**.
+
+También registra un log con:
+
+```txt
+package: @jarvis/http
+event: http.response.success
+statusCode: 200
+```
+
+Salida esperada en consola o archivo:
+
+```txt
+[2026-07-04 14:10:24] [INFO] [@jarvis/http] [J.A.R.V.I.S. | Sandbox-API] | [200] - Respuesta exitosa generada por @jarvis/http.
+{
+  "route": "/http/success",
+  "method": "GET"
+}
+```
+
+### GET /http/error
+
+Ruta de prueba para validar errores controlados usando **`@jarvis/http`**.
+
+También registra un log con:
+
+```txt
+package: @jarvis/http
+event: http.response.error
+statusCode: 401
+```
+
+Salida esperada en consola o archivo:
+
+```txt
+[2026-07-04 14:10:29] [WARN] [@jarvis/http] [J.A.R.V.I.S. | Sandbox-API] | [401] - Token inválido o ausente.
+{
+  "route": "/http/error",
+  "method": "GET",
+  "code": "UNAUTHORIZED"
+}
+```
+
+---
+
+## Integración con @jarvis/logger
+
+**`Sandbox-API`** usa **`@jarvis/logger`** como sistema principal de bitácoras.
+
+El formato homologado esperado es:
+
+```txt
+[YYYY-MM-DD HH:mm:ss] [TYPE] [PACKAGE] [J.A.R.V.I.S. | APP] | [STATUSCODE] - MESSAGE
+```
+
+Ejemplo:
+
+```txt
+[2026-07-04 14:10:24] [INFO] [@jarvis/http] [J.A.R.V.I.S. | Sandbox-API] | [200] - Respuesta exitosa generada por @jarvis/http.
+```
+
+Cuando no existe **`statusCode`**, el bloque se omite:
+
+```txt
+[2026-07-04 14:10:18] [INFO] [Sandbox-API] [J.A.R.V.I.S. | Sandbox-API] - Servidor HTTPS: https://localhost:3000
+```
+
+### Archivos de log
+
+Cuando la salida a archivos está habilitada, se genera la estructura:
+
+```txt
+logs/YYYY/MM/DD/
+```
+
+Archivos esperados:
+
+```txt
+all.log
+debug.log
+info.log
+warn.log
+error.log
+fatal.log
+```
+
+Ejemplo:
+
+```txt
+logs/
+  2026/
+    07/
+      04/
+        all.log
+        debug.log
+        info.log
+        warn.log
+        error.log
+        fatal.log
 ```
 
 ---
@@ -233,6 +385,8 @@ core.info().server
 resolveSandboxHttpOptions()
 ↓
 createSandboxHttpServer()
+↓
+registerSandboxHttpRoutes()
 ↓
 Fastify HTTP/HTTPS
 ```
@@ -262,3 +416,12 @@ Cuando se usa certificado autofirmado, navegadores y herramientas HTTP pueden mo
 Esto es normal en certificados locales porque no están firmados por una autoridad certificadora pública.
 
 Esta configuración es únicamente para desarrollo local o pruebas controladas.
+
+También es importante considerar:
+
+- No publicar certificados locales reales.
+- No subir archivos **`.env`**.
+- No subir archivos **`logs/`** ni **`*.log`**.
+- Mantener las rutas de prueba como laboratorio controlado del ecosistema.
+- Mantener documentación en español.
+- Mantener comentarios útiles en español.

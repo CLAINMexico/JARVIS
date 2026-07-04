@@ -32,12 +32,15 @@ export function shouldLog(level: LoggerLevel, minimumLevel: LoggerLevel): boolea
 /**
  * Convierte un nivel a texto estándar para salida visual.
  *
- * El padEnd mantiene alineados los niveles dentro del formato final:
- * [INFO ]
- * [WARN ]
+ * El formato homologado no agrega espacios de relleno para mantener
+ * etiquetas limpias:
+ *
+ * [DEBUG]
+ * [INFO]
+ * [WARN]
  * [ERROR]
  * [FATAL]
  */
 export function formatLoggerLevel(level: LoggerLevel): string {
-  return level.toUpperCase().padEnd(5, ' ');
+  return level.toUpperCase();
 }

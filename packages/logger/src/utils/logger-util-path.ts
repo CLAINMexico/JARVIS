@@ -7,7 +7,7 @@ import type {
 } from '../contracts/logger-contract-level.js';
 
 /**
- * Partes de fecha usadas para construir rutas y nombres de archivos de log.
+ * Partes de fecha usadas para construir rutas de archivos de log.
  */
 interface LoggerDateParts {
   year: string;
@@ -34,8 +34,8 @@ function getPart(parts: Intl.DateTimeFormatPart[], type: string): string {
 /**
  * Obtiene partes de fecha usando una zona horaria específica.
  *
- * Se usa para construir carpetas y nombres de archivo con la misma fecha
- * local que aparece en los logs.
+ * Se usa para construir carpetas de logs con la misma fecha local que aparece
+ * en las líneas del logger.
  *
  * El objeto Date original no se modifica. La zona horaria solo se usa para
  * resolver la representación local del año, mes y día.
@@ -58,29 +58,14 @@ function getDateParts(date: Date, timeZone: string): LoggerDateParts {
 }
 
 /**
- * Normaliza el nombre de la aplicación para usarlo en nombres de archivo.
- *
- * Esta función funciona como una segunda línea de defensa. Normalmente
- * appName ya debería llegar normalizado desde @jarvis/bootstrap, pero el
- * transport de archivos vuelve a normalizarlo para evitar nombres inválidos.
- *
- * Ejemplos:
- * - Sandbox-API -> SANDBOX_API
- * - JARVIS_SANDBOXAPI -> JARVIS_SANDBOXAPI
- */
-export function normalizeLoggerAppName(appName: string): string {
-  return appName
-    .trim()
-    .toUpperCase()
-    .replaceAll(/\s+/g, '_')
-    .replaceAll(/[^A-Z0-9_]/g, '');
-}
-
-/**
  * Devuelve la ruta de carpeta donde se guardarán los logs.
  *
- * Estructura:
+ * Estructura estándar:
+ *
  * logs/YYYY/MM/DD
+ *
+ * Esta estructura no es configurable porque forma parte del estándar interno
+ * de @jarvis/logger.
  */
 export function getLoggerDirectory(
   basePath: string,
@@ -95,24 +80,24 @@ export function getLoggerDirectory(
 /**
  * Devuelve el nombre de archivo para un log.
  *
- * Formato:
- * YYYY_MM_DD_APP_LEVEL.log
+ * Formato estándar:
  *
- * Ejemplos:
- * - 2026_06_24_JARVIS_SANDBOXAPI_ALL.log
- * - 2026_06_24_JARVIS_SANDBOXAPI_ERROR.log
+ * all.log
+ * debug.log
+ * info.log
+ * warn.log
+ * error.log
+ * fatal.log
+ *
+ * La fecha y la aplicación no se colocan en el nombre del archivo porque:
+ * - La fecha ya vive en la ruta logs/YYYY/MM/DD.
+ * - La aplicación ya vive dentro de cada línea del log.
+ * - El nivel ya vive dentro de cada línea del log.
  */
 export function getLoggerFileName(
-  appName: string,
-  level: LoggerLevel | 'all',
-  date: Date,
-  timeZone: string
+  level: LoggerLevel | 'all'
 ): string {
-  const parts = getDateParts(date, timeZone);
-  const normalizedAppName = normalizeLoggerAppName(appName);
-  const normalizedLevel = level.toUpperCase();
-
-  return `${parts.year}_${parts.month}_${parts.day}_${normalizedAppName}_${normalizedLevel}.log`;
+  return `${level}.log`;
 }
 
 /**
@@ -123,13 +108,12 @@ export function getLoggerFileName(
  */
 export function getLoggerFilePath(
   basePath: string,
-  appName: string,
   level: LoggerLevel | 'all',
   date: Date,
   timeZone: string
 ): string {
   return join(
     getLoggerDirectory(basePath, date, timeZone),
-    getLoggerFileName(appName, level, date, timeZone)
+    getLoggerFileName(level)
   );
 }

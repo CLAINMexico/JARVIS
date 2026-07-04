@@ -25,12 +25,31 @@ import {
  */
 export interface LoggerServiceOptions {
   /**
+   * Nombre de la aplicación usado para impresión visual.
+   *
+   * Este valor representa el bloque:
+   *
+   * [J.A.R.V.I.S. | App]
+   *
+   * dentro del formato homologado.
+   */
+  appName: string;
+
+  /**
    * Nivel mínimo que será procesado por el logger.
    *
    * Los eventos con menor prioridad serán ignorados antes de enviarse
    * a los transports.
    */
   level: LoggerLevel;
+
+  /**
+   * Paquete por defecto usado cuando el log no recibe uno explícito
+   * mediante context.package.
+   *
+   * Este valor representa el bloque [PACKAGE] dentro del formato homologado.
+   */
+  defaultPackage: string;
 
   /**
    * Módulo por defecto usado cuando el log no recibe uno explícito
@@ -65,9 +84,19 @@ export interface LoggerServiceOptions {
  */
 export class LoggerService {
   /**
+   * Nombre de la aplicación usado por los formatters.
+   */
+  private readonly appName: string;
+
+  /**
    * Nivel mínimo configurado para procesar eventos.
    */
   private readonly level: LoggerLevel;
+
+  /**
+   * Paquete por defecto usado cuando no se especifica context.package.
+   */
+  private readonly defaultPackage: string;
 
   /**
    * Módulo por defecto usado cuando no se especifica context.module.
@@ -96,7 +125,9 @@ export class LoggerService {
    * Crea una nueva instancia de LoggerService.
    */
   public constructor(options: LoggerServiceOptions) {
+    this.appName = options.appName;
     this.level = options.level;
+    this.defaultPackage = options.defaultPackage;
     this.defaultModule = options.defaultModule;
     this.transports = options.transports;
     this.timeZone = options.timeZone;
@@ -140,15 +171,38 @@ export class LoggerService {
   /**
    * Crea un logger hijo asociado a un módulo específico.
    *
-   * El logger hijo comparte nivel, zona horaria y transports con el logger
-   * principal, pero cambia el módulo por defecto.
+   * El logger hijo comparte nombre de app, paquete por defecto, nivel, zona
+   * horaria y transports con el logger principal, pero cambia el módulo por
+   * defecto.
    *
    * Esto permite evitar repetir { module: 'Config' } en cada log.
    */
   public child(module: string): LoggerService {
     return new LoggerService({
+      appName: this.appName,
       level: this.level,
+      defaultPackage: this.defaultPackage,
       defaultModule: module,
+      timeZone: this.timeZone,
+      transports: this.transports
+    });
+  }
+
+  /**
+   * Crea un logger hijo asociado a un paquete específico.
+   *
+   * El logger hijo comparte nombre de app, nivel, zona horaria y transports
+   * con el logger principal, pero cambia el paquete por defecto.
+   *
+   * Esto permite generar logs homologados por paquete sin repetir
+   * { package: '@jarvis/http' } en cada llamada.
+   */
+  public package(packageName: string): LoggerService {
+    return new LoggerService({
+      appName: this.appName,
+      level: this.level,
+      defaultPackage: packageName,
+      defaultModule: this.defaultModule,
       timeZone: this.timeZone,
       transports: this.transports
     });
@@ -196,7 +250,15 @@ export class LoggerService {
       message,
       timestamp: new Date(),
       timeZone: this.timeZone,
-      module: context.module ?? this.defaultModule,
+      appName: this.appName,
+      package: typeof context.package === 'string'
+        ? context.package
+        : this.defaultPackage,
+      module: typeof context.module === 'string'
+        ? context.module
+        : this.defaultModule,
+      ...(typeof context.event === 'string' ? { event: context.event } : {}),
+      ...(typeof context.statusCode === 'number' ? { statusCode: context.statusCode } : {}),
       context
     };
 

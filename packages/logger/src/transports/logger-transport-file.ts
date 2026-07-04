@@ -29,14 +29,6 @@ import {
  */
 export interface LoggerFileTransportOptions {
   /**
-   * Nombre de la aplicación usado para construir nombres de archivo.
-   *
-   * Ejemplo:
-   * JARVIS_SANDBOXAPI
-   */
-  appName: string;
-
-  /**
    * Ruta base donde se crearán los archivos de log.
    *
    * Ejemplo:
@@ -47,7 +39,7 @@ export interface LoggerFileTransportOptions {
   /**
    * Indica si todos los logs deben escribirse también en un archivo general.
    *
-   * Cuando está activo, se crea o actualiza un archivo ALL con todos los
+   * Cuando está activo, se crea o actualiza el archivo all.log con todos los
    * eventos procesados.
    */
   writeAll?: boolean;
@@ -55,8 +47,8 @@ export interface LoggerFileTransportOptions {
   /**
    * Indica si los logs deben escribirse en archivos separados por nivel.
    *
-   * Cuando está activo, se crean o actualizan archivos como DEBUG, INFO,
-   * WARN, ERROR y FATAL según el nivel del evento.
+   * Cuando está activo, se crean o actualizan archivos como debug.log,
+   * info.log, warn.log, error.log y fatal.log según el nivel del evento.
    */
   splitByLevel?: boolean;
 }
@@ -65,22 +57,23 @@ export interface LoggerFileTransportOptions {
  * Transport encargado de escribir eventos de log en archivos.
  *
  * Este transport recibe entradas normalizadas, las convierte a texto usando
- * el formatter de archivos y las escribe en la estructura de directorios
- * definida por las utilidades de path del logger.
+ * el formatter de archivos y las escribe en la estructura estándar:
+ *
+ * logs/YYYY/MM/DD/all.log
+ * logs/YYYY/MM/DD/debug.log
+ * logs/YYYY/MM/DD/info.log
+ * logs/YYYY/MM/DD/warn.log
+ * logs/YYYY/MM/DD/error.log
+ * logs/YYYY/MM/DD/fatal.log
  */
 export class LoggerFileTransport implements LoggerTransport {
-  /**
-   * Nombre normalizado de la aplicación para nombres de archivo.
-   */
-  private readonly appName: string;
-
   /**
    * Ruta base donde se guardarán los logs.
    */
   private readonly path: string;
 
   /**
-   * Indica si se debe escribir un archivo concentrado ALL.
+   * Indica si se debe escribir un archivo concentrado all.log.
    */
   private readonly writeAll: boolean;
 
@@ -93,7 +86,6 @@ export class LoggerFileTransport implements LoggerTransport {
    * Crea una nueva instancia del transport de archivos.
    */
   public constructor(options: LoggerFileTransportOptions) {
-    this.appName = options.appName;
     this.path = options.path;
     this.writeAll = options.writeAll ?? true;
     this.splitByLevel = options.splitByLevel ?? true;
@@ -105,11 +97,16 @@ export class LoggerFileTransport implements LoggerTransport {
    * Primero asegura que exista el directorio del día correspondiente.
    * Después prepara la línea de log y la escribe en los archivos habilitados:
    *
-   * - Archivo ALL, si writeAll está activo.
+   * - all.log, si writeAll está activo.
    * - Archivo por nivel, si splitByLevel está activo.
    */
   public async write(entry: LoggerEntry): Promise<void> {
-    const directory = getLoggerDirectory(this.path, entry.timestamp, entry.timeZone);
+    const directory = getLoggerDirectory(
+      this.path,
+      entry.timestamp,
+      entry.timeZone
+    );
+
     const line = `${formatLoggerFileEntry(entry)}\n`;
 
     await mkdir(directory, {
@@ -119,11 +116,15 @@ export class LoggerFileTransport implements LoggerTransport {
     const tasks: Promise<void>[] = [];
 
     if (this.writeAll) {
-      tasks.push(this.writeToFile('all', entry, line));
+      tasks.push(
+        this.writeToFile('all', entry, line)
+      );
     }
 
     if (this.splitByLevel) {
-      tasks.push(this.writeToFile(entry.level, entry, line));
+      tasks.push(
+        this.writeToFile(entry.level, entry, line)
+      );
     }
 
     await Promise.all(tasks);
@@ -132,8 +133,8 @@ export class LoggerFileTransport implements LoggerTransport {
   /**
    * Escribe una línea en el archivo correspondiente.
    *
-   * El archivo final se resuelve a partir de la ruta base, el nombre de la
-   * aplicación, el nivel del log, el timestamp y la zona horaria del evento.
+   * El archivo final se resuelve a partir de la ruta base, el nivel del log,
+   * el timestamp y la zona horaria del evento.
    */
   private async writeToFile(
     level: LoggerLevel | 'all',
@@ -142,7 +143,6 @@ export class LoggerFileTransport implements LoggerTransport {
   ): Promise<void> {
     const filePath = getLoggerFilePath(
       this.path,
-      this.appName,
       level,
       entry.timestamp,
       entry.timeZone

@@ -44,12 +44,53 @@ export interface LoggerEntry {
   timeZone: string;
 
   /**
+   * Nombre de la aplicación normalizado para impresión visual.
+   *
+   * Este valor representa el bloque:
+   *
+   * [J.A.R.V.I.S. | App]
+   *
+   * dentro del formato homologado.
+   */
+  appName: string;
+
+  /**
+   * Paquete responsable del evento.
+   *
+   * Este valor se usa como etiqueta principal del origen del log.
+   *
+   * Ejemplos:
+   * - @jarvis/core
+   * - @jarvis/bootstrap
+   * - @jarvis/http
+   * - Sandbox API
+   */
+  package: string;
+
+  /**
    * Módulo responsable del evento.
    *
    * Este valor ya debe venir resuelto usando el módulo indicado en el contexto
    * o el módulo por defecto configurado en LoggerService.
+   *
+   * Se conserva para metadata y diagnóstico interno.
    */
   module: string;
+
+  /**
+   * Nombre técnico del evento registrado.
+   *
+   * Este valor es opcional y permite clasificar logs de forma estable.
+   */
+  event?: string;
+
+  /**
+   * Código de estado HTTP asociado al log.
+   *
+   * Este valor es opcional porque no todos los eventos de log pertenecen a
+   * una respuesta HTTP.
+   */
+  statusCode?: number;
 
   /**
    * Contexto adicional opcional asociado al evento.

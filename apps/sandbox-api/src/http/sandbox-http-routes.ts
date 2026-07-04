@@ -6,6 +6,10 @@ import type {
   JarvisApplication
 } from '@jarvis/core';
 
+import type {
+  LoggerService
+} from '@jarvis/logger';
+
 import {
   createErrorResponse,
   createSuccessResponse,
@@ -23,6 +27,7 @@ export function registerSandboxHttpRoutes(
   core: JarvisApplication
 ): void {
   const instance = core.info();
+  const logger = core.service('logger') as LoggerService;
 
   /**
    * Ruta raíz de Sandbox-API.
@@ -77,13 +82,23 @@ export function registerSandboxHttpRoutes(
    * Esta ruta valida que Sandbox API puede consumir createSuccessResponse()
    * desde el paquete @jarvis/http.
    */
-  server.get('/http/success', async () => createSuccessResponse({
-    message: 'Respuesta exitosa generada por @jarvis/http.',
-    data: {
+  server.get('/http/success', async () => {
+    logger.info('Respuesta exitosa generada por @jarvis/http.', {
       package: '@jarvis/http',
-      helper: 'createSuccessResponse'
-    }
-  }));
+      event: 'http.response.success',
+      statusCode: 200,
+      route: '/http/success',
+      method: 'GET'
+    });
+
+    return createSuccessResponse({
+      message: 'Respuesta exitosa generada por @jarvis/http.',
+      data: {
+        package: '@jarvis/http',
+        helper: 'createSuccessResponse'
+      }
+    });
+  });
 
   /**
    * Ruta de prueba para errores controlados usando @jarvis/http.
@@ -98,6 +113,15 @@ export function registerSandboxHttpRoutes(
     });
 
     const response = createErrorResponse(error);
+
+    logger.warn('Token inválido o ausente.', {
+      package: '@jarvis/http',
+      event: 'http.response.error',
+      statusCode: response.statusCode,
+      route: '/http/error',
+      method: 'GET',
+      code: response.error.code
+    });
 
     return reply
       .status(response.statusCode)

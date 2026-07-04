@@ -18,10 +18,16 @@ export interface BootstrapLogger {
   enabled: boolean;
 
   /**
-   * Nombre normalizado de la aplicación para generar archivos de log.
+   * Nombre normalizado de la aplicación para impresión visual en logs.
+   *
+   * Este valor representa el bloque:
+   *
+   * [J.A.R.V.I.S. | App]
+   *
+   * dentro del formato homologado de consola y archivos.
    *
    * Ejemplo:
-   * JARVIS_SANDBOXAPI
+   * J.A.R.V.I.S. | Sandbox API
    */
   appName: string;
 
@@ -31,7 +37,20 @@ export interface BootstrapLogger {
   level: LoggerLevel;
 
   /**
+   * Nombre del paquete por defecto para logs generados desde la aplicación.
+   *
+   * Este valor representa el bloque [PACKAGE] dentro del formato homologado.
+   *
+   * Ejemplo:
+   * Sandbox API
+   */
+  defaultPackage: string;
+
+  /**
    * Nombre del módulo por defecto para logs generados desde la aplicación.
+   *
+   * Se conserva como contexto adicional y fallback para compatibilidad con
+   * logs existentes.
    */
   defaultModule: string;
 

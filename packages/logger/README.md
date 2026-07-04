@@ -2,7 +2,7 @@
 
 **`@jarvis/logger`** es el paquete oficial de logging del ecosistema **`J.A.R.V.I.S.`**.
 
-Este paquete permite registrar eventos del sistema en consola y archivos, usando niveles, módulos, contexto adicional, zona horaria y una estructura de logs ordenada por fecha.
+Este paquete permite registrar eventos del sistema en consola y archivos usando niveles, paquete origen, aplicación, contexto adicional, zona horaria y una estructura de logs ordenada por fecha.
 
 ---
 
@@ -23,13 +23,19 @@ Actualmente, este paquete permite:
 - Registrar mensajes por nivel.
 - Escribir logs en consola.
 - Escribir logs en archivos.
-- Crear un archivo concentrado **`ALL.log`**.
+- Usar un formato homologado para consola y archivos.
+- Identificar el paquete origen mediante **`package`**.
+- Identificar la aplicación mediante **`appName`**.
+- Agregar **`statusCode`** opcional para eventos HTTP.
+- Crear un archivo concentrado **`all.log`**.
 - Crear archivos separados por nivel.
 - Usar zona horaria configurable.
 - Mantener el orden de escritura mediante una cola interna.
 - Formatear contexto adicional como JSON legible.
+- Evitar duplicar metadata ya impresa en la línea principal.
 - Normalizar errores para imprimirlos correctamente.
 - Permitir loggers hijos mediante **`child(module)`**.
+- Permitir loggers asociados a paquetes mediante **`package(packageName)`**.
 - Respetar **`enabled: false`** como switch maestro del módulo.
 
 ---
@@ -42,6 +48,55 @@ Este módulo expone una instancia de **`LoggerService`** como servicio del runti
 
 ```ts
 const logger = core.service<LoggerService>('logger');
+```
+
+### Formato homologado
+
+El formato oficial de salida es:
+
+```txt
+[YYYY-MM-DD HH:mm:ss] [TYPE] [PACKAGE] [J.A.R.V.I.S. | APP] | [STATUSCODE] - MESSAGE
+```
+
+Ejemplo con **`statusCode`**:
+
+```txt
+[2026-07-04 14:10:24] [INFO] [@jarvis/http] [J.A.R.V.I.S. | Sandbox-API] | [200] - Respuesta exitosa generada por @jarvis/http.
+```
+
+Ejemplo sin **`statusCode`**:
+
+```txt
+[2026-07-04 14:10:18] [INFO] [Sandbox-API] [J.A.R.V.I.S. | Sandbox-API] - Servidor HTTPS: https://localhost:3000
+```
+
+El bloque **`statusCode`** es opcional porque no todos los logs pertenecen a operaciones HTTP.
+
+### Campos principales
+
+Cada evento normalizado puede incluir:
+
+```txt
+timestamp
+level
+package
+appName
+module
+event
+statusCode
+message
+context
+```
+
+Uso visual:
+
+```txt
+timestamp  -> [2026-07-04 14:10:24]
+level      -> [INFO]
+package    -> [@jarvis/http]
+appName    -> [J.A.R.V.I.S. | Sandbox-API]
+statusCode -> | [200]
+message    -> Respuesta exitosa generada por @jarvis/http.
 ```
 
 ### Niveles de log
@@ -60,6 +115,16 @@ Orden de prioridad:
 
 ```txt
 debug < info < warn < error < fatal
+```
+
+Salida visual:
+
+```txt
+[DEBUG]
+[INFO]
+[WARN]
+[ERROR]
+[FATAL]
 ```
 
 ### Métodos disponibles
@@ -131,13 +196,38 @@ const configLogger = logger.child('Config');
 configLogger.info('Configuración cargada');
 ```
 
+### Loggers por paquete
+
+**`package(packageName)`** crea un logger asociado a un paquete específico:
+
+```ts
+const httpLogger = logger.package('@jarvis/http');
+
+httpLogger.info('Respuesta exitosa generada por @jarvis/http.', {
+  statusCode: 200,
+  route: '/http/success',
+  method: 'GET'
+});
+```
+
+Salida esperada:
+
+```txt
+[2026-07-04 14:10:24] [INFO] [@jarvis/http] [J.A.R.V.I.S. | Sandbox-API] | [200] - Respuesta exitosa generada por @jarvis/http.
+{
+  "route": "/http/success",
+  "method": "GET"
+}
+```
+
 ### Contexto adicional
 
 El logger puede imprimir contexto adicional como JSON legible:
 
 ```ts
-logger.debug('Configuración cargada desde settings.json', {
-  module: 'Config',
+logger.debug('Configuración cargada desde settings.json.', {
+  package: '@jarvis/config',
+  event: 'config.loaded',
   data: config.all()
 });
 ```
@@ -145,7 +235,7 @@ logger.debug('Configuración cargada desde settings.json', {
 Salida esperada:
 
 ```txt
-[DEBUG] 2026-06-24 20:28:21 | [Config] Configuración cargada desde settings.json
+[2026-07-04 14:10:18] [DEBUG] [@jarvis/config] [J.A.R.V.I.S. | Sandbox-API] - Configuración cargada desde settings.json.
 {
   "data": {
     "app": {
@@ -155,13 +245,27 @@ Salida esperada:
 }
 ```
 
+Los campos usados por la línea principal no se duplican dentro del contexto.
+
+No se imprimen como metadata adicional:
+
+```txt
+package
+module
+event
+statusCode
+```
+
+Esto evita salidas repetidas y mantiene los logs limpios.
+
 ### Errores
 
 Los errores se normalizan para evitar que se impriman como objetos vacíos:
 
 ```ts
-logger.error('No se pudo cargar settings.json', {
-  module: 'Config',
+logger.error('No se pudo cargar settings.json.', {
+  package: '@jarvis/config',
+  event: 'config.load.failed',
   error
 });
 ```
@@ -180,36 +284,61 @@ Salida esperada:
 
 ### Archivos generados
 
-Cuando la salida a archivo está habilitada, se usa la estructura:
+Cuando la salida a archivo está habilitada, se usa la estructura estándar:
 
 ```txt
 logs/YYYY/MM/DD/
 ```
 
-Los nombres de archivo siguen este formato:
+Los nombres de archivo son simples y no son configurables:
 
 ```txt
-YYYY_MM_DD_APP_LEVEL.log
+all.log
+debug.log
+info.log
+warn.log
+error.log
+fatal.log
 ```
 
-Ejemplos:
+Ejemplo:
 
 ```txt
-2026_06_24_JARVIS_SANDBOXAPI_ALL.log
-2026_06_24_JARVIS_SANDBOXAPI_DEBUG.log
-2026_06_24_JARVIS_SANDBOXAPI_INFO.log
-2026_06_24_JARVIS_SANDBOXAPI_WARN.log
-2026_06_24_JARVIS_SANDBOXAPI_ERROR.log
-2026_06_24_JARVIS_SANDBOXAPI_FATAL.log
+logs/
+  2026/
+    07/
+      04/
+        all.log
+        debug.log
+        info.log
+        warn.log
+        error.log
+        fatal.log
 ```
 
-Cuando **`writeAll`** está activo, todos los logs también se escriben en un archivo concentrado:
+Cuando **`writeAll`** está activo, todos los logs también se escriben en:
 
 ```txt
-YYYY_MM_DD_APP_ALL.log
+all.log
 ```
 
-Este archivo permite revisar el flujo completo de la aplicación.
+Cuando **`splitByLevel`** está activo, cada log también se escribe en el archivo correspondiente a su nivel:
+
+```txt
+debug.log
+info.log
+warn.log
+error.log
+fatal.log
+```
+
+Regla interna:
+
+```txt
+La ruta organiza por fecha.
+El archivo organiza por nivel.
+La línea del log contiene el contexto.
+```
 
 ### Zona horaria
 
@@ -221,7 +350,7 @@ timeZone: 'America/Mexico_City'
 
 ### Escritura ordenada
 
-**`LoggerService`** mantiene una cola interna de escritura para evitar que los logs se mezclen fuera de orden en archivos como **`ALL.log`**.
+**`LoggerService`** mantiene una cola interna de escritura para evitar que los logs se mezclen fuera de orden en archivos como **`all.log`**.
 
 ---
 
@@ -236,9 +365,10 @@ import {
 
 const loggerModule = createLoggerModule({
   enabled: true,
-  appName: 'JARVIS_SANDBOXAPI',
+  appName: 'J.A.R.V.I.S. | Sandbox-API',
   level: 'debug',
-  defaultModule: 'SandboxAPI',
+  defaultPackage: 'Sandbox-API',
+  defaultModule: 'Sandbox-API',
   timeZone: 'America/Mexico_City',
   console: {
     enabled: true,
@@ -252,7 +382,53 @@ const loggerModule = createLoggerModule({
   }
 });
 
-loggerModule.service.info('Logger inicializado');
+loggerModule.service.info('Logger inicializado.');
+```
+
+Ejemplo con **`package`** y **`statusCode`**:
+
+```ts
+loggerModule.service.info('Respuesta exitosa generada por @jarvis/http.', {
+  package: '@jarvis/http',
+  event: 'http.response.success',
+  statusCode: 200,
+  route: '/http/success',
+  method: 'GET'
+});
+```
+
+Salida esperada:
+
+```txt
+[2026-07-04 14:10:24] [INFO] [@jarvis/http] [J.A.R.V.I.S. | Sandbox-API] | [200] - Respuesta exitosa generada por @jarvis/http.
+{
+  "route": "/http/success",
+  "method": "GET"
+}
+```
+
+Ejemplo con error HTTP controlado:
+
+```ts
+loggerModule.service.warn('Token inválido o ausente.', {
+  package: '@jarvis/http',
+  event: 'http.response.error',
+  statusCode: 401,
+  route: '/http/error',
+  method: 'GET',
+  code: 'UNAUTHORIZED'
+});
+```
+
+Salida esperada:
+
+```txt
+[2026-07-04 14:10:29] [WARN] [@jarvis/http] [J.A.R.V.I.S. | Sandbox-API] | [401] - Token inválido o ausente.
+{
+  "route": "/http/error",
+  "method": "GET",
+  "code": "UNAUTHORIZED"
+}
 ```
 
 Ejemplo con logger apagado:
@@ -260,9 +436,10 @@ Ejemplo con logger apagado:
 ```ts
 const loggerModule = createLoggerModule({
   enabled: false,
-  appName: 'JARVIS_SANDBOXAPI',
+  appName: 'J.A.R.V.I.S. | Sandbox-API',
   level: 'debug',
-  defaultModule: 'SandboxAPI',
+  defaultPackage: 'Sandbox-API',
+  defaultModule: 'Sandbox-API',
   timeZone: 'America/Mexico_City',
   console: {
     enabled: true,
@@ -301,7 +478,7 @@ await core.bootModules();
 
 const logger = core.service<LoggerService>('logger');
 
-logger?.info('J.A.R.V.I.S. iniciado');
+logger.info('J.A.R.V.I.S. iniciado.');
 
 await core.shutdown();
 ```
@@ -328,6 +505,7 @@ También es importante considerar:
 - No usar **`console.log()`** directamente en paquetes cuando **`LoggerService`** esté disponible.
 - No imprimir secretos reales en logs.
 - No subir **`logs/`** ni **`*.log`** a Git.
+- Mantener la estructura interna de logs como estándar del paquete.
 - Mantener documentación en español.
 - Mantener comentarios útiles en español.
 - Mantener commits en español.
