@@ -6,6 +6,12 @@ import type {
   JarvisApplication
 } from '@jarvis/core';
 
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  unauthorized
+} from '@jarvis/http';
+
 /**
  * Registra las rutas HTTP base de Sandbox-API.
  *
@@ -34,7 +40,9 @@ export function registerSandboxHttpRoutes(
       '/',
       '/health',
       '/info',
-      '/modules'
+      '/modules',
+      '/http/success',
+      '/http/error'
     ]
   }));
 
@@ -63,4 +71,36 @@ export function registerSandboxHttpRoutes(
    * Devuelve la lista de módulos conocidos por el runtime.
    */
   server.get('/modules', async () => core?.modules());
+  /**
+   * Ruta de prueba para respuestas exitosas usando @jarvis/http.
+   *
+   * Esta ruta valida que Sandbox API puede consumir createSuccessResponse()
+   * desde el paquete @jarvis/http.
+   */
+  server.get('/http/success', async () => createSuccessResponse({
+    message: 'Respuesta exitosa generada por @jarvis/http.',
+    data: {
+      package: '@jarvis/http',
+      helper: 'createSuccessResponse'
+    }
+  }));
+
+  /**
+   * Ruta de prueba para errores controlados usando @jarvis/http.
+   *
+   * Esta ruta valida que Sandbox API puede crear un JarvisHttpError mediante
+   * helpers de @jarvis/http y convertirlo a una respuesta segura.
+   */
+  server.get('/http/error', async (_request, reply) => {
+    const error = unauthorized('Token inválido o ausente.', {
+      package: '@jarvis/http',
+      helper: 'unauthorized'
+    });
+
+    const response = createErrorResponse(error);
+
+    return reply
+      .status(response.statusCode)
+      .send(response);
+  });
 }

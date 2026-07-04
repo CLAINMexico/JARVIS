@@ -16,6 +16,7 @@
     "@jarvis/bootstrap": "workspace:*",
     "@jarvis/config": "workspace:*",
     "@jarvis/core": "workspace:*",
+    "@jarvis/http": "workspace:*",
     "@jarvis/logger": "workspace:*",
     "fastify": "^5.8.5"
   },

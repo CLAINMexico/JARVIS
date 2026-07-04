@@ -1,5 +1,83 @@
 # CHANGELOG | J.A.R.V.I.S.
 
+## **`0.16.0`** <sup><small>(03/Julio/2026)</small></sup>
+
+### Resumen
+
+Se agrega el paquete **`@jarvis/http`** como base oficial para manejar errores, códigos de estado y respuestas HTTP estandarizadas dentro del ecosistema **`J.A.R.V.I.S.`**.
+
+Esta versión define un lenguaje común para construir respuestas exitosas, errores controlados y códigos internos de error sin duplicar lógica en cada paquete o aplicación.
+
+---
+
+### Cambios
+
+- Se agregó el nuevo paquete **`packages/http`**.
+- Se agregó el catálogo oficial **`HTTP_STATUS`**.
+- Se agregó el catálogo oficial **`HTTP_ERROR_CODE`**.
+- Se agregó el contrato **`HttpErrorOptions`**.
+- Se agregó el contrato **`HttpErrorResponse`**.
+- Se agregó el contrato **`HttpSuccessResponse`**.
+- Se agregó la clase **`JarvisHttpError`**.
+- Se agregó el type guard **`isJarvisHttpError()`**.
+- Se agregaron helpers para crear errores HTTP comunes:
+  - **`badRequest()`**
+  - **`unauthorized()`**
+  - **`forbidden()`**
+  - **`notFound()`**
+  - **`conflict()`**
+  - **`validationError()`**
+  - **`tooManyRequests()`**
+  - **`internalServerError()`**
+  - **`serviceUnavailable()`**
+- Se agregaron helpers para crear respuestas estándar:
+  - **`createSuccessResponse()`**
+  - **`createErrorResponse()`**
+- Se agregaron utilidades para clasificar status codes HTTP.
+- Se integró **`@jarvis/http`** en **`apps/sandbox-api`** para validar consumo real desde otro workspace.
+- Se agregaron rutas de prueba en **`Sandbox API`**:
+  - **`GET /http/success`**
+  - **`GET /http/error`**
+- Se actualizó **`apps/sandbox-api/http/sandbox-api.http`** para probar las nuevas rutas desde REST Client.
+- Se actualizó el **`package.json`** raíz para incluir **`@jarvis/http`** en los scripts de paquetes.
+
+---
+
+### Mejoras
+
+- Se estandariza el formato de respuestas HTTP exitosas.
+- Se estandariza el formato de respuestas HTTP de error.
+- Se evita usar números mágicos para status codes HTTP.
+- Se evita inventar códigos internos de error en cada paquete.
+- Se facilita la futura integración con **`@jarvis/security`**.
+- Se mantiene **`@jarvis/http`** independiente de Fastify, rutas, middlewares, base de datos y seguridad.
+- Se valida que **`@jarvis/http`** compile como paquete independiente y también funcione consumido desde **`Sandbox API`**.
+
+---
+
+### Correcciones
+
+- Se agregaron códigos HTTP de éxito **`200`**, **`201`** y **`204`** al catálogo oficial para soportar respuestas exitosas.
+- Se ajustó **`createSuccessResponse()`** para usar **`HTTP_STATUS.OK`** en lugar de un valor numérico directo.
+- Se respetó **`exactOptionalPropertyTypes`** evitando propiedades opcionales con valor **`undefined`**.
+- Se validaron respuestas reales desde REST Client:
+  - **`GET /http/success`**
+  - **`GET /http/error`**
+- Se verificó correctamente el paquete mediante:
+
+```bash
+docker compose exec jarvis-node pnpm --filter @jarvis/http build
+docker compose exec jarvis-node pnpm --filter @jarvis/http typecheck
+```
+
+- Se verificó correctamente el proyecto mediante:
+
+```bash
+docker compose exec jarvis-node pnpm verify
+```
+
+---
+
 ## **`0.15.0`** <sup><small>(26/Junio/2026)</small></sup>
 
 ### Resumen

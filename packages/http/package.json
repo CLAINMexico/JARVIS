@@ -1,0 +1,25 @@
+{
+  "name": "@jarvis/http",
+  "description": "HTTP | Paquete base para definir errores, códigos de estado y respuestas HTTP estandarizadas dentro del ecosistema J.A.R.V.I.S.",
+  "version": "1.0.0",
+  "author": "CLAIN México, S.A. de C.V.",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

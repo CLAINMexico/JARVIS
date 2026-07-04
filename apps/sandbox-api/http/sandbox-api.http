@@ -12,3 +12,9 @@ GET {{baseUrl}}/info
 
 ### Sandbox-API | Runtime Modules
 GET {{baseUrl}}/modules
+
+### Sandbox API | HTTP Success Response
+GET {{baseUrl}}/http/success
+
+### Sandbox API | HTTP Error Response
+GET {{baseUrl}}/http/error

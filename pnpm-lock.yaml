@@ -29,6 +29,9 @@ importers:
       '@jarvis/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@jarvis/http':
+        specifier: workspace:*
+        version: link:../../packages/http
       '@jarvis/logger':
         specifier: workspace:*
         version: link:../../packages/logger
@@ -70,6 +73,12 @@ importers:
         version: 5.9.3
 
   packages/core:
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/http:
     devDependencies:
       typescript:
         specifier: ^5.7.0
