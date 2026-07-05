@@ -18,6 +18,7 @@ También permite validar integraciones entre paquetes del ecosistema, por ejempl
 @jarvis/config
 @jarvis/logger
 @jarvis/http
+@jarvis/security
 ```
 
 ---
@@ -411,7 +412,7 @@ Apagar módulos vivos del runtime
 
 ## Configuración de packages
 
-A partir de **`v0.18.1`**, la configuración de paquetes instalables del ecosistema se declara bajo:
+La configuración de paquetes instalables del ecosistema se declara bajo:
 
 ```json
 {
@@ -505,7 +506,172 @@ issuer   = J.A.R.V.I.S.
 audience = Sandbox-API
 ```
 
-La integración real de **`@jarvis/security`** con **`Sandbox-API`** se realizará en una versión posterior.
+**`Sandbox-API`** usa esta configuración para crear una instancia de **`SecurityJwtService`** y exponer rutas HTTP de prueba para firma y verificación de tokens JWT.
+
+---
+
+## Rutas HTTP homologadas
+
+Las rutas base de **`Sandbox-API`** responden usando el formato estándar de **`@jarvis/http`**.
+
+Rutas base:
+
+```txt
+GET /
+GET /health
+GET /info
+GET /modules
+GET /http/success
+GET /http/error
+```
+
+Formato de respuesta exitosa:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "...",
+  "data": {}
+}
+```
+
+Formato de respuesta de error:
+
+```json
+{
+  "success": false,
+  "statusCode": 401,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "..."
+  }
+}
+```
+
+### Información del runtime
+
+La ruta **`GET /info`** expone la información normalizada de **`core.info()`**, incluyendo la zona horaria configurada para la aplicación.
+
+Ejemplo:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Información del runtime consultada correctamente.",
+  "data": {
+    "app": {
+      "name": "Sandbox-API",
+      "description": "Ambiente de pruebas para aplicaciones de tipo API.",
+      "version": "1.0.0",
+      "environment": "local",
+      "timeZone": "America/Mexico_City"
+    }
+  }
+}
+```
+
+---
+
+## Rutas JWT
+
+**`Sandbox-API`** expone rutas de prueba para validar **`@jarvis/security`** desde HTTP:
+
+```txt
+POST /security/jwt/sign
+POST /security/jwt/verify
+```
+
+### Firmar token access
+
+```http
+POST {{host}}/security/jwt/sign
+Content-Type: application/json
+
+{
+  "subject": "user-001",
+  "tokenType": "access",
+  "sessionId": "session-001",
+  "roles": [
+    "admin"
+  ],
+  "permissions": [
+    "security.jwt.test"
+  ],
+  "metadata": {
+    "source": "sandbox-api.http"
+  }
+}
+```
+
+### Verificar token
+
+```http
+POST {{host}}/security/jwt/verify
+Content-Type: application/json
+
+{
+  "token": "..."
+}
+```
+
+Tipos de token usados en pruebas:
+
+```txt
+access
+refresh
+service
+```
+
+Errores controlados validados:
+
+```txt
+token inválido
+token ausente
+body inválido
+payload sin tokenType
+```
+
+---
+
+## Logger error verbose
+
+La configuración de logger permite controlar si los errores se imprimen completos o resumidos.
+
+Ruta:
+
+```txt
+packages.logger.error.verbose
+```
+
+Ejemplo:
+
+```json
+{
+  "packages": {
+    "logger": {
+      "error": {
+        "verbose": false
+      }
+    }
+  }
+}
+```
+
+Con **`verbose: false`**, el log conserva información segura:
+
+```json
+{
+  "error": {
+    "name": "JarvisHttpError",
+    "message": "Token JWT inválido o expirado.",
+    "code": "UNAUTHORIZED"
+  }
+}
+```
+
+Con **`verbose: true`**, el log incluye **`stack`** para depuración local.
 
 ---
 

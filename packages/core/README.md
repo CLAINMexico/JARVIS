@@ -23,6 +23,7 @@ Actualmente, este paquete permite:
 - Ejecutar el ciclo de vida inicial de módulos con **`bootModules()`**.
 - Ejecutar apagado ordenado con **`shutdown()`**.
 - Reportar información de la instancia mediante **`info()`**.
+- Reportar la zona horaria de la aplicación mediante **`info().app.timeZone`**.
 - Exponer contratos base para otros paquetes.
 
 ---
@@ -52,6 +53,7 @@ La función **`Jarvis.boot()`** crea una instancia de **`JarvisApplication`**.
 Durante este proceso, el core recibe opciones iniciales como:
 
 - Información de la aplicación.
+- Zona horaria base de la aplicación.
 - Configuración del servidor.
 - Módulos informativos.
 - Módulos vivos del runtime.
@@ -223,6 +225,89 @@ console.log(config?.get('app.name'));
 
 await core.shutdown();
 ```
+
+---
+
+## Información del runtime
+
+El método **`core.info()`** devuelve una fotografía normalizada de la instancia viva de **`J.A.R.V.I.S.`**.
+
+Ejemplo:
+
+```json
+{
+  "name": "J.A.R.V.I.S.",
+  "description": "JavaScript Architecture Runtime for Versatile Intelligent Services",
+  "app": {
+    "name": "Sandbox-API",
+    "description": "Ambiente de pruebas para aplicaciones de tipo API.",
+    "version": "1.0.0",
+    "environment": "local",
+    "timeZone": "America/Mexico_City"
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 3000,
+    "protocol": "https"
+  },
+  "modules": [
+    {
+      "name": "config",
+      "status": "registered"
+    },
+    {
+      "name": "logger",
+      "status": "registered"
+    }
+  ],
+  "status": "bootstrapped"
+}
+```
+
+La propiedad **`timeZone`** permite que aplicaciones, logs, procesos internos y futuras tareas programadas conozcan la zona horaria base configurada para la aplicación.
+
+Si no se recibe una zona horaria válida, el core usa:
+
+```txt
+UTC
+```
+
+### Diferencia entre packages y runtimeModules
+
+En el ecosistema se mantiene esta separación:
+
+```txt
+packages       = paquetes físicos/configurables del monorepo
+runtimeModules = módulos vivos registrados dentro de @jarvis/core
+modules        = módulos reportados por el runtime
+```
+
+Ejemplo de paquetes físicos:
+
+```txt
+packages/core
+packages/config
+packages/logger
+packages/http
+packages/security
+```
+
+Ejemplo de configuración:
+
+```txt
+settings.packages.logger
+```
+
+Ejemplo de módulos vivos:
+
+```ts
+runtimeModules: [
+  configModule,
+  loggerModule
+]
+```
+
+Por esta razón, contratos como **`JarvisRuntimeModule`**, métodos como **`bootModules()`** y respuestas como **`core.modules()`** conservan el término **`module`**, porque pertenecen al lenguaje interno del runtime.
 
 ---
 

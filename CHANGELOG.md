@@ -1,5 +1,92 @@
 # CHANGELOG | J.A.R.V.I.S.
 
+## **`0.19.0`** <sup><small>(04/Julio/2026)</small></sup>
+
+### Resumen
+
+Se integró **`@jarvis/security`** con **`Sandbox-API`** mediante rutas HTTP reales para firmar y verificar tokens JWT.
+
+También se homologaron rutas base de **`Sandbox-API`** con **`@jarvis/http`**, se agregó **`timeZone`** a **`core.info()`** y se incorporó en **`@jarvis/logger`** la configuración **`packages.logger.error.verbose`** para controlar si los errores se imprimen completos o resumidos.
+
+---
+
+### Cambios
+
+- Se agregó **`@jarvis/security`** como dependencia de **`@jarvis/sandbox-api`**.
+- Se creó resolución de opciones JWT para **`Sandbox-API`** desde **`api.jwt`**.
+- Se definió **`issuer`** fijo como **`J.A.R.V.I.S.`**.
+- Se definió **`audience`** desde **`app.name`**.
+- Se agregó soporte para resolver **`api.jwt.secret`** desde variable de entorno cuando el valor de settings sea un placeholder.
+- Se agregaron rutas HTTP de prueba:
+  - **`POST /security/jwt/sign`**
+  - **`POST /security/jwt/verify`**.
+- Se homologaron rutas base usando **`@jarvis/http`**:
+  - **`GET /`**
+  - **`GET /health`**
+  - **`GET /info`**
+  - **`GET /modules`**.
+- Se agregó colección **`sandbox-api.http`** para pruebas manuales desde REST Client.
+- Se agregó **`timeZone`** a **`JarvisAppInfo`**.
+- Se agregó normalización de **`timeZone`** dentro de **`@jarvis/core`**.
+- Se agregó configuración oficial en **`@jarvis/logger`**:
+
+```txt
+packages.logger.error.verbose
+```
+
+- Se actualizó **`@jarvis/bootstrap`** para leer y entregar **`packages.logger.error.verbose`**.
+- Se actualizó **`@jarvis/logger`** para serializar errores completos o resumidos según configuración.
+- Se reorganizó el arranque de **`Sandbox-API`** para imprimir logs de boot más limpios:
+  - Datos de la aplicación.
+  - Packages cargados e inicializados.
+  - Servidor iniciado.
+
+---
+
+### Mejoras
+
+- Se validó el flujo completo:
+
+```txt
+settings.json
+.env
+Sandbox-API
+@jarvis/security
+@jarvis/http
+@jarvis/logger
+Fastify
+```
+
+- Se centralizó la serialización de errores dentro de **`@jarvis/logger`**.
+- Se evitó que **`Sandbox-API`** necesite helpers locales para limpiar errores.
+- Se mejoró la legibilidad de **`all.log`**.
+- Se redujo el ruido de stack traces cuando **`packages.logger.error.verbose`** está en **`false`**.
+- Se conserva la posibilidad de depurar con stack trace completo cuando **`packages.logger.error.verbose`** está en **`true`**.
+- Se documentó la diferencia conceptual entre:
+  - **`packages`**
+  - **`runtimeModules`**
+  - **`modules`** del runtime.
+- Se dejó preparada la base para un futuro middleware HTTP de autenticación.
+
+---
+
+### Correcciones
+
+- Se corrigió la respuesta cruda de rutas base para usar formato estándar de **`@jarvis/http`**.
+- Se corrigió la ausencia de **`timeZone`** dentro de **`core.info()`**.
+- Se corrigió la serialización de errores en logs para no imprimir stack traces cuando no son necesarios.
+- Se validó que **`createErrorResponse()`** reciba errores controlados reales usando helpers oficiales como **`badRequest()`**.
+- Se validaron rutas JWT con:
+  - access token
+  - refresh token
+  - service token
+  - token inválido
+  - token ausente
+  - payload sin tokenType.
+- Se validó la versión mediante **`pnpm verify`** completo.
+
+---
+
 ## **`0.18.1`** <sup><small>(04/Julio/2026)</small></sup>
 
 ### Resumen

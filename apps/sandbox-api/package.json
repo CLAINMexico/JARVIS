@@ -18,6 +18,7 @@
     "@jarvis/core": "workspace:*",
     "@jarvis/http": "workspace:*",
     "@jarvis/logger": "workspace:*",
+    "@jarvis/security": "workspace:*",
     "fastify": "^5.8.5"
   },
   "devDependencies": {

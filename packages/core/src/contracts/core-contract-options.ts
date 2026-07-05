@@ -63,7 +63,7 @@ export interface JarvisAppOptions {
    * Nombre legible de la aplicación.
    *
    * Ejemplo:
-   * J.A.R.V.I.S. Sandbox-API
+   * Sandbox-API
    */
   name: string;
 
@@ -79,7 +79,7 @@ export interface JarvisAppOptions {
    * Versión de la aplicación.
    *
    * Ejemplo:
-   * 0.1.0
+   * 1.0.0
    */
   version: string;
 
@@ -89,6 +89,13 @@ export interface JarvisAppOptions {
    * Si no se define, J.A.R.V.I.S. usará local por defecto.
    */
   environment?: JarvisEnvironment;
+
+  /**
+   * Zona horaria base de la aplicación.
+   *
+   * Si no se define, J.A.R.V.I.S. usará UTC por defecto.
+   */
+  timeZone?: string;
 }
 
 /**
@@ -155,6 +162,10 @@ export interface JarvisOptions {
    *
    * Estos módulos solo describen nombre y estado. No ejecutan boot(),
    * shutdown() ni exponen servicios.
+   *
+   * Importante:
+   * Este concepto pertenece al runtime. No representa paquetes físicos del
+   * monorepo ni la sección settings.packages.
    */
   modules?: JarvisModuleOptions[];
 
@@ -164,6 +175,10 @@ export interface JarvisOptions {
    * Estos módulos pueden participar en el ciclo de vida mediante boot()
    * y shutdown(). También pueden exponer un service para ser consultado
    * desde core.service(name).
+   *
+   * Importante:
+   * runtimeModules representa instancias vivas dentro del core, no paquetes
+   * configurables dentro de settings.packages.
    */
   runtimeModules?: JarvisRuntimeModule[];
 }

@@ -60,6 +60,22 @@ export interface BootstrapLogger {
   timeZone: string;
 
   /**
+   * Configuración de salida de errores.
+   */
+  error: {
+    /**
+     * Indica si los errores deben imprimirse con información completa.
+     *
+     * true:
+     * - Incluye stack trace cuando existe.
+     *
+     * false:
+     * - Imprime información segura y resumida.
+     */
+    verbose: boolean;
+  };
+
+  /**
    * Configuración de salida en consola.
    */
   console: {

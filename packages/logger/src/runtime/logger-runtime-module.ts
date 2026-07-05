@@ -93,6 +93,14 @@ export function createLoggerModule(options: LoggerOptions = {}): LoggerModule {
   const timeZone = options.timeZone ?? 'UTC';
 
   /**
+   * Configuración de detalle para errores en logs.
+   *
+   * Cuando verbose es true, se imprime stack trace.
+   * Cuando verbose es false, se imprime una versión segura y resumida.
+   */
+  const verboseError = options.error?.verbose ?? false;
+
+  /**
    * Lista de destinos donde LoggerService escribirá los eventos.
    *
    * Si el switch maestro enabled está apagado, esta lista permanece vacía
@@ -130,6 +138,7 @@ export function createLoggerModule(options: LoggerOptions = {}): LoggerModule {
     defaultPackage,
     defaultModule,
     timeZone,
+    verboseError,
     transports
   });
 

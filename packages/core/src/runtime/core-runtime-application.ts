@@ -34,6 +34,7 @@ interface NormalizedJarvisOptions {
     description: string;
     version: string;
     environment: JarvisEnvironment;
+    timeZone: string;
   };
 
   /**
@@ -52,6 +53,9 @@ interface NormalizedJarvisOptions {
 
   /**
    * Lista de módulos registrados ya normalizados.
+   *
+   * Estos módulos representan registros del runtime, no paquetes físicos ni
+   * claves de settings.packages.
    */
   modules: JarvisModuleInfo[];
 
@@ -103,6 +107,23 @@ function normalizeServerProtocol(
 }
 
 /**
+ * Normaliza la zona horaria configurada para la aplicación.
+ *
+ * Si no se recibe un valor real, J.A.R.V.I.S. usa UTC por defecto.
+ */
+function normalizeAppTimeZone(
+  options: JarvisOptions
+): string {
+  const timeZone = options.app.timeZone;
+
+  if (typeof timeZone !== 'string' || timeZone.trim().length === 0) {
+    return 'UTC';
+  }
+
+  return timeZone;
+}
+
+/**
  * Representa una instancia viva del runtime de J.A.R.V.I.S.
  *
  * Esta clase recibe las opciones de arranque, las normaliza y expone métodos
@@ -144,7 +165,8 @@ export class JarvisApplication {
         name: options.app.name,
         description: options.app.description,
         version: options.app.version,
-        environment: options.app.environment ?? 'local'
+        environment: options.app.environment ?? 'local',
+        timeZone: normalizeAppTimeZone(options)
       },
       server: {
         host: options.server?.host ?? '0.0.0.0',
@@ -208,7 +230,8 @@ export class JarvisApplication {
         name: this.options.app.name,
         description: this.options.app.description,
         version: this.options.app.version,
-        environment: this.options.app.environment
+        environment: this.options.app.environment,
+        timeZone: this.options.app.timeZone
       },
       server: {
         host: this.options.server.host,
@@ -226,6 +249,10 @@ export class JarvisApplication {
    *
    * Se devuelve una copia superficial del arreglo para evitar que código
    * externo modifique directamente la lista interna de módulos.
+   *
+   * Importante:
+   * Estos módulos pertenecen al runtime. No representan paquetes físicos del
+   * monorepo ni claves de settings.packages.
    */
   public modules(): JarvisModuleInfo[] {
     return [...this.options.modules];

@@ -35,6 +35,9 @@ importers:
       '@jarvis/logger':
         specifier: workspace:*
         version: link:../../packages/logger
+      '@jarvis/security':
+        specifier: workspace:*
+        version: link:../../packages/security
       fastify:
         specifier: ^5.8.5
         version: 5.8.5

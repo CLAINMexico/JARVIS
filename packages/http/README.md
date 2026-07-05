@@ -188,6 +188,55 @@ isSupportedHttpStatus()
 
 ---
 
+## Integración con logs y seguridad
+
+**`@jarvis/http`** permite que otros paquetes construyan errores controlados que después pueden registrarse de forma limpia con **`@jarvis/logger`**.
+
+Ejemplo:
+
+```ts
+import {
+  createErrorResponse,
+  unauthorized
+} from '@jarvis/http';
+
+const error = unauthorized('Token JWT inválido o expirado.', {
+  package: '@jarvis/security',
+  event: 'security.jwt.invalid'
+});
+
+const response = createErrorResponse(error);
+```
+
+Respuesta segura:
+
+```json
+{
+  "success": false,
+  "statusCode": 401,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Token JWT inválido o expirado.",
+    "details": {
+      "package": "@jarvis/security",
+      "event": "security.jwt.invalid"
+    }
+  }
+}
+```
+
+Cuando el error se envía a **`@jarvis/logger`**, el logger puede decidir si imprime el error completo o resumido según su configuración.
+
+Esto permite separar responsabilidades:
+
+```txt
+@jarvis/http   = crea errores y respuestas HTTP seguras
+@jarvis/logger = registra eventos y errores
+@jarvis/security = usa errores HTTP controlados para flujos de seguridad
+```
+
+---
+
 ## Notas
 
 **`@jarvis/http`** es un paquete base del ecosistema.
@@ -205,4 +254,4 @@ No debe depender de:
 
 Esto permite que pueda ser usado por distintos paquetes sin generar acoplamiento innecesario.
 
-Este paquete será utilizado posteriormente por **`@jarvis/security`**, **`Sandbox API`** y otros módulos que necesiten respuestas HTTP estandarizadas.
+Este paquete puede ser utilizado por **`@jarvis/security`**, **`Sandbox-API`** y otros paquetes o aplicaciones que necesiten respuestas HTTP estandarizadas.

@@ -27,6 +27,10 @@ import type {
 } from '@jarvis/logger';
 
 import {
+  SecurityJwtService
+} from '@jarvis/security';
+
+import {
   createJarvisBootstrap
 } from '@jarvis/bootstrap';
 
@@ -42,10 +46,19 @@ import {
   resolveSandboxHttpOptions
 } from './http/sandbox-http-options.js';
 
+import {
+  resolveSandboxSecurityJwtOptions
+} from './security/sandbox-security-jwt-options.js';
+
 /**
  * Paquete visual usado por los logs propios de Sandbox-API.
  */
 const SandboxPackageName = 'Sandbox-API';
+
+/**
+ * Separador visual para agrupar logs importantes del arranque.
+ */
+const SandboxLogSeparator = '================================================================================';
 
 /**
  * Ejecuta el arranque principal de Sandbox-API.
@@ -179,6 +192,30 @@ async function main(): Promise<void> {
     }
 
     /**
+     * Resuelve las opciones de seguridad JWT para Sandbox-API.
+     *
+     * Reglas oficiales:
+     * - issuer se fija internamente como J.A.R.V.I.S.
+     * - audience se resuelve desde app.name.
+     * - secret puede venir como placeholder de variable de entorno.
+     */
+    const securityJwtOptions = resolveSandboxSecurityJwtOptions(
+      config,
+      instance.app.name
+    );
+
+    /**
+     * Crea el servicio JWT de @jarvis/security.
+     *
+     * En v0.19.0 este servicio se usa para rutas de prueba de firma y
+     * verificación. La protección real de rutas se integrará en una versión
+     * posterior mediante middleware HTTP.
+     */
+    const securityJwt = new SecurityJwtService(
+      securityJwtOptions
+    );
+
+    /**
      * Resuelve las opciones finales del servidor HTTP/HTTPS.
      *
      * La configuración viene desde core.info().server, después de haber sido
@@ -187,86 +224,6 @@ async function main(): Promise<void> {
     const httpOptions = resolveSandboxHttpOptions(
       instance.server
     );
-
-    logger.debug('================================================================================', {
-      package: SandboxPackageName,
-      event: 'sandbox.boot.separator'
-    });
-
-    logger.debug(`App: ${instance.name} | ${instance.app.name}`, {
-      package: SandboxPackageName,
-      event: 'sandbox.boot.app'
-    });
-
-    logger.debug(`Description: ${instance.app.description}`, {
-      package: SandboxPackageName,
-      event: 'sandbox.boot.description'
-    });
-
-    logger.debug(`Version: ${instance.app.version}`, {
-      package: SandboxPackageName,
-      event: 'sandbox.boot.version'
-    });
-
-    logger.debug(`Environment: ${instance.app.environment}`, {
-      package: SandboxPackageName,
-      event: 'sandbox.boot.environment'
-    });
-
-    logger.debug(`Status: ${instance.status}`, {
-      package: SandboxPackageName,
-      event: 'sandbox.boot.status'
-    });
-
-    logger.info('================================================================================', {
-      package: SandboxPackageName,
-      event: 'sandbox.boot.separator'
-    });
-
-    logger.info('Inicializado.', {
-      package: '@jarvis/config',
-      event: 'config.initialized'
-    });
-
-    if (instance.app.environment === 'production') {
-      logger.info('Configuración cargada desde settings.json.', {
-        package: '@jarvis/config',
-        event: 'config.loaded'
-      });
-    } else {
-      logger.info('Configuración cargada desde settings.json.', {
-        package: '@jarvis/config',
-        event: 'config.loaded',
-        data: config.all()
-      });
-    }
-
-    logger.info('================================================================================', {
-      package: SandboxPackageName,
-      event: 'sandbox.boot.separator'
-    });
-
-    logger.info('Inicializado.', {
-      package: '@jarvis/logger',
-      event: 'logger.initialized'
-    });
-
-    if (instance.app.environment === 'production') {
-      logger.info('Metadata de arranque normalizada.', {
-        package: '@jarvis/logger',
-        event: 'logger.bootstrap.metadata.normalized'
-      });
-    } else {
-      logger.info('Metadata de arranque normalizada.', {
-        package: '@jarvis/logger',
-        event: 'logger.bootstrap.metadata.normalized',
-        data: {
-          app: jarvisBootstrap.app,
-          server: jarvisBootstrap.server,
-          logger: jarvisBootstrap.logger
-        }
-      });
-    }
 
     /**
      * Crea el servidor HTTP/HTTPS de Sandbox-API.
@@ -286,7 +243,8 @@ async function main(): Promise<void> {
      */
     registerSandboxHttpRoutes(
       server,
-      core
+      core,
+      securityJwt
     );
 
     /**
@@ -309,19 +267,77 @@ async function main(): Promise<void> {
       port: httpOptions.port
     });
 
-    logger.info('================================================================================', {
+    /**
+     * Logs resumidos del arranque.
+     *
+     * Se agrupan en secciones pequeñas para evitar imprimir demasiada
+     * información cruda en consola y mantener una lectura limpia.
+     */
+    logger.info(SandboxLogSeparator, {
       package: SandboxPackageName,
       event: 'sandbox.boot.separator'
     });
 
-    logger.info('Inicializado.', {
-      package: 'Fastify',
-      event: 'fastify.initialized'
+    logger.info('Datos de la aplicación.', {
+      package: SandboxPackageName,
+      event: 'sandbox.boot.app.data',
+      data: {
+        runtime: {
+          name: instance.name,
+          description: instance.description,
+          status: instance.status
+        },
+        app: {
+          name: instance.app.name,
+          description: instance.app.description,
+          version: instance.app.version,
+          environment: instance.app.environment,
+          timeZone: instance.app.timeZone
+        },
+        server: {
+          host: httpOptions.host,
+          port: httpOptions.port,
+          protocol: httpOptions.protocol,
+          url: httpOptions.url
+        }
+      }
+    });
+
+    logger.info('Packages cargados e inicializados.', {
+      package: SandboxPackageName,
+      event: 'sandbox.boot.packages.initialized',
+      data: {
+        packages: [
+          {
+            name: '@jarvis/config',
+            status: 'initialized'
+          },
+          {
+            name: '@jarvis/logger',
+            status: 'initialized'
+          },
+          {
+            name: '@jarvis/security',
+            status: 'initialized'
+          },
+          {
+            name: 'Fastify',
+            status: 'initialized'
+          }
+        ],
+        runtimeModules: core.modules()
+      }
     });
 
     logger.info(`Servidor ${httpOptions.protocol.toUpperCase()}: ${httpOptions.url}`, {
       package: 'Fastify',
-      event: 'fastify.server.started'
+      event: 'fastify.server.started',
+      statusCode: 200
+    });
+
+    logger.info(SandboxLogSeparator, {
+      package: SandboxPackageName,
+      event: 'sandbox.boot.separator'
     });
   } catch (error: unknown) {
     if (logger) {

@@ -62,11 +62,19 @@ Si el comando finaliza correctamente, el ambiente base de **`J.A.R.V.I.S.`** est
 
 ## Paquetes
 
-Los paquetes de **`J.A.R.V.I.S.`** representan módulos internos del ecosistema, diseñados para separar responsabilidades y mantener una arquitectura limpia, escalable y reutilizable.
+Los paquetes de **`J.A.R.V.I.S.`** representan capacidades internas del ecosistema, diseñados para separar responsabilidades y mantener una arquitectura limpia, escalable y reutilizable.
 
 Cada paquete cumple una función específica dentro del runtime o dentro del flujo de una aplicación, permitiendo que el proyecto crezca de forma ordenada sin concentrar toda la lógica en un solo lugar.
 
 Con esta estructura, **`J.A.R.V.I.S.`** puede integrar nuevos paquetes de forma progresiva, como seguridad, base de datos, almacenamiento, notificaciones y cliente frontend, manteniendo siempre una separación clara entre cada capacidad del sistema.
+
+Dentro del proyecto se mantiene una diferencia importante:
+
+```txt
+packages       = paquetes físicos y configurables del monorepo
+runtimeModules = módulos vivos registrados dentro de @jarvis/core
+modules        = módulos reportados por el runtime
+```
 
 ### @jarvis/core
 
@@ -83,6 +91,14 @@ Paquete principal encargado de preparar la configuración inicial de una app ant
 ### @jarvis/logger
 
 Paquete principal para gestionar el registro de eventos, bitácoras, errores y mensajes de diagnóstico generados durante la ejecución del runtime de **`J.A.R.V.I.S.`**.
+
+### @jarvis/http
+
+Paquete base para construir respuestas HTTP exitosas, errores controlados, códigos de estado y códigos internos de error con una estructura estándar.
+
+### @jarvis/security
+
+Paquete base de seguridad para firmar, verificar y validar tokens JWT dentro del ecosistema **`J.A.R.V.I.S.`**.
 
 ---
 

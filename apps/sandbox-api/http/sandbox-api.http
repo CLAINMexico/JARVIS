@@ -1,20 +1,146 @@
-@protocol = https
-@baseUrl = {{protocol}}://localhost:3000
+# =================================================================================
+# J.A.R.V.I.S. | Sandbox-API HTTP Tests
+# =================================================================================
 
-### Sandbox-API | Root
-GET {{baseUrl}}/
+@host = https://localhost:3000
+@contentType = application/json
 
-### Sandbox-API | Health
-GET {{baseUrl}}/health
+# =================================================================================
+# Base
+# =================================================================================
 
-### Sandbox-API | Runtime Info
-GET {{baseUrl}}/info
+### Root
+GET {{host}}/
 
-### Sandbox-API | Runtime Modules
-GET {{baseUrl}}/modules
+### Health
+GET {{host}}/health
 
-### Sandbox API | HTTP Success Response
-GET {{baseUrl}}/http/success
+### Info
+GET {{host}}/info
 
-### Sandbox API | HTTP Error Response
-GET {{baseUrl}}/http/error
+### Runtime modules
+GET {{host}}/modules
+
+# =================================================================================
+# HTTP | @jarvis/http
+# =================================================================================
+
+### HTTP success response
+GET {{host}}/http/success
+
+### HTTP controlled error response
+GET {{host}}/http/error
+
+# =================================================================================
+# Security | @jarvis/security | JWT
+# =================================================================================
+
+### JWT | Sign access token
+# @name signAccessToken
+POST {{host}}/security/jwt/sign
+Content-Type: {{contentType}}
+
+{
+  "subject": "user-001",
+  "tokenType": "access",
+  "sessionId": "session-001",
+  "roles": [
+    "admin"
+  ],
+  "permissions": [
+    "security.jwt.test"
+  ],
+  "metadata": {
+    "source": "sandbox-api.http"
+  }
+}
+
+### JWT | Verify access token
+POST {{host}}/security/jwt/verify
+Content-Type: {{contentType}}
+
+{
+  "token": "{{signAccessToken.response.body.data.token}}"
+}
+
+### JWT | Sign refresh token
+# @name signRefreshToken
+POST {{host}}/security/jwt/sign
+Content-Type: {{contentType}}
+
+{
+  "subject": "user-001",
+  "tokenType": "refresh",
+  "sessionId": "session-001",
+  "metadata": {
+    "source": "sandbox-api.http"
+  }
+}
+
+### JWT | Verify refresh token
+POST {{host}}/security/jwt/verify
+Content-Type: {{contentType}}
+
+{
+  "token": "{{signRefreshToken.response.body.data.token}}"
+}
+
+### JWT | Sign service token
+# @name signServiceToken
+POST {{host}}/security/jwt/sign
+Content-Type: {{contentType}}
+
+{
+  "subject": "service-sandbox-api",
+  "tokenType": "service",
+  "permissions": [
+    "internal.read",
+    "internal.health"
+  ],
+  "metadata": {
+    "source": "sandbox-api.http",
+    "service": "Sandbox-API"
+  }
+}
+
+### JWT | Verify service token
+POST {{host}}/security/jwt/verify
+Content-Type: {{contentType}}
+
+{
+  "token": "{{signServiceToken.response.body.data.token}}"
+}
+
+# =================================================================================
+# Security | JWT | Controlled errors
+# =================================================================================
+
+### JWT | Verify invalid token
+POST {{host}}/security/jwt/verify
+Content-Type: {{contentType}}
+
+{
+  "token": "token-invalido"
+}
+
+### JWT | Verify missing token
+POST {{host}}/security/jwt/verify
+Content-Type: {{contentType}}
+
+{
+  "token": ""
+}
+
+### JWT | Sign invalid body
+POST {{host}}/security/jwt/sign
+Content-Type: {{contentType}}
+
+[]
+
+### JWT | Sign missing tokenType
+POST {{host}}/security/jwt/sign
+Content-Type: {{contentType}}
+
+{
+  "subject": "user-001"
+}

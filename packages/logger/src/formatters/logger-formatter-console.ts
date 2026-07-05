@@ -89,7 +89,8 @@ export function formatLoggerConsoleEntry(
   const message = `[${date}] [${level}] [${entry.package}] [${entry.appName}]${statusCode} - ${entry.message}`;
 
   const context = formatLoggerContext(
-    entry.context
+    entry.context,
+    entry.verboseError
   );
 
   const output = context

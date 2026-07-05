@@ -93,6 +93,14 @@ export interface LoggerEntry {
   statusCode?: number;
 
   /**
+   * Indica si los errores deben imprimirse completos.
+   *
+   * Cuando es true, se conserva stack trace en errores.
+   * Cuando es false, se imprime una versión segura y resumida.
+   */
+  verboseError: boolean;
+
+  /**
    * Contexto adicional opcional asociado al evento.
    *
    * Puede incluir metadata técnica, errores, identificadores o datos útiles

@@ -3,21 +3,46 @@ import type {
 } from '../contracts/logger-contract-context.js';
 
 /**
+ * Extrae un código estable desde un error cuando existe.
+ *
+ * Algunos errores controlados, como JarvisHttpError, exponen code como
+ * propiedad pública. Este valor es útil para logs seguros no verbosos.
+ */
+function getLoggerErrorCode(error: Error): string | undefined {
+  const errorWithCode = error as Error & {
+    code?: unknown;
+  };
+
+  if (typeof errorWithCode.code === 'string') {
+    return errorWithCode.code;
+  }
+
+  return undefined;
+}
+
+/**
  * Normaliza un error para que pueda imprimirse de forma segura dentro
  * del contexto del logger.
  *
- * Las instancias de Error normalmente no se serializan bien con
- * JSON.stringify(), por eso se extraen sus propiedades principales.
+ * Si verbose está activo, se incluye stack trace cuando exista.
+ * Si verbose está apagado, solo se incluyen propiedades seguras:
+ * name, message y code cuando exista.
  *
  * Si el valor recibido no es una instancia de Error, se devuelve tal como
  * llegó para permitir objetos personalizados u otros valores capturados.
  */
-function normalizeLoggerError(error: unknown): unknown {
+function normalizeLoggerError(
+  error: unknown,
+  verbose: boolean
+): unknown {
   if (error instanceof Error) {
+    const code = getLoggerErrorCode(error);
+
     return {
       name: error.name,
       message: error.message,
-      stack: error.stack
+      ...(code !== undefined ? { code } : {}),
+      ...(verbose && error.stack !== undefined ? { stack: error.stack } : {})
     };
   }
 
@@ -46,15 +71,18 @@ function hasObjectKeys(value: Record<string, unknown>): boolean {
  *   normalizado.
  * - statusCode no se imprime como metadata porque ya aparece en la línea
  *   principal cuando existe.
- * - error se normaliza para evitar salidas vacías o poco útiles.
+ * - error se normaliza según verboseError.
  * - El resto del contexto se conserva como metadata adicional.
  */
-function normalizeLoggerContext(context: LoggerContext): Record<string, unknown> {
+function normalizeLoggerContext(
+  context: LoggerContext,
+  verboseError: boolean
+): Record<string, unknown> {
   const {
     package: _package,
-    module,
-    event,
-    statusCode,
+    module: _module,
+    event: _event,
+    statusCode: _statusCode,
     error,
     ...metadata
   } = context;
@@ -63,7 +91,10 @@ function normalizeLoggerContext(context: LoggerContext): Record<string, unknown>
     ...metadata,
     ...(error !== undefined
       ? {
-        error: normalizeLoggerError(error)
+        error: normalizeLoggerError(
+          error,
+          verboseError
+        )
       }
       : {})
   };
@@ -75,12 +106,18 @@ function normalizeLoggerContext(context: LoggerContext): Record<string, unknown>
  * Si no existe metadata útil después de normalizar el contexto, devuelve
  * undefined para que el formatter solo imprima la línea principal del log.
  */
-export function formatLoggerContext(context?: LoggerContext): string | undefined {
+export function formatLoggerContext(
+  context: LoggerContext | undefined,
+  verboseError = false
+): string | undefined {
   if (!context) {
     return undefined;
   }
 
-  const normalizedContext = normalizeLoggerContext(context);
+  const normalizedContext = normalizeLoggerContext(
+    context,
+    verboseError
+  );
 
   if (!hasObjectKeys(normalizedContext)) {
     return undefined;

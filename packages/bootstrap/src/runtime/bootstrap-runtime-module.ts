@@ -201,6 +201,11 @@ export async function createJarvisBootstrap(
     config.get('packages.logger.level')
   );
 
+  const loggerErrorVerbose = getBootstrapBoolean(
+    config.get('packages.logger.error.verbose'),
+    false
+  );
+
   const loggerConsoleEnabled = getBootstrapBoolean(
     config.get('packages.logger.console.enabled'),
     true
@@ -282,6 +287,9 @@ export async function createJarvisBootstrap(
       defaultPackage: buildBootstrapLoggerDefaultModule(appName),
       defaultModule: buildBootstrapLoggerDefaultModule(appName),
       timeZone: appTimeZone,
+      error: {
+        verbose: loggerErrorVerbose
+      },
       console: {
         enabled: loggerConsoleEnabled,
         colors: loggerConsoleColors

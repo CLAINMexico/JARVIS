@@ -38,6 +38,9 @@
     "logger": {
       "enabled": true,
       "level": "debug",
+      "error": {
+        "verbose": false
+      },
       "console": {
         "enabled": true,
         "colors": true

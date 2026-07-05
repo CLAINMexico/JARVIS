@@ -17,6 +17,7 @@ Actualmente, este paquete permite:
 - Normalizar datos de la aplicación.
 - Normalizar datos del servidor.
 - Normalizar la configuración inicial de **`@jarvis/logger`**.
+- Normalizar la configuración **`packages.logger.error.verbose`**.
 - Entregar un resultado listo para construir módulos y arrancar **`@jarvis/core`**.
 
 ---
@@ -42,6 +43,55 @@ Donde:
 - **`config`** contiene una instancia de **`ConfigService`**.
 - **`logger`** contiene opciones normalizadas para **`createLoggerModule()`**.
 - **`settings`** contiene el objeto completo cargado desde **`settings.json`**.
+
+---
+
+## Configuración esperada
+
+**`@jarvis/bootstrap`** lee valores desde **`settings.json`** y los normaliza para que la aplicación pueda construir sus módulos reales.
+
+La configuración de paquetes instalables debe vivir bajo:
+
+```txt
+packages
+```
+
+Ejemplo para logger:
+
+```json
+{
+  "packages": {
+    "logger": {
+      "enabled": true,
+      "level": "debug",
+      "error": {
+        "verbose": false
+      },
+      "console": {
+        "enabled": true,
+        "colors": true
+      },
+      "file": {
+        "enabled": true,
+        "path": "./logs",
+        "splitByLevel": true,
+        "writeAll": true
+      }
+    }
+  }
+}
+```
+
+La sección **`packages.logger`** se transforma en opciones compatibles con **`createLoggerModule()`**.
+
+Regla de lenguaje:
+
+```txt
+settings.packages = configuración de paquetes instalables
+runtimeModules    = módulos vivos registrados dentro de @jarvis/core
+```
+
+**`@jarvis/bootstrap`** no registra módulos vivos directamente. Solo prepara valores para que la aplicación pueda construirlos.
 
 ---
 

@@ -7,7 +7,7 @@ import type {
  *
  * Estas opciones permiten controlar el estado general del logger, el nivel
  * mínimo de escritura, el paquete por defecto, el módulo por defecto, la zona
- * horaria y los transports disponibles.
+ * horaria, la salida de errores y los transports disponibles.
  */
 export interface LoggerOptions {
   /**
@@ -70,6 +70,23 @@ export interface LoggerOptions {
    * America/Mexico_City
    */
   timeZone?: string;
+
+  /**
+   * Configuración de serialización de errores.
+   *
+   * verbose controla si los errores se imprimen con stack trace completo o
+   * solo con información segura y resumida.
+   */
+  error?: {
+    /**
+     * Cuando es true, los errores se imprimen con información completa,
+     * incluyendo stack trace cuando exista.
+     *
+     * Cuando es false, los errores se imprimen con información segura:
+     * name, message y code cuando exista.
+     */
+    verbose?: boolean;
+  };
 
   /**
    * Configuración de salida en consola.

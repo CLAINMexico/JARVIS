@@ -105,6 +105,57 @@ Para aplicar cambios, se debe reiniciar la aplicación.
 
 ---
 
+## Placeholders y variables de entorno
+
+**`@jarvis/config`** puede almacenar valores que funcionan como referencias a variables de entorno.
+
+Ejemplo en **`settings.json`**:
+
+```json
+{
+  "api": {
+    "jwt": {
+      "secret": "SETTINGS_SECURITY_JWT_SECRET"
+    }
+  }
+}
+```
+
+Ejemplo en **`.env`**:
+
+```env
+SETTINGS_SECURITY_JWT_SECRET=JARVIS_LOCAL_SECURITY_SECRET
+```
+
+El servicio **`ConfigService`** devuelve el valor configurado en **`settings.json`**. La resolución del placeholder contra **`process.env`** puede realizarse en la aplicación o en el paquete que consume la configuración.
+
+Esto permite mantener una separación clara:
+
+```txt
+settings.json = estructura y referencias
+.env          = valores sensibles reales
+```
+
+### Configuración por packages
+
+La configuración de paquetes instalables debe declararse bajo:
+
+```txt
+packages
+```
+
+Ejemplo:
+
+```ts
+config.get('packages.logger.enabled');
+config.get('packages.logger.error.verbose');
+config.get('api.jwt.secret');
+```
+
+El término **`packages`** representa configuración de paquetes físicos del monorepo. No debe confundirse con **`runtimeModules`**, que representa módulos vivos registrados dentro de **`@jarvis/core`**.
+
+---
+
 ## Uso
 
 Ejemplo básico con valores directos:

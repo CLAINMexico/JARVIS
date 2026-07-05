@@ -10,76 +10,157 @@ import type {
   LoggerService
 } from '@jarvis/logger';
 
+import type {
+  SecurityJwtService
+} from '@jarvis/security';
+
 import {
   createErrorResponse,
   createSuccessResponse,
   unauthorized
 } from '@jarvis/http';
 
+import {
+  registerSandboxSecurityJwtRoutes
+} from '../security/sandbox-security-jwt-routes.js';
+
+/**
+ * Paquete visual usado por los logs propios de Sandbox-API.
+ */
+const SandboxPackageName = 'Sandbox-API';
+
 /**
  * Registra las rutas HTTP base de Sandbox-API.
  *
- * Estas rutas permiten validar que el servidor HTTP está activo y que puede
- * exponer información básica del runtime de J.A.R.V.I.S.
+ * Estas rutas permiten validar que el servidor HTTP está activo, que puede
+ * exponer información básica del runtime de J.A.R.V.I.S. y que responde con
+ * el formato estándar de @jarvis/http.
  */
 export function registerSandboxHttpRoutes(
   server: FastifyInstance,
-  core: JarvisApplication
+  core: JarvisApplication,
+  securityJwt: SecurityJwtService
 ): void {
   const instance = core.info();
   const logger = core.service('logger') as LoggerService;
 
   /**
+   * Registra rutas de prueba para @jarvis/security.
+   */
+  registerSandboxSecurityJwtRoutes(
+    server,
+    securityJwt,
+    logger
+  );
+
+  /**
    * Ruta raíz de Sandbox-API.
    *
-   * Permite validar rápidamente que la API está disponible y muestra
-   * las rutas base expuestas por esta versión del sandbox.
+   * Permite validar rápidamente que la API está disponible y muestra las rutas
+   * base expuestas por esta versión del sandbox.
    */
-  server.get('/', async () => ({
-    name: `${instance.name} | ${instance.app.name}`,
-    status: 'running',
-    runtime: instance.name,
-    app: instance.app.name,
-    environment: instance.app.environment,
-    routes: [
-      '/',
-      '/health',
-      '/info',
-      '/modules',
-      '/http/success',
-      '/http/error'
-    ]
-  }));
+  server.get('/', async () => {
+    logger.info('Ruta raíz consultada correctamente.', {
+      package: SandboxPackageName,
+      event: 'sandbox.root.success',
+      statusCode: 200,
+      route: '/',
+      method: 'GET'
+    });
+
+    return createSuccessResponse({
+      message: 'Sandbox-API se encuentra en ejecución.',
+      data: {
+        name: `${instance.name} | ${instance.app.name}`,
+        status: 'running',
+        runtime: instance.name,
+        app: instance.app.name,
+        environment: instance.app.environment,
+        routes: [
+          '/',
+          '/health',
+          '/info',
+          '/modules',
+          '/http/success',
+          '/http/error',
+          '/security/jwt/sign',
+          '/security/jwt/verify'
+        ]
+      }
+    });
+  });
 
   /**
    * Ruta básica de salud.
    *
    * Permite validar que el servidor HTTP está vivo.
    */
-  server.get('/health', async () => ({
-    status: 'ok',
-    app: instance.app.name,
-    runtime: instance.name,
-    environment: instance.app.environment
-  }));
+  server.get('/health', async () => {
+    logger.info('Estado de salud consultado correctamente.', {
+      package: SandboxPackageName,
+      event: 'sandbox.health.success',
+      statusCode: 200,
+      route: '/health',
+      method: 'GET'
+    });
+
+    return createSuccessResponse({
+      message: 'Sandbox-API se encuentra disponible.',
+      data: {
+        status: 'ok',
+        app: instance.app.name,
+        runtime: instance.name,
+        environment: instance.app.environment
+      }
+    });
+  });
 
   /**
    * Ruta de información general del runtime.
    *
    * Devuelve la misma información expuesta por core.info().
    */
-  server.get('/info', async () => core?.info());
+  server.get('/info', async () => {
+    logger.info('Información del runtime consultada correctamente.', {
+      package: SandboxPackageName,
+      event: 'sandbox.info.success',
+      statusCode: 200,
+      route: '/info',
+      method: 'GET'
+    });
+
+    return createSuccessResponse({
+      message: 'Información del runtime consultada correctamente.',
+      data: core.info()
+    });
+  });
 
   /**
    * Ruta de módulos registrados.
    *
    * Devuelve la lista de módulos conocidos por el runtime.
    */
-  server.get('/modules', async () => core?.modules());
+  server.get('/modules', async () => {
+    logger.info('Módulos del runtime consultados correctamente.', {
+      package: SandboxPackageName,
+      event: 'sandbox.modules.success',
+      statusCode: 200,
+      route: '/modules',
+      method: 'GET'
+    });
+
+    return createSuccessResponse({
+      message: 'Módulos del runtime consultados correctamente.',
+      data: {
+        modules: core.modules()
+      }
+    });
+  });
+
   /**
    * Ruta de prueba para respuestas exitosas usando @jarvis/http.
    *
-   * Esta ruta valida que Sandbox API puede consumir createSuccessResponse()
+   * Esta ruta valida que Sandbox-API puede consumir createSuccessResponse()
    * desde el paquete @jarvis/http.
    */
   server.get('/http/success', async () => {
@@ -103,7 +184,7 @@ export function registerSandboxHttpRoutes(
   /**
    * Ruta de prueba para errores controlados usando @jarvis/http.
    *
-   * Esta ruta valida que Sandbox API puede crear un JarvisHttpError mediante
+   * Esta ruta valida que Sandbox-API puede crear un JarvisHttpError mediante
    * helpers de @jarvis/http y convertirlo a una respuesta segura.
    */
   server.get('/http/error', async (_request, reply) => {

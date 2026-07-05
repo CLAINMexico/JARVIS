@@ -66,6 +66,17 @@ export interface LoggerServiceOptions {
   timeZone: string;
 
   /**
+   * Indica si los errores deben imprimirse completos.
+   *
+   * true:
+   * - Imprime stack trace cuando existe.
+   *
+   * false:
+   * - Imprime una versión segura y resumida del error.
+   */
+  verboseError: boolean;
+
+  /**
    * Lista de salidas donde se escribirá cada evento de log.
    *
    * Puede incluir consola, archivos u otros transports futuros.
@@ -104,14 +115,19 @@ export class LoggerService {
   private readonly defaultModule: string;
 
   /**
-   * Lista de destinos donde se escribirán los eventos procesados.
-   */
-  private readonly transports: LoggerTransport[];
-
-  /**
    * Zona horaria usada por los formatters para representar fechas.
    */
   private readonly timeZone: string;
+
+  /**
+   * Indica si los errores deben imprimirse completos.
+   */
+  private readonly verboseError: boolean;
+
+  /**
+   * Lista de destinos donde se escribirán los eventos procesados.
+   */
+  private readonly transports: LoggerTransport[];
 
   /**
    * Cola interna de escritura.
@@ -129,8 +145,9 @@ export class LoggerService {
     this.level = options.level;
     this.defaultPackage = options.defaultPackage;
     this.defaultModule = options.defaultModule;
-    this.transports = options.transports;
     this.timeZone = options.timeZone;
+    this.verboseError = options.verboseError;
+    this.transports = options.transports;
   }
 
   /**
@@ -172,8 +189,8 @@ export class LoggerService {
    * Crea un logger hijo asociado a un módulo específico.
    *
    * El logger hijo comparte nombre de app, paquete por defecto, nivel, zona
-   * horaria y transports con el logger principal, pero cambia el módulo por
-   * defecto.
+   * horaria, configuración de errores y transports con el logger principal,
+   * pero cambia el módulo por defecto.
    *
    * Esto permite evitar repetir { module: 'Config' } en cada log.
    */
@@ -184,6 +201,7 @@ export class LoggerService {
       defaultPackage: this.defaultPackage,
       defaultModule: module,
       timeZone: this.timeZone,
+      verboseError: this.verboseError,
       transports: this.transports
     });
   }
@@ -191,8 +209,9 @@ export class LoggerService {
   /**
    * Crea un logger hijo asociado a un paquete específico.
    *
-   * El logger hijo comparte nombre de app, nivel, zona horaria y transports
-   * con el logger principal, pero cambia el paquete por defecto.
+   * El logger hijo comparte nombre de app, nivel, zona horaria, configuración
+   * de errores y transports con el logger principal, pero cambia el paquete
+   * por defecto.
    *
    * Esto permite generar logs homologados por paquete sin repetir
    * { package: '@jarvis/http' } en cada llamada.
@@ -204,6 +223,7 @@ export class LoggerService {
       defaultPackage: packageName,
       defaultModule: this.defaultModule,
       timeZone: this.timeZone,
+      verboseError: this.verboseError,
       transports: this.transports
     });
   }
@@ -259,6 +279,7 @@ export class LoggerService {
         : this.defaultModule,
       ...(typeof context.event === 'string' ? { event: context.event } : {}),
       ...(typeof context.statusCode === 'number' ? { statusCode: context.statusCode } : {}),
+      verboseError: this.verboseError,
       context
     };
 

@@ -34,6 +34,7 @@ Actualmente, este paquete permite:
 - Formatear contexto adicional como JSON legible.
 - Evitar duplicar metadata ya impresa en la línea principal.
 - Normalizar errores para imprimirlos correctamente.
+- Controlar si los errores se imprimen con stack trace mediante **`error.verbose`**.
 - Permitir loggers hijos mediante **`child(module)`**.
 - Permitir loggers asociados a paquetes mediante **`package(packageName)`**.
 - Respetar **`enabled: false`** como switch maestro del módulo.
@@ -351,6 +352,110 @@ timeZone: 'America/Mexico_City'
 ### Escritura ordenada
 
 **`LoggerService`** mantiene una cola interna de escritura para evitar que los logs se mezclen fuera de orden en archivos como **`all.log`**.
+
+---
+
+## Configuración de errores
+
+**`@jarvis/logger`** permite controlar cómo se imprimen los errores dentro del contexto de un log.
+
+La configuración se declara dentro de las opciones del logger:
+
+```ts
+createLoggerModule({
+  error: {
+    verbose: false
+  }
+});
+```
+
+Cuando se usa desde una aplicación con **`settings.json`**, la ruta recomendada es:
+
+```txt
+packages.logger.error.verbose
+```
+
+Ejemplo:
+
+```json
+{
+  "packages": {
+    "logger": {
+      "enabled": true,
+      "level": "debug",
+      "error": {
+        "verbose": false
+      },
+      "console": {
+        "enabled": true,
+        "colors": true
+      },
+      "file": {
+        "enabled": true,
+        "path": "./logs",
+        "splitByLevel": true,
+        "writeAll": true
+      }
+    }
+  }
+}
+```
+
+### error.verbose en false
+
+Cuando **`verbose`** está en **`false`**, los errores se imprimen de forma segura y resumida.
+
+Ejemplo:
+
+```json
+{
+  "error": {
+    "name": "JarvisHttpError",
+    "message": "Token JWT inválido o expirado.",
+    "code": "UNAUTHORIZED"
+  }
+}
+```
+
+Este modo evita imprimir stack traces completos en logs donde no sean necesarios.
+
+### error.verbose en true
+
+Cuando **`verbose`** está en **`true`**, los errores se imprimen con información completa, incluyendo **`stack`** cuando exista.
+
+Ejemplo:
+
+```json
+{
+  "error": {
+    "name": "JarvisHttpError",
+    "message": "Token JWT inválido o expirado.",
+    "code": "UNAUTHORIZED",
+    "stack": "JarvisHttpError: Token JWT inválido o expirado..."
+  }
+}
+```
+
+Este modo es útil para depuración local.
+
+### Uso desde otros paquetes
+
+Los paquetes pueden enviar el error completo en el contexto:
+
+```ts
+logger.warn('No se pudo verificar el token JWT.', {
+  package: '@jarvis/security',
+  event: 'security.jwt.verify.failed',
+  statusCode: 401,
+  route: '/security/jwt/verify',
+  method: 'POST',
+  error
+});
+```
+
+**`@jarvis/logger`** decide cómo serializar la propiedad **`error`** según la configuración activa.
+
+Esta regla aplica para consola y archivos.
 
 ---
 

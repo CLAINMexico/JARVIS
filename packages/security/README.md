@@ -4,7 +4,6 @@
 
 Este paquete incorpora soporte inicial para **JWT** mediante un servicio dedicado para firmar y verificar tokens dentro del runtime.
 
-En **`v0.18.1`** se complementa la base JWT con tipos de token, expiración por tipo y un payload más cerrado para preparar la integración con **`Sandbox-API`** en una versión posterior.
 
 ---
 
@@ -286,6 +285,114 @@ security.jwt.tokenType.invalid
 
 ---
 
+## Integración HTTP
+
+**`@jarvis/security`** no crea servidores ni registra rutas por sí mismo. Su responsabilidad es exponer servicios reutilizables para que una aplicación pueda integrarlos.
+
+Una aplicación puede exponer rutas HTTP usando **`SecurityJwtService`**.
+
+Ejemplo de rutas de prueba:
+
+```txt
+POST /security/jwt/sign
+POST /security/jwt/verify
+```
+
+### Firmar un token desde HTTP
+
+Body de ejemplo:
+
+```json
+{
+  "subject": "user-001",
+  "tokenType": "access",
+  "sessionId": "session-001",
+  "roles": [
+    "admin"
+  ],
+  "permissions": [
+    "security.jwt.test"
+  ],
+  "metadata": {
+    "source": "sandbox-api.http"
+  }
+}
+```
+
+Respuesta esperada usando **`@jarvis/http`**:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Token JWT generado correctamente.",
+  "data": {
+    "token": "..."
+  }
+}
+```
+
+### Verificar un token desde HTTP
+
+Body de ejemplo:
+
+```json
+{
+  "token": "..."
+}
+```
+
+Respuesta esperada:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Token JWT verificado correctamente.",
+  "data": {
+    "payload": {
+      "subject": "user-001",
+      "tokenType": "access"
+    }
+  }
+}
+```
+
+### Configuración recomendada
+
+La configuración JWT puede vivir dentro de:
+
+```txt
+api.jwt
+```
+
+Ejemplo:
+
+```json
+{
+  "api": {
+    "jwt": {
+      "enabled": true,
+      "secret": "SETTINGS_SECURITY_JWT_SECRET",
+      "accessTokenExpiresIn": "15m",
+      "refreshTokenExpiresIn": "7d",
+      "serviceTokenExpiresIn": "1h"
+    }
+  }
+}
+```
+
+Reglas recomendadas para integraciones oficiales:
+
+```txt
+issuer   = J.A.R.V.I.S.
+audience = app.name
+```
+
+Por esta razón, **`issuer`** y **`audience`** no necesitan exponerse dentro de **`settings.json`**.
+
+---
+
 ## Uso
 
 Ejemplo básico:
@@ -353,9 +460,8 @@ variables de entorno
 secret manager
 ```
 
-Queda pendiente para versiones posteriores:
+Capacidades fuera del alcance actual:
 
-- Integración con **`Sandbox-API`**.
 - Middleware HTTP de autenticación.
 - Login.
 - Hash de contraseñas.

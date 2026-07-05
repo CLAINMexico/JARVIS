@@ -11,8 +11,8 @@ import type {
 /**
  * Información normalizada de la aplicación arrancada por J.A.R.V.I.S.
  *
- * Esta información proviene de JarvisOptions, pero aquí se reporta
- * completa y normalizada después del arranque del runtime.
+ * Esta información proviene de JarvisOptions, pero aquí se reporta completa
+ * y normalizada después del arranque del runtime.
  */
 export interface JarvisAppInfo {
   /**
@@ -34,6 +34,14 @@ export interface JarvisAppInfo {
    * Ambiente actual de ejecución.
    */
   environment: JarvisEnvironment;
+
+  /**
+   * Zona horaria configurada para la aplicación.
+   *
+   * Este valor permite que APIs, logs, procesos internos y futuras tareas
+   * programadas conozcan la zona horaria base de la aplicación.
+   */
+  timeZone: string;
 }
 
 /**
@@ -98,6 +106,10 @@ export interface JarvisInfo {
 
   /**
    * Módulos registrados dentro del runtime.
+   *
+   * Importante:
+   * Estos módulos representan registros del runtime, no paquetes físicos del
+   * monorepo ni claves dentro de settings.packages.
    */
   modules: JarvisModuleInfo[];
 
