@@ -1,5 +1,65 @@
 # CHANGELOG | J.A.R.V.I.S.
 
+## **`0.18.1`** <sup><small>(04/Julio/2026)</small></sup>
+
+### Resumen
+
+Se realizó una limpieza estructural previa a la integración de **`@jarvis/security`** con **`Sandbox-API`**.
+
+Esta versión renombra la sección **`settings.modules`** a **`settings.packages`** para alinear el lenguaje del proyecto y complementa la base JWT con tipos de token, expiración por tipo y un payload más cerrado.
+
+---
+
+### Cambios
+
+- Se renombró la sección de configuración **`settings.modules`** a **`settings.packages`**.
+- Se actualizó **`@jarvis/bootstrap`** para leer configuración del logger desde **`packages.logger`**.
+- Se actualizó **`settings.example.json`**.
+- Se actualizó **`settings.json`** local de **`Sandbox-API`**.
+- Se agregó **`api.jwt.serviceTokenExpiresIn`**.
+- Se definió que **`issuer`** no vive en **`settings.json`** porque se resuelve internamente como **`J.A.R.V.I.S.`**.
+- Se definió que **`audience`** no vive en **`settings.json`** porque se resuelve internamente desde **`app.name`**.
+- Se agregó **`SecurityJwtTokenType`** con los valores **`access`**, **`refresh`** y **`service`**.
+- Se agregó **`SecurityJwtMetadata`**.
+- Se cerró el contrato **`SecurityJwtPayload`** removiendo propiedades arbitrarias en la raíz.
+- Se hizo obligatorio **`tokenType`** dentro de **`SecurityJwtPayload`**.
+- Se agregó soporte para **`refreshTokenExpiresIn`** y **`serviceTokenExpiresIn`**.
+- Se actualizó **`SecurityJwtService`** para resolver expiración por tipo de token.
+- Se actualizó **`SecurityJwtSignOptions`** para permitir solo **`expiresIn`** como sobrescritura por firma.
+
+---
+
+### Mejoras
+
+- Se aclaró la diferencia conceptual entre **`packages`** y **`runtimeModules`**.
+- Se evita la confusión entre configuración de paquetes instalables y módulos vivos del runtime.
+- Se prepara el terreno para declarar en el futuro **`packages.security`**.
+- Se mejora el diseño JWT usando tipos explícitos:
+  - **`access`** para acceso a rutas protegidas.
+  - **`refresh`** para renovación de sesión.
+  - **`service`** para comunicación interna entre servicios.
+- Se centraliza la selección de expiración según **`payload.tokenType`**.
+- Se reduce el riesgo de payloads demasiado abiertos.
+- Se deja lista la configuración JWT para integración futura con **`Sandbox-API`**.
+
+---
+
+### Correcciones
+
+- Se corrigieron referencias internas de **`modules.logger`** a **`packages.logger`**.
+- Se corrigió el casteo del payload devuelto por **`jose`** usando una conversión controlada antes de validar la estructura esperada.
+- Se validó el nuevo payload con access token, refresh token, service token, token inválido, token ausente y payload sin tokenType.
+- Se removieron archivos y scripts temporales de prueba antes del cierre.
+- Se validó la integración mediante:
+  - **`pnpm --filter @jarvis/bootstrap build`**
+  - **`pnpm --filter @jarvis/bootstrap typecheck`**
+  - **`pnpm --filter @jarvis/security build`**
+  - **`pnpm --filter @jarvis/security typecheck`**
+  - **`pnpm build`**
+  - **`pnpm typecheck`**.
+
+---
+
 ## **`0.18.0`** <sup><small>(04/Julio/2026)</small></sup>
 
 ### Resumen
@@ -580,7 +640,7 @@ Esta versión no modifica lógica del runtime. Su objetivo es ordenar la documen
 
 ### Resumen
 
-Se corrige el comportamiento de **@jarvis/logger** para respetar **modules.logger.enabled = false** como switch maestro del módulo.
+Se corrige el comportamiento de **@jarvis/logger** para respetar **packages.logger.enabled = false** como switch maestro del módulo.
 
 ---
 
@@ -588,7 +648,7 @@ Se corrige el comportamiento de **@jarvis/logger** para respetar **modules.logge
 
 - Se agrega soporte efectivo para **enabled** a nivel general del módulo logger.
 - Se mantiene **LoggerService** disponible aunque el logger esté apagado.
-- Se evita crear transports cuando **modules.logger.enabled** está en **false**.
+- Se evita crear transports cuando **packages.logger.enabled** está en **false**.
 - Se evita escribir logs internos de **boot()** y **shutdown()** cuando el logger está deshabilitado.
 - Se conserva el comportamiento de **console.enabled** y **file.enabled** como switches específicos de salida.
 
@@ -605,7 +665,7 @@ Se corrige el comportamiento de **@jarvis/logger** para respetar **modules.logge
 
 ### Correcciones
 
-- Se corrige que **modules.logger.enabled = false** no apagara completamente la escritura del logger.
+- Se corrige que **packages.logger.enabled = false** no apagara completamente la escritura del logger.
 - Se corrige que el logger pudiera seguir escribiendo mensajes de arranque o apagado aunque el módulo estuviera deshabilitado.
 
 ---

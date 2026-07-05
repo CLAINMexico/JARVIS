@@ -186,45 +186,48 @@ export async function createJarvisBootstrap(
   /**
    * Normalización de configuración para @jarvis/logger.
    *
+   * La configuración se lee desde settings.packages.logger porque representa
+   * opciones de un paquete instalable del ecosistema J.A.R.V.I.S.
+   *
    * El bootstrap no crea el logger directamente. Solo prepara la estructura
    * que después se entregará a createLoggerModule().
    */
   const loggerEnabled = getBootstrapBoolean(
-    config.get('modules.logger.enabled'),
+    config.get('packages.logger.enabled'),
     true
   );
 
   const loggerLevel = getBootstrapLoggerLevel(
-    config.get('modules.logger.level')
+    config.get('packages.logger.level')
   );
 
   const loggerConsoleEnabled = getBootstrapBoolean(
-    config.get('modules.logger.console.enabled'),
+    config.get('packages.logger.console.enabled'),
     true
   );
 
   const loggerConsoleColors = getBootstrapBoolean(
-    config.get('modules.logger.console.colors'),
+    config.get('packages.logger.console.colors'),
     true
   );
 
   const loggerFileEnabled = getBootstrapBoolean(
-    config.get('modules.logger.file.enabled'),
+    config.get('packages.logger.file.enabled'),
     false
   );
 
   const loggerFilePath = getBootstrapString(
-    config.get('modules.logger.file.path'),
+    config.get('packages.logger.file.path'),
     './logs'
   );
 
   const loggerFileSplitByLevel = getBootstrapBoolean(
-    config.get('modules.logger.file.splitByLevel'),
+    config.get('packages.logger.file.splitByLevel'),
     true
   );
 
   const loggerFileWriteAll = getBootstrapBoolean(
-    config.get('modules.logger.file.writeAll'),
+    config.get('packages.logger.file.writeAll'),
     true
   );
 

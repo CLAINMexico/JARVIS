@@ -12,7 +12,8 @@ import type {
 } from '../contracts/security-contract-jwt-options.js';
 
 import type {
-  SecurityJwtPayload
+  SecurityJwtPayload,
+  SecurityJwtTokenType
 } from '../contracts/security-contract-jwt-payload.js';
 
 import type {
@@ -34,14 +35,15 @@ import {
  * Este servicio concentra las operaciones básicas para firmar y verificar
  * tokens JWT dentro del ecosistema J.A.R.V.I.S.
  *
- * En v0.18.0 solo se implementa JWT inicial. Login, refresh tokens,
- * sesiones, roles y permisos formales se integrarán en versiones posteriores.
+ * En v0.18.1 se complementa el soporte inicial agregando tokenType y
+ * expiración por tipo de token.
  */
 export class SecurityJwtService {
   /**
    * Secreto codificado para firmar y verificar tokens.
    */
   private readonly secret: Uint8Array;
+
   /**
    * Emisor por defecto de los tokens.
    */
@@ -53,9 +55,19 @@ export class SecurityJwtService {
   private readonly audience: string | undefined;
 
   /**
-   * Tiempo de expiración por defecto.
+   * Tiempo de expiración por defecto para access tokens.
    */
   private readonly accessTokenExpiresIn: string;
+
+  /**
+   * Tiempo de expiración por defecto para refresh tokens.
+   */
+  private readonly refreshTokenExpiresIn: string;
+
+  /**
+   * Tiempo de expiración por defecto para service tokens.
+   */
+  private readonly serviceTokenExpiresIn: string;
 
   /**
    * Crea una nueva instancia del servicio JWT.
@@ -67,6 +79,8 @@ export class SecurityJwtService {
     this.issuer = options.issuer;
     this.audience = options.audience;
     this.accessTokenExpiresIn = options.accessTokenExpiresIn ?? '15m';
+    this.refreshTokenExpiresIn = options.refreshTokenExpiresIn ?? '7d';
+    this.serviceTokenExpiresIn = options.serviceTokenExpiresIn ?? '1h';
   }
 
   /**
@@ -76,6 +90,8 @@ export class SecurityJwtService {
     payload: SecurityJwtPayload,
     options: SecurityJwtSignOptions = {}
   ): Promise<string> {
+    this.assertPayload(payload);
+
     let token = new SignJWT({
       ...payload
     })
@@ -85,17 +101,16 @@ export class SecurityJwtService {
       })
       .setSubject(payload.subject)
       .setIssuedAt()
-      .setExpirationTime(options.expiresIn ?? this.accessTokenExpiresIn);
+      .setExpirationTime(
+        options.expiresIn ?? this.resolveExpiresIn(payload.tokenType)
+      );
 
-    const issuer = options.issuer ?? this.issuer;
-    const audience = options.audience ?? this.audience;
-
-    if (issuer) {
-      token = token.setIssuer(issuer);
+    if (this.issuer) {
+      token = token.setIssuer(this.issuer);
     }
 
-    if (audience) {
-      token = token.setAudience(audience);
+    if (this.audience) {
+      token = token.setAudience(this.audience);
     }
 
     return token.sign(this.secret);
@@ -121,14 +136,9 @@ export class SecurityJwtService {
         ...(this.audience ? { audience: this.audience } : {})
       });
 
-      const payload = result.payload as SecurityJwtPayload;
+      const payload = result.payload as unknown as SecurityJwtPayload;
 
-      if (typeof payload.subject !== 'string' || payload.subject.length === 0) {
-        throw unauthorized('Token JWT inválido: subject ausente.', {
-          package: '@jarvis/security',
-          event: 'security.jwt.subject.missing'
-        });
-      }
+      this.assertPayload(payload);
 
       return {
         payload,
@@ -144,5 +154,49 @@ export class SecurityJwtService {
         error
       });
     }
+  }
+
+  /**
+   * Resuelve la expiración por defecto según el tipo de token.
+   */
+  private resolveExpiresIn(tokenType: SecurityJwtTokenType): string {
+    if (tokenType === 'refresh') {
+      return this.refreshTokenExpiresIn;
+    }
+
+    if (tokenType === 'service') {
+      return this.serviceTokenExpiresIn;
+    }
+
+    return this.accessTokenExpiresIn;
+  }
+
+  /**
+   * Valida que el payload tenga la estructura mínima esperada.
+   *
+   * Esta validación se ejecuta antes de firmar y después de verificar para
+   * evitar tokens incompletos o mal formados.
+   */
+  private assertPayload(payload: SecurityJwtPayload): void {
+    if (typeof payload.subject !== 'string' || payload.subject.trim().length === 0) {
+      throw unauthorized('Token JWT inválido: subject ausente.', {
+        package: '@jarvis/security',
+        event: 'security.jwt.subject.missing'
+      });
+    }
+
+    if (!this.isTokenType(payload.tokenType)) {
+      throw unauthorized('Token JWT inválido: tokenType no soportado.', {
+        package: '@jarvis/security',
+        event: 'security.jwt.tokenType.invalid'
+      });
+    }
+  }
+
+  /**
+   * Valida si un valor pertenece a los tipos de token soportados.
+   */
+  private isTokenType(value: unknown): value is SecurityJwtTokenType {
+    return value === 'access' || value === 'refresh' || value === 'service';
   }
 }

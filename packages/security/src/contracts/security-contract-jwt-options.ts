@@ -3,6 +3,10 @@
  *
  * Estas opciones controlan cómo se firman y verifican tokens dentro del
  * ecosistema J.A.R.V.I.S.
+ *
+ * En integraciones oficiales:
+ * - issuer debe resolverse internamente como J.A.R.V.I.S.
+ * - audience debe resolverse desde app.name.
  */
 export interface SecurityJwtOptions {
   /**
@@ -16,7 +20,7 @@ export interface SecurityJwtOptions {
   /**
    * Emisor esperado del token.
    *
-   * Ejemplo:
+   * En J.A.R.V.I.S. debe usarse internamente como:
    * J.A.R.V.I.S.
    */
   issuer?: string;
@@ -24,8 +28,8 @@ export interface SecurityJwtOptions {
   /**
    * Audiencia esperada del token.
    *
-   * Ejemplo:
-   * Sandbox-API
+   * En J.A.R.V.I.S. debe resolverse desde el nombre de la aplicación:
+   * app.name.
    */
   audience?: string;
 
@@ -38,4 +42,24 @@ export interface SecurityJwtOptions {
    * - 7d
    */
   accessTokenExpiresIn?: string;
+
+  /**
+   * Tiempo de expiración por defecto para refresh tokens.
+   *
+   * Formatos comunes:
+   * - 7d
+   * - 15d
+   * - 30d
+   */
+  refreshTokenExpiresIn?: string;
+
+  /**
+   * Tiempo de expiración por defecto para tokens de servicio.
+   *
+   * Formatos comunes:
+   * - 1h
+   * - 12h
+   * - 1d
+   */
+  serviceTokenExpiresIn?: string;
 }

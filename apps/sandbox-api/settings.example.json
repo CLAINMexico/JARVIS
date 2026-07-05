@@ -30,10 +30,11 @@
       "enabled": true,
       "secret": "SETTINGS_SECURITY_JWT_SECRET",
       "accessTokenExpiresIn": "15m",
-      "refreshTokenExpiresIn": "7d"
+      "refreshTokenExpiresIn": "7d",
+      "serviceTokenExpiresIn": "1h"
     }
   },
-  "modules": {
+  "packages": {
     "logger": {
       "enabled": true,
       "level": "debug",

@@ -409,6 +409,106 @@ Apagar módulos vivos del runtime
 
 ---
 
+## Configuración de packages
+
+A partir de **`v0.18.1`**, la configuración de paquetes instalables del ecosistema se declara bajo:
+
+```json
+{
+  "packages": {}
+}
+```
+
+Antes se usaba:
+
+```json
+{
+  "modules": {}
+}
+```
+
+El cambio evita confusión entre:
+
+```txt
+packages        = paquetes instalables del monorepo.
+runtimeModules  = módulos vivos registrados en runtime.
+```
+
+Ejemplo:
+
+```json
+{
+  "packages": {
+    "logger": {
+      "enabled": true,
+      "level": "debug",
+      "console": {
+        "enabled": true,
+        "colors": true
+      },
+      "file": {
+        "enabled": true,
+        "path": "./logs",
+        "splitByLevel": true,
+        "writeAll": true
+      }
+    }
+  }
+}
+```
+
+**`@jarvis/bootstrap`** lee la configuración del logger desde:
+
+```txt
+packages.logger
+```
+
+---
+
+## Configuración JWT
+
+La configuración JWT de **`Sandbox-API`** vive dentro de:
+
+```txt
+api.jwt
+```
+
+Ejemplo:
+
+```json
+{
+  "api": {
+    "jwt": {
+      "enabled": true,
+      "secret": "SETTINGS_SECURITY_JWT_SECRET",
+      "accessTokenExpiresIn": "15m",
+      "refreshTokenExpiresIn": "7d",
+      "serviceTokenExpiresIn": "1h"
+    }
+  }
+}
+```
+
+Reglas oficiales para integración futura con **`@jarvis/security`**:
+
+```txt
+issuer   = J.A.R.V.I.S.
+audience = app.name
+```
+
+Por esta razón, **`issuer`** y **`audience`** no se configuran en **`settings.json`**.
+
+En esta aplicación:
+
+```txt
+issuer   = J.A.R.V.I.S.
+audience = Sandbox-API
+```
+
+La integración real de **`@jarvis/security`** con **`Sandbox-API`** se realizará en una versión posterior.
+
+---
+
 ## Notas
 
 Cuando se usa certificado autofirmado, navegadores y herramientas HTTP pueden mostrar advertencias de confianza.

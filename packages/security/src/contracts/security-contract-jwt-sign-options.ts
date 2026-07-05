@@ -1,24 +1,20 @@
 /**
  * Opciones específicas para firmar un token JWT.
  *
- * Estas opciones pueden sobrescribir valores definidos en
- * SecurityJwtOptions para una firma concreta.
+ * Estas opciones solo permiten sobrescribir la expiración de una firma
+ * concreta. El issuer y audience deben venir desde SecurityJwtOptions para
+ * evitar tokens con origen o destino inconsistentes.
  */
 export interface SecurityJwtSignOptions {
   /**
-   * Emisor específico para el token.
-   */
-  issuer?: string;
-
-  /**
-   * Audiencia específica para el token.
-   */
-  audience?: string;
-
-  /**
    * Tiempo de expiración específico para el token.
    *
-   * Si no se define, se usa accessTokenExpiresIn desde SecurityJwtOptions.
+   * Si no se define, @jarvis/security usa la expiración por defecto según
+   * payload.tokenType:
+   *
+   * - access  -> accessTokenExpiresIn
+   * - refresh -> refreshTokenExpiresIn
+   * - service -> serviceTokenExpiresIn
    */
   expiresIn?: string;
 }

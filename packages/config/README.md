@@ -79,7 +79,7 @@ config.all();
 config.get('app.name');
 config.get('server.port');
 config.get('database.connections.main.driver');
-config.get('modules.logger.enabled');
+config.get('packages.logger.enabled');
 ```
 
 Si el path no existe, devuelve:

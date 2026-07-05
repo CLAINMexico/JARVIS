@@ -2,9 +2,9 @@
 
 **`@jarvis/security`** es el paquete base de seguridad del ecosistema **`J.A.R.V.I.S.`**.
 
-En su primera versión, este paquete incorpora soporte inicial para **JWT** mediante un servicio dedicado para firmar y verificar tokens dentro del runtime.
+Este paquete incorpora soporte inicial para **JWT** mediante un servicio dedicado para firmar y verificar tokens dentro del runtime.
 
-Esta versión no implementa todavía login, refresh tokens, sesiones, roles formales, permisos formales, policies, guards ni OAuth 2.0. Esos bloques se integrarán en versiones posteriores de forma controlada.
+En **`v0.18.1`** se complementa la base JWT con tipos de token, expiración por tipo y un payload más cerrado para preparar la integración con **`Sandbox-API`** en una versión posterior.
 
 ---
 
@@ -24,10 +24,12 @@ Actualmente, este paquete permite:
 - Verificar tokens JWT.
 - Validar tokens inválidos o expirados.
 - Validar tokens ausentes.
-- Definir un payload base para JWT.
+- Definir tipos de token: **`access`**, **`refresh`** y **`service`**.
+- Definir un payload base controlado.
 - Definir opciones de firma.
 - Definir opciones de verificación.
 - Normalizar el resultado de verificación.
+- Resolver expiración por tipo de token.
 - Usar errores controlados mediante **`@jarvis/http`**.
 - Trabajar con **`jose`** como librería JWT moderna compatible con TypeScript y ESM.
 
@@ -44,85 +46,149 @@ const jwt = new SecurityJwtService({
   secret: 'JARVIS_LOCAL_SECURITY_SECRET',
   issuer: 'J.A.R.V.I.S.',
   audience: 'Sandbox-API',
-  accessTokenExpiresIn: '15m'
+  accessTokenExpiresIn: '15m',
+  refreshTokenExpiresIn: '7d',
+  serviceTokenExpiresIn: '1h'
 });
 ```
 
-Con esa configuración puede generar tokens:
+En integraciones oficiales de **`J.A.R.V.I.S.`**:
+
+```txt
+issuer   = J.A.R.V.I.S.
+audience = app.name
+```
+
+Por esta razón, **`issuer`** y **`audience`** no deben exponerse como valores configurables dentro de **`settings.json`**.
+
+---
+
+## Tipos de token
+
+**`@jarvis/security`** soporta tres tipos de token:
 
 ```ts
-const token = await jwt.sign({
+export type SecurityJwtTokenType = 'access' | 'refresh' | 'service';
+```
+
+### access
+
+Token de acceso para consumir rutas protegidas.
+
+```ts
+const accessToken = await jwt.sign({
   subject: 'user-001',
+  tokenType: 'access',
+  sessionId: 'session-001',
   roles: [
     'admin'
   ],
   permissions: [
-    'security.jwt.test'
-  ],
-  name: 'Usuario de prueba'
+    'users.read'
+  ]
 });
 ```
 
-Y verificarlos:
+### refresh
+
+Token usado para renovar sesión o generar nuevos access tokens.
 
 ```ts
-const result = await jwt.verify(token);
+const refreshToken = await jwt.sign({
+  subject: 'user-001',
+  tokenType: 'refresh',
+  sessionId: 'session-001'
+});
 ```
 
-### Payload base
+### service
+
+Token usado para comunicación interna entre servicios.
+
+```ts
+const serviceToken = await jwt.sign({
+  subject: 'service-sandbox-api',
+  tokenType: 'service',
+  permissions: [
+    'internal.read'
+  ]
+});
+```
+
+---
+
+## Payload base
 
 El payload base se define con **`SecurityJwtPayload`**:
 
 ```ts
 export interface SecurityJwtPayload {
   subject: string;
+  tokenType: SecurityJwtTokenType;
+  sessionId?: string;
+  tenantId?: string;
   roles?: string[];
   permissions?: string[];
-  [key: string]: unknown;
+  metadata?: SecurityJwtMetadata;
 }
 ```
 
 El campo **`subject`** representa al dueño del token.
 
-Ejemplos:
+El campo **`tokenType`** es obligatorio y define el tipo de token emitido.
+
+El campo **`metadata`** permite extender información segura sin abrir propiedades arbitrarias en la raíz del payload.
+
+No se deben incluir dentro del payload JWT:
+
+- Contraseñas.
+- Hashes de contraseña.
+- Tokens externos.
+- Secretos de API.
+- Llaves privadas.
+- Refresh tokens externos.
+- Información sensible innecesaria.
+
+---
+
+## Configuración JWT
+
+En **`settings.json`** solo debe configurarse la parte necesaria para la aplicación:
+
+```json
+{
+  "api": {
+    "jwt": {
+      "enabled": true,
+      "secret": "SETTINGS_SECURITY_JWT_SECRET",
+      "accessTokenExpiresIn": "15m",
+      "refreshTokenExpiresIn": "7d",
+      "serviceTokenExpiresIn": "1h"
+    }
+  }
+}
+```
+
+Reglas oficiales:
 
 ```txt
-user-001
-service-sandbox-api
-client-001
+issuer no va en settings.json.
+audience no va en settings.json.
+issuer se resuelve como J.A.R.V.I.S.
+audience se resuelve desde app.name.
 ```
 
-Los campos **`roles`** y **`permissions`** viajan como metadata en esta versión. La validación formal de roles y permisos se implementará en versiones posteriores.
+---
 
-### Opciones JWT
-
-El contrato **`SecurityJwtOptions`** permite configurar:
-
-```txt
-secret
-issuer
-audience
-accessTokenExpiresIn
-```
-
-Ejemplo:
-
-```ts
-const jwt = new SecurityJwtService({
-  secret: 'JARVIS_LOCAL_SECURITY_SECRET',
-  issuer: 'J.A.R.V.I.S.',
-  audience: 'Sandbox-API',
-  accessTokenExpiresIn: '15m'
-});
-```
-
-### Firma de tokens
+## Firma de tokens
 
 Para firmar un token:
 
 ```ts
 const token = await jwt.sign({
   subject: 'user-001',
+  tokenType: 'access',
+  sessionId: 'session-001',
   roles: [
     'admin'
   ],
@@ -132,22 +198,43 @@ const token = await jwt.sign({
 });
 ```
 
-También se pueden sobrescribir opciones específicas de firma:
+También se puede sobrescribir la expiración para una firma concreta:
 
 ```ts
 const token = await jwt.sign(
   {
-    subject: 'user-001'
+    subject: 'user-001',
+    tokenType: 'access'
   },
   {
-    issuer: 'J.A.R.V.I.S.',
-    audience: 'Sandbox-API',
     expiresIn: '30m'
   }
 );
 ```
 
-### Verificación de tokens
+---
+
+## Expiración por tipo de token
+
+Cuando no se especifica **`expiresIn`** en la firma, **`@jarvis/security`** selecciona la expiración usando **`payload.tokenType`**:
+
+```txt
+access  -> accessTokenExpiresIn
+refresh -> refreshTokenExpiresIn
+service -> serviceTokenExpiresIn
+```
+
+Defaults:
+
+```txt
+access  -> 15m
+refresh -> 7d
+service -> 1h
+```
+
+---
+
+## Verificación de tokens
 
 Para verificar un token:
 
@@ -161,6 +248,8 @@ Resultado esperado:
 {
   "payload": {
     "subject": "user-001",
+    "tokenType": "access",
+    "sessionId": "session-001",
     "roles": [
       "admin"
     ],
@@ -180,51 +269,20 @@ Resultado esperado:
 }
 ```
 
-### Errores controlados
+---
 
-Cuando un token es inválido, expiró o no coincide con la configuración esperada, **`@jarvis/security`** lanza un error controlado usando **`@jarvis/http`**.
+## Errores controlados
 
-Ejemplo de error por token inválido:
+**`@jarvis/security`** lanza errores controlados usando **`@jarvis/http`**.
 
-```txt
-Token JWT inválido o expirado.
-```
-
-Metadata esperada:
+Casos cubiertos:
 
 ```txt
-package: @jarvis/security
-event: security.jwt.invalid
+security.jwt.invalid
+security.jwt.missing
+security.jwt.subject.missing
+security.jwt.tokenType.invalid
 ```
-
-Ejemplo de error por token ausente:
-
-```txt
-Token JWT ausente.
-```
-
-Metadata esperada:
-
-```txt
-package: @jarvis/security
-event: security.jwt.missing
-```
-
-### Secret JWT
-
-El secreto JWT se transforma internamente a **`Uint8Array`** mediante:
-
-```ts
-encodeSecurityJwtSecret(secret)
-```
-
-También se valida que no esté vacío mediante:
-
-```ts
-assertSecurityJwtSecret(secret)
-```
-
-Si el secreto está vacío, se lanza un error para evitar firmar o verificar tokens con una configuración insegura.
 
 ---
 
@@ -241,41 +299,24 @@ const jwt = new SecurityJwtService({
   secret: 'JARVIS_LOCAL_SECURITY_SECRET',
   issuer: 'J.A.R.V.I.S.',
   audience: 'Sandbox-API',
-  accessTokenExpiresIn: '15m'
+  accessTokenExpiresIn: '15m',
+  refreshTokenExpiresIn: '7d',
+  serviceTokenExpiresIn: '1h'
 });
 
 const token = await jwt.sign({
   subject: 'user-001',
+  tokenType: 'access',
+  sessionId: 'session-001',
   roles: [
     'admin'
   ],
   permissions: [
     'security.jwt.test'
-  ],
-  name: 'Usuario de prueba'
+  ]
 });
 
 const result = await jwt.verify(token);
-```
-
-Ejemplo con token inválido:
-
-```ts
-try {
-  await jwt.verify('token-invalido');
-} catch (error: unknown) {
-  console.error(error);
-}
-```
-
-Ejemplo con token ausente:
-
-```ts
-try {
-  await jwt.verify('');
-} catch (error: unknown) {
-  console.error(error);
-}
 ```
 
 Ejemplo de imports públicos:
@@ -288,9 +329,11 @@ import {
 } from '@jarvis/security';
 
 import type {
+  SecurityJwtMetadata,
   SecurityJwtOptions,
   SecurityJwtPayload,
   SecurityJwtSignOptions,
+  SecurityJwtTokenType,
   SecurityJwtVerifyResult
 } from '@jarvis/security';
 ```
@@ -304,22 +347,11 @@ import type {
 El valor **`secret`** debe venir desde una fuente segura, por ejemplo:
 
 ```txt
-settings.json
+settings.json con placeholders
 .env
 variables de entorno
 secret manager
 ```
-
-No se deben incluir dentro del payload JWT:
-
-- Contraseñas.
-- Tokens externos.
-- Secretos de API.
-- Llaves privadas.
-- Información sensible innecesaria.
-- Datos personales que no sean necesarios para autenticación/autorización.
-
-Esta versión solo implementa JWT inicial.
 
 Queda pendiente para versiones posteriores:
 
@@ -327,18 +359,10 @@ Queda pendiente para versiones posteriores:
 - Middleware HTTP de autenticación.
 - Login.
 - Hash de contraseñas.
-- Refresh tokens.
+- Refresh tokens funcionales.
 - Sesiones.
 - Roles formales.
 - Permisos formales.
 - Policies.
 - Guards.
 - OAuth 2.0.
-
-También es importante considerar:
-
-- Mantener documentación en español.
-- Mantener comentarios útiles en español.
-- Mantener commits en español.
-- No subir secretos reales al repositorio.
-- No imprimir tokens reales en logs productivos.
