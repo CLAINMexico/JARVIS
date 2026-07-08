@@ -1,5 +1,3 @@
-# @jarvis/http
-
 ## Introducción
 
 **`@jarvis/http`** es el paquete base de **`J.A.R.V.I.S.`** encargado de definir errores, códigos de estado y respuestas HTTP estandarizadas dentro del ecosistema.
@@ -28,7 +26,7 @@ Responsabilidades principales:
 
 ## Funcionamiento
 
-**`@jarvis/http`** no crea servidores, no registra rutas y no depende de Fastify.
+**`@jarvis/http`** no crea servidores, no registra rutas y no depende de **`Fastify`**.
 
 Su responsabilidad es proporcionar contratos, clases y utilidades que puedan ser consumidos por otros paquetes o aplicaciones.
 
@@ -255,3 +253,10 @@ No debe depender de:
 Esto permite que pueda ser usado por distintos paquetes sin generar acoplamiento innecesario.
 
 Este paquete puede ser utilizado por **`@jarvis/security`**, **`Sandbox-API`** y otros paquetes o aplicaciones que necesiten respuestas HTTP estandarizadas.
+
+También es importante considerar:
+
+- No usar **`console.log()`** directamente en paquetes cuando **`LoggerService`** esté disponible.
+- Mantener documentación en español.
+- Mantener comentarios útiles en español.
+- Mantener commits en español.

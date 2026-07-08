@@ -23,7 +23,6 @@ Actualmente, este paquete permite:
 - Ejecutar el ciclo de vida inicial de módulos con **`bootModules()`**.
 - Ejecutar apagado ordenado con **`shutdown()`**.
 - Reportar información de la instancia mediante **`info()`**.
-- Reportar la zona horaria de la aplicación mediante **`info().app.timeZone`**.
 - Exponer contratos base para otros paquetes.
 
 ---
@@ -53,7 +52,6 @@ La función **`Jarvis.boot()`** crea una instancia de **`JarvisApplication`**.
 Durante este proceso, el core recibe opciones iniciales como:
 
 - Información de la aplicación.
-- Zona horaria base de la aplicación.
 - Configuración del servidor.
 - Módulos informativos.
 - Módulos vivos del runtime.
@@ -337,17 +335,10 @@ Esto evita dependencias circulares y mantiene el núcleo limpio.
 La relación esperada entre componentes es:
 
 ```txt
-@jarvis/core
-= define contratos y mecanismos base
-
-@jarvis/config
-= implementa un módulo compatible con el core
-
-@jarvis/logger
-= implementa un módulo compatible con el core
-
-apps/sandbox-api
-= conecta el core con los módulos reales
+@jarvis/core = define contratos y mecanismos base
+@jarvis/config = implementa un módulo compatible con el core
+@jarvis/logger = implementa un módulo compatible con el core
+apps/sandbox-api = conecta el core con los módulos reales
 ```
 
 Regla arquitectónica principal:

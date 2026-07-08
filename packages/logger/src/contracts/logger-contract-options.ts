@@ -89,58 +89,72 @@ export interface LoggerOptions {
   };
 
   /**
-   * Configuración de salida en consola.
+   * Configuración de transports del logger.
    *
-   * Este bloque solo controla el transport de consola. Si enabled está en false,
-   * el logger completo permanecerá apagado aunque console.enabled sea true.
+   * Cada transport representa una salida disponible para los eventos de log.
+   *
+   * Ejemplos:
+   * - console: salida en consola.
+   * - file: salida en archivos.
+   *
+   * Esta estructura permite agregar nuevos transports en el futuro sin crecer
+   * propiedades directas en la raíz de LoggerOptions.
    */
-  console?: {
+  transports?: {
     /**
-     * Habilita o deshabilita la escritura en consola.
+     * Configuración de salida en consola.
+     *
+     * Este bloque solo controla el transport de consola. Si enabled está en false,
+     * el logger completo permanecerá apagado aunque console.enabled sea true.
      */
-    enabled?: boolean;
+    console?: {
+      /**
+       * Habilita o deshabilita la escritura en consola.
+       */
+      enabled?: boolean;
+
+      /**
+       * Habilita o deshabilita colores ANSI en consola.
+       */
+      colors?: boolean;
+    };
 
     /**
-     * Habilita o deshabilita colores ANSI en consola.
+     * Configuración de salida en archivos.
+     *
+     * Este bloque solo controla el transport de archivos. Si enabled está en false,
+     * el logger completo permanecerá apagado aunque file.enabled sea true.
+     *
+     * La estructura interna de archivos no es configurable. @jarvis/logger usa
+     * una estructura estándar:
+     *
+     * logs/YYYY/MM/DD/all.log
+     * logs/YYYY/MM/DD/debug.log
+     * logs/YYYY/MM/DD/info.log
+     * logs/YYYY/MM/DD/warn.log
+     * logs/YYYY/MM/DD/error.log
+     * logs/YYYY/MM/DD/fatal.log
      */
-    colors?: boolean;
-  };
+    file?: {
+      /**
+       * Habilita o deshabilita la escritura en archivos.
+       */
+      enabled?: boolean;
 
-  /**
-   * Configuración de salida en archivos.
-   *
-   * Este bloque solo controla el transport de archivos. Si enabled está en false,
-   * el logger completo permanecerá apagado aunque file.enabled sea true.
-   *
-   * La estructura interna de archivos no es configurable. @jarvis/logger usa
-   * una estructura estándar:
-   *
-   * logs/YYYY/MM/DD/all.log
-   * logs/YYYY/MM/DD/debug.log
-   * logs/YYYY/MM/DD/info.log
-   * logs/YYYY/MM/DD/warn.log
-   * logs/YYYY/MM/DD/error.log
-   * logs/YYYY/MM/DD/fatal.log
-   */
-  file?: {
-    /**
-     * Habilita o deshabilita la escritura en archivos.
-     */
-    enabled?: boolean;
+      /**
+       * Ruta base donde se crearán los archivos de log.
+       */
+      path?: string;
 
-    /**
-     * Ruta base donde se crearán los archivos de log.
-     */
-    path?: string;
+      /**
+       * Indica si se deben crear archivos separados por nivel.
+       */
+      splitByLevel?: boolean;
 
-    /**
-     * Indica si se deben crear archivos separados por nivel.
-     */
-    splitByLevel?: boolean;
-
-    /**
-     * Indica si todos los logs deben escribirse también en un archivo all.log.
-     */
-    writeAll?: boolean;
+      /**
+       * Indica si todos los logs deben escribirse también en un archivo all.log.
+       */
+      writeAll?: boolean;
+    };
   };
 }

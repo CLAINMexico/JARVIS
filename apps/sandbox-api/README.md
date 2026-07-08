@@ -443,15 +443,17 @@ Ejemplo:
     "logger": {
       "enabled": true,
       "level": "debug",
-      "console": {
-        "enabled": true,
-        "colors": true
-      },
-      "file": {
-        "enabled": true,
-        "path": "./logs",
-        "splitByLevel": true,
-        "writeAll": true
+      "transports": {
+        "console": {
+          "enabled": true,
+          "colors": true
+        },
+        "file": {
+          "enabled": true,
+          "path": "./logs",
+          "splitByLevel": true,
+          "writeAll": true
+        }
       }
     }
   }
@@ -635,7 +637,113 @@ payload sin tokenType
 
 ---
 
-## Logger error verbose
+## Configuración de logger transports
+
+**`Sandbox-API`** configura las salidas del logger desde **`settings.json`** usando la sección:
+
+```txt
+packages.logger.transports
+```
+
+Ejemplo:
+
+```json
+{
+  "packages": {
+    "logger": {
+      "enabled": true,
+      "level": "debug",
+      "error": {
+        "verbose": false
+      },
+      "transports": {
+        "console": {
+          "enabled": true,
+          "colors": true
+        },
+        "file": {
+          "enabled": true,
+          "path": "./logs",
+          "splitByLevel": true,
+          "writeAll": true
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+### Consola
+
+Para habilitar o deshabilitar logs en consola:
+
+```json
+{
+  "transports": {
+    "console": {
+      "enabled": true,
+      "colors": true
+    }
+  }
+}
+```
+
+Opciones:
+
+```txt
+enabled = controla si se imprimen logs en consola
+colors  = controla si la consola usa colores
+```
+
+---
+
+### Archivos
+
+Para habilitar o deshabilitar logs en archivos:
+
+```json
+{
+  "transports": {
+    "file": {
+      "enabled": true,
+      "path": "./logs",
+      "splitByLevel": true,
+      "writeAll": true
+    }
+  }
+}
+```
+
+Opciones:
+
+```txt
+enabled      = controla si se escriben archivos de log
+path         = ruta base de logs
+splitByLevel = crea archivos separados por nivel
+writeAll     = escribe todos los logs también en all.log
+```
+
+---
+
+### Defaults esperados
+
+Si una opción no se define, se aplican defaults seguros:
+
+```txt
+console.enabled -> true
+console.colors  -> true
+
+file.enabled      -> false
+file.path         -> ./logs
+file.splitByLevel -> true
+file.writeAll     -> true
+```
+
+---
+
+### Logger error verbose
 
 La configuración de logger permite controlar si los errores se imprimen completos o resumidos.
 
@@ -672,6 +780,21 @@ Con **`verbose: false`**, el log conserva información segura:
 ```
 
 Con **`verbose: true`**, el log incluye **`stack`** para depuración local.
+
+---
+
+### Notas
+
+La configuración de transports permite mantener limpia la sección **`packages.logger`** y deja preparada la aplicación para soportar nuevas salidas de log sin modificar la raíz de configuración.
+
+Ejemplos futuros:
+
+```txt
+packages.logger.transports.database
+packages.logger.transports.http
+packages.logger.transports.cloud
+packages.logger.transports.otel
+```
 
 ---
 

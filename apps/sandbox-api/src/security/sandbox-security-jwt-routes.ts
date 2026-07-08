@@ -19,8 +19,6 @@ import {
 
 /**
  * Body esperado para firmar tokens JWT desde Sandbox-API.
- *
- * Esta interfaz se usa solo para las rutas de prueba de v0.19.0.
  */
 interface SandboxSecurityJwtSignBody extends SecurityJwtPayload { }
 

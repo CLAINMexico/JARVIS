@@ -76,42 +76,49 @@ export interface BootstrapLogger {
   };
 
   /**
-   * Configuración de salida en consola.
+   * Configuración normalizada de transports del logger.
+   *
+   * Cada transport representa una salida disponible para los eventos.
    */
-  console: {
+  transports: {
     /**
-     * Indica si el logger puede escribir en consola.
+     * Configuración de salida en consola.
      */
-    enabled: boolean;
+    console: {
+      /**
+       * Indica si el logger puede escribir en consola.
+       */
+      enabled: boolean;
+
+      /**
+       * Indica si la salida en consola debe usar colores.
+       */
+      colors: boolean;
+    };
 
     /**
-     * Indica si la salida en consola debe usar colores.
+     * Configuración de salida en archivos.
      */
-    colors: boolean;
-  };
+    file: {
+      /**
+       * Indica si el logger puede escribir archivos de log.
+       */
+      enabled: boolean;
 
-  /**
-   * Configuración de salida en archivos.
-   */
-  file: {
-    /**
-     * Indica si el logger puede escribir archivos de log.
-     */
-    enabled: boolean;
+      /**
+       * Ruta base donde se crearán los archivos de log.
+       */
+      path: string;
 
-    /**
-     * Ruta base donde se crearán los archivos de log.
-     */
-    path: string;
+      /**
+       * Indica si se deben crear archivos separados por nivel.
+       */
+      splitByLevel: boolean;
 
-    /**
-     * Indica si se deben crear archivos separados por nivel.
-     */
-    splitByLevel: boolean;
-
-    /**
-     * Indica si todos los logs deben escribirse también en un archivo general.
-     */
-    writeAll: boolean;
+      /**
+       * Indica si todos los logs deben escribirse también en un archivo general.
+       */
+      writeAll: boolean;
+    };
   };
 }

@@ -207,32 +207,32 @@ export async function createJarvisBootstrap(
   );
 
   const loggerConsoleEnabled = getBootstrapBoolean(
-    config.get('packages.logger.console.enabled'),
+    config.get('packages.logger.transports.console.enabled'),
     true
   );
 
   const loggerConsoleColors = getBootstrapBoolean(
-    config.get('packages.logger.console.colors'),
+    config.get('packages.logger.transports.console.colors'),
     true
   );
 
   const loggerFileEnabled = getBootstrapBoolean(
-    config.get('packages.logger.file.enabled'),
+    config.get('packages.logger.transports.file.enabled'),
     false
   );
 
   const loggerFilePath = getBootstrapString(
-    config.get('packages.logger.file.path'),
+    config.get('packages.logger.transports.file.path'),
     './logs'
   );
 
   const loggerFileSplitByLevel = getBootstrapBoolean(
-    config.get('packages.logger.file.splitByLevel'),
+    config.get('packages.logger.transports.file.splitByLevel'),
     true
   );
 
   const loggerFileWriteAll = getBootstrapBoolean(
-    config.get('packages.logger.file.writeAll'),
+    config.get('packages.logger.transports.file.writeAll'),
     true
   );
 
@@ -290,15 +290,17 @@ export async function createJarvisBootstrap(
       error: {
         verbose: loggerErrorVerbose
       },
-      console: {
-        enabled: loggerConsoleEnabled,
-        colors: loggerConsoleColors
-      },
-      file: {
-        enabled: loggerFileEnabled,
-        path: loggerFilePath,
-        splitByLevel: loggerFileSplitByLevel,
-        writeAll: loggerFileWriteAll
+      transports: {
+        console: {
+          enabled: loggerConsoleEnabled,
+          colors: loggerConsoleColors
+        },
+        file: {
+          enabled: loggerFileEnabled,
+          path: loggerFilePath,
+          splitByLevel: loggerFileSplitByLevel,
+          writeAll: loggerFileWriteAll
+        }
       }
     }
   };

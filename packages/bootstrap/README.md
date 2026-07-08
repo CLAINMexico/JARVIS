@@ -67,15 +67,17 @@ Ejemplo para logger:
       "error": {
         "verbose": false
       },
-      "console": {
-        "enabled": true,
-        "colors": true
-      },
-      "file": {
-        "enabled": true,
-        "path": "./logs",
-        "splitByLevel": true,
-        "writeAll": true
+      "transports": {
+        "console": {
+          "enabled": true,
+          "colors": true
+        },
+        "file": {
+          "enabled": true,
+          "path": "./logs",
+          "splitByLevel": true,
+          "writeAll": true
+        }
       }
     }
   }
@@ -92,6 +94,111 @@ runtimeModules    = módulos vivos registrados dentro de @jarvis/core
 ```
 
 **`@jarvis/bootstrap`** no registra módulos vivos directamente. Solo prepara valores para que la aplicación pueda construirlos.
+
+---
+
+## Configuración de logger transports
+
+**`@jarvis/bootstrap`** normaliza la configuración del logger desde **`settings.json`** para entregarla lista a **`createLoggerModule()`**.
+
+La configuración de salidas del logger debe declararse dentro de:
+
+```txt
+packages.logger.transports
+```
+
+Ejemplo:
+
+```json
+{
+  "packages": {
+    "logger": {
+      "enabled": true,
+      "level": "debug",
+      "error": {
+        "verbose": false
+      },
+      "transports": {
+        "console": {
+          "enabled": true,
+          "colors": true
+        },
+        "file": {
+          "enabled": true,
+          "path": "./logs",
+          "splitByLevel": true,
+          "writeAll": true
+        }
+      }
+    }
+  }
+}
+```
+
+Durante el bootstrap, esta configuración se transforma en una estructura normalizada compatible con **`@jarvis/logger`**:
+
+```ts
+logger: {
+  enabled: true,
+  appName: 'J.A.R.V.I.S. | Sandbox-API',
+  level: 'debug',
+  defaultPackage: 'Sandbox-API',
+  defaultModule: 'Sandbox-API',
+  timeZone: 'America/Mexico_City',
+  error: {
+    verbose: false
+  },
+  transports: {
+    console: {
+      enabled: true,
+      colors: true
+    },
+    file: {
+      enabled: true,
+      path: './logs',
+      splitByLevel: true,
+      writeAll: true
+    }
+  }
+}
+```
+
+---
+
+### Rutas de configuración normalizadas
+
+**`@jarvis/bootstrap`** lee las siguientes rutas:
+
+```txt
+packages.logger.enabled
+packages.logger.level
+packages.logger.error.verbose
+
+packages.logger.transports.console.enabled
+packages.logger.transports.console.colors
+
+packages.logger.transports.file.enabled
+packages.logger.transports.file.path
+packages.logger.transports.file.splitByLevel
+packages.logger.transports.file.writeAll
+```
+
+---
+
+### Responsabilidad del bootstrap
+
+**`@jarvis/bootstrap`** no crea transports directamente.
+
+Su responsabilidad es:
+
+```txt
+- Leer settings.json.
+- Normalizar valores.
+- Aplicar defaults seguros.
+- Preparar una estructura compatible con @jarvis/logger.
+```
+
+La creación real de transports ocurre dentro de **`@jarvis/logger`**.
 
 ---
 

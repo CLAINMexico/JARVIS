@@ -50,8 +50,8 @@ export interface LoggerModule extends JarvisRuntimeModule {
  * pero no se registran transports ni se escriben mensajes internos.
  *
  * Los transports se crean de forma condicional:
- * - console.enabled controla la salida en consola.
- * - file.enabled controla la salida en archivos.
+ * - transports.console.enabled controla la salida en consola.
+ * - transports.file.enabled controla la salida en archivos.
  * - enabled controla el módulo completo como switch maestro.
  */
 export function createLoggerModule(options: LoggerOptions = {}): LoggerModule {
@@ -101,27 +101,35 @@ export function createLoggerModule(options: LoggerOptions = {}): LoggerModule {
   const verboseError = options.error?.verbose ?? false;
 
   /**
+   * Configuración normalizada de transports.
+   *
+   * Esta variable evita repetir accesos largos y deja claro que las salidas
+   * del logger viven dentro de options.transports.
+   */
+  const transportsOptions = options.transports ?? {};
+
+  /**
    * Lista de destinos donde LoggerService escribirá los eventos.
    *
    * Si el switch maestro enabled está apagado, esta lista permanece vacía
-   * aunque console.enabled o file.enabled estén activos.
+   * aunque transports.console.enabled o transports.file.enabled estén activos.
    */
   const transports: LoggerTransport[] = [];
 
-  if (enabled && (options.console?.enabled ?? true)) {
+  if (enabled && (transportsOptions.console?.enabled ?? true)) {
     transports.push(
       new LoggerConsoleTransport({
-        colors: options.console?.colors ?? true
+        colors: transportsOptions.console?.colors ?? true
       })
     );
   }
 
-  if (enabled && (options.file?.enabled ?? false)) {
+  if (enabled && (transportsOptions.file?.enabled ?? false)) {
     transports.push(
       new LoggerFileTransport({
-        path: options.file?.path ?? './logs',
-        splitByLevel: options.file?.splitByLevel ?? true,
-        writeAll: options.file?.writeAll ?? true
+        path: transportsOptions.file?.path ?? './logs',
+        splitByLevel: transportsOptions.file?.splitByLevel ?? true,
+        writeAll: transportsOptions.file?.writeAll ?? true
       })
     );
   }

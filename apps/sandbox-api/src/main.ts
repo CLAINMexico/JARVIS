@@ -207,9 +207,8 @@ async function main(): Promise<void> {
     /**
      * Crea el servicio JWT de @jarvis/security.
      *
-     * En v0.19.0 este servicio se usa para rutas de prueba de firma y
-     * verificación. La protección real de rutas se integrará en una versión
-     * posterior mediante middleware HTTP.
+     * Este servicio se usa para rutas de prueba de firma y verificación.
+     * La protección real de rutas se integrará mediante autenticación Bearer.
      */
     const securityJwt = new SecurityJwtService(
       securityJwtOptions

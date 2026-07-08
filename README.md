@@ -6,7 +6,7 @@
 
 ## Introducción
 
-**`J.A.R.V.I.S. | JavaScript Architecture Runtime for Versatile Intelligent Services`** es un proyecto modular, escalable y orientado a servicios, creado como núcleo tecnológico para aplicaciones empresariales modernas de **CLAIN México, S.A. de C.V.**
+**`J.A.R.V.I.S. | JavaScript Architecture Runtime for Versatile Intelligent Services`** (Entorno de ejecución de arquitectura JavaScript para servicios inteligentes versátiles) es un proyecto modular, escalable y orientado a servicios, creado como núcleo tecnológico para aplicaciones empresariales modernas de **CLAIN México, S.A. de C.V.**
 
 ---
 
@@ -98,7 +98,7 @@ Paquete base para construir respuestas HTTP exitosas, errores controlados, códi
 
 ### @jarvis/security
 
-Paquete base de seguridad para firmar, verificar y validar tokens JWT dentro del ecosistema **`J.A.R.V.I.S.`**.
+Paquete base de seguridad para firmar, verificar y validar peticiones HTTP dentro del ecosistema **`J.A.R.V.I.S.`**.
 
 ---
 

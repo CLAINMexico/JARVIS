@@ -41,15 +41,17 @@
       "error": {
         "verbose": false
       },
-      "console": {
-        "enabled": true,
-        "colors": true
-      },
-      "file": {
-        "enabled": true,
-        "path": "./logs",
-        "splitByLevel": true,
-        "writeAll": true
+      "transports": {
+        "console": {
+          "enabled": true,
+          "colors": true
+        },
+        "file": {
+          "enabled": true,
+          "path": "./logs",
+          "splitByLevel": true,
+          "writeAll": true
+        }
       }
     },
     "database": {

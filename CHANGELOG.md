@@ -1,5 +1,47 @@
 # CHANGELOG | J.A.R.V.I.S.
 
+## **`0.19.1`** <sup><small>(08/Julio/2026)</small></sup>
+
+### Resumen
+
+Se ajustó la configuración de **`@jarvis/logger`** para agrupar sus salidas dentro de la sección **`transports`**, manteniendo una estructura más limpia, escalable y preparada para futuras salidas de log.
+
+---
+
+### Cambios
+
+- Se actualizó el contrato **`LoggerOptions`** para mover la configuración de consola y archivos dentro de **`transports`**.
+- Se actualizó **`createLoggerModule()`** para leer las salidas desde **`options.transports`**.
+- Se actualizó el contrato **`BootstrapLogger`** para reflejar la nueva estructura normalizada.
+- Se actualizó **`@jarvis/bootstrap`** para leer la configuración desde:
+  - **`packages.logger.transports.console`**
+  - **`packages.logger.transports.file`**
+- Se actualizó la configuración de **`Sandbox-API`** para usar la estructura oficial de transports.
+
+---
+
+### Mejoras
+
+- La configuración del logger queda mejor organizada.
+- Se evita crecer propiedades directas dentro de **`packages.logger`**.
+- Se deja preparada la estructura para futuros transports como:
+  - **`database`**
+  - **`http`**
+  - **`cloud`**
+  - **`otel`**
+- Se conserva el switch maestro **`packages.logger.enabled`**.
+- Se conserva la configuración de errores mediante **`packages.logger.error.verbose`**.
+- Se mantiene compatibilidad funcional con los transports actuales de consola y archivo.
+
+---
+
+### Correcciones
+
+- Se corrigió la estructura de configuración para alinear **`settings.json`**, **`@jarvis/bootstrap`** y **`@jarvis/logger`** bajo el mismo contrato de transports.
+- Se evitó mantener **`console`** y **`file`** como propiedades directas de la configuración del logger.
+
+---
+
 ## **`0.19.0`** <sup><small>(04/Julio/2026)</small></sup>
 
 ### Resumen

@@ -177,15 +177,14 @@ El valor **`file.enabled`** controla únicamente la salida a archivos.
 
 Tabla de comportamiento:
 
-```txt
-logger.enabled | console.enabled | file.enabled | consola | archivos | servicio
-true           | true            | true         | sí      | sí       | sí
-true           | false           | true         | no      | sí       | sí
-true           | true            | false        | sí      | no       | sí
-true           | false           | false        | no      | no       | sí
-false          | true            | true         | no      | no       | sí
-false          | false           | false        | no      | no       | sí
-```
+| logger.enabled | console.enabled | file.enabled | consola | archivos | servicio |
+|:--------------:|:---------------:|:------------:|:-------:|:--------:|:--------:|
+| true           | true            | true         | sí      | sí       | sí       |
+| true           | false           | true         | no      | sí       | sí       |
+| true           | true            | false        | sí      | no       | sí       |
+| true           | false           | false        | no      | no       | sí       |
+| false          | true            | true         | no      | no       | sí       |
+| false          | false           | false        | no      | no       | sí       |
 
 ### Loggers hijos
 
@@ -355,6 +354,144 @@ timeZone: 'America/Mexico_City'
 
 ---
 
+## Configuración de transports
+
+**`@jarvis/logger`** organiza sus salidas mediante la propiedad **`transports`**.
+
+Cada transport representa un destino donde el logger puede escribir eventos.
+
+Configuración recomendada:
+
+```json
+{
+  "packages": {
+    "logger": {
+      "enabled": true,
+      "level": "debug",
+      "error": {
+        "verbose": false
+      },
+      "transports": {
+        "console": {
+          "enabled": true,
+          "colors": true
+        },
+        "file": {
+          "enabled": true,
+          "path": "./logs",
+          "splitByLevel": true,
+          "writeAll": true
+        }
+      }
+    }
+  }
+}
+```
+
+La ruta oficial queda organizada así:
+
+```txt
+packages.logger.transports.console
+packages.logger.transports.file
+```
+
+---
+
+### Transport console
+
+El transport **`console`** controla la salida de logs en consola.
+
+```json
+{
+  "console": {
+    "enabled": true,
+    "colors": true
+  }
+}
+```
+
+Opciones:
+
+```txt
+enabled = habilita o deshabilita la escritura en consola
+colors  = habilita o deshabilita colores ANSI en consola
+```
+
+Cuando **`console.enabled`** es **`false`**, el logger deja de imprimir eventos en consola.
+
+Cuando **`console.colors`** es **`false`**, la salida en consola se mantiene activa, pero sin colores.
+
+---
+
+### Transport file
+
+El transport **`file`** controla la escritura de logs en archivos.
+
+```json
+{
+  "file": {
+    "enabled": true,
+    "path": "./logs",
+    "splitByLevel": true,
+    "writeAll": true
+  }
+}
+```
+
+Opciones:
+
+```txt
+enabled      = habilita o deshabilita la escritura en archivos
+path         = ruta base donde se crearán los archivos de log
+splitByLevel = habilita archivos separados por nivel
+writeAll     = escribe todos los eventos también en all.log
+```
+
+Cuando **`file.enabled`** es **`false`**, no se generan archivos de log.
+
+La estructura interna de archivos se conserva homologada:
+
+```txt
+logs/YYYY/MM/DD/all.log
+logs/YYYY/MM/DD/debug.log
+logs/YYYY/MM/DD/info.log
+logs/YYYY/MM/DD/warn.log
+logs/YYYY/MM/DD/error.log
+logs/YYYY/MM/DD/fatal.log
+```
+
+---
+
+### Switch maestro del logger
+
+La propiedad **`enabled`** sigue funcionando como switch maestro.
+
+Cuando **`packages.logger.enabled`** es **`false`**:
+
+```txt
+- El servicio logger sigue existiendo.
+- No se escribe en consola.
+- No se escriben archivos.
+- No se imprimen mensajes internos de boot/shutdown.
+```
+
+---
+
+### Preparación para nuevos transports
+
+La propiedad **`transports`** permite agregar nuevas salidas sin crecer propiedades directas dentro de la raíz de configuración del logger.
+
+Ejemplos futuros:
+
+```txt
+packages.logger.transports.database
+packages.logger.transports.http
+packages.logger.transports.cloud
+packages.logger.transports.otel
+```
+
+---
+
 ## Configuración de errores
 
 **`@jarvis/logger`** permite controlar cómo se imprimen los errores dentro del contexto de un log.
@@ -386,15 +523,17 @@ Ejemplo:
       "error": {
         "verbose": false
       },
-      "console": {
-        "enabled": true,
-        "colors": true
-      },
-      "file": {
-        "enabled": true,
-        "path": "./logs",
-        "splitByLevel": true,
-        "writeAll": true
+      "transports": {
+        "console": {
+          "enabled": true,
+          "colors": true
+        },
+        "file": {
+          "enabled": true,
+          "path": "./logs",
+          "splitByLevel": true,
+          "writeAll": true
+        }
       }
     }
   }
@@ -475,15 +614,17 @@ const loggerModule = createLoggerModule({
   defaultPackage: 'Sandbox-API',
   defaultModule: 'Sandbox-API',
   timeZone: 'America/Mexico_City',
-  console: {
-    enabled: true,
-    colors: true
-  },
-  file: {
-    enabled: true,
-    path: './logs',
-    splitByLevel: true,
-    writeAll: true
+  transports: {
+    console: {
+      enabled: true,
+      colors: true
+    },
+    file: {
+      enabled: true,
+      path: './logs',
+      splitByLevel: true,
+      writeAll: true
+    }
   }
 });
 
@@ -546,15 +687,17 @@ const loggerModule = createLoggerModule({
   defaultPackage: 'Sandbox-API',
   defaultModule: 'Sandbox-API',
   timeZone: 'America/Mexico_City',
-  console: {
-    enabled: true,
-    colors: true
-  },
-  file: {
-    enabled: true,
-    path: './logs',
-    splitByLevel: true,
-    writeAll: true
+  transports: {
+    console: {
+      enabled: true,
+      colors: true
+    },
+    file: {
+      enabled: true,
+      path: './logs',
+      splitByLevel: true,
+      writeAll: true
+    }
   }
 });
 ```
