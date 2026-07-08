@@ -1,41 +1,121 @@
 # =================================================================================
 # J.A.R.V.I.S. | Sandbox-API HTTP Tests
 # =================================================================================
+#
+# Archivo de pruebas para VS Code REST Client.
+#
+# Objetivo:
+# - Validar rutas base de Sandbox-API.
+# - Validar respuestas estándar de @jarvis/http.
+# - Validar firma y verificación JWT de @jarvis/security.
+# - Validar Bearer Auth universal usando rutas protegidas.
+#
+# Flujo recomendado:
+# 1. Ejecutar primero App | Health.
+# 2. Ejecutar JWT | Sign access token.
+# 3. Ejecutar JWT | Sign refresh token.
+# 4. Ejecutar JWT | Sign service token.
+# 5. Ejecutar Bearer Auth | Protected route with access token.
+# 6. Ejecutar Bearer Auth | Me with access token.
+# 7. Ejecutar los casos de error.
+#
+# Nota:
+# Los requests con # @name guardan su respuesta para reutilizar tokens.
+# Ejemplo:
+# {{signAccessToken.response.body.data.token}}
+#
+# =================================================================================
+
+
+# =================================================================================
+# Variables
+# =================================================================================
 
 @host = https://localhost:3000
 @contentType = application/json
 
+
 # =================================================================================
-# Base
+# App | Sandbox-API
+# =================================================================================
+#
+# Estas pruebas validan que Sandbox-API esté viva y que el runtime de J.A.R.V.I.S.
+# responda correctamente desde sus rutas base.
+#
 # =================================================================================
 
-### Root
+### App | Root
+# Valida la ruta principal de Sandbox-API.
+# Debe responder información general de la aplicación y rutas disponibles.
 GET {{host}}/
 
-### Health
+
+### App | Health
+# Valida que la API esté arriba.
+# Úsalo como primera prueba después de arrancar el servidor.
 GET {{host}}/health
 
-### Info
+
+### App | Info
+# Valida la información normalizada del runtime.
+# Debe incluir app, server, status, timeZone y datos generales de J.A.R.V.I.S.
 GET {{host}}/info
 
-### Runtime modules
+
+### App | Modules
+# Valida los módulos vivos registrados dentro de @jarvis/core.
+# No representa packages físicos, sino runtimeModules registrados.
 GET {{host}}/modules
+
 
 # =================================================================================
 # HTTP | @jarvis/http
 # =================================================================================
+#
+# Estas pruebas validan las respuestas estándar del paquete @jarvis/http.
+#
+# =================================================================================
 
-### HTTP success response
+### HTTP | Test success response
+# Valida el formato estándar de respuesta exitosa.
+# Esperado:
+# - success: true
+# - statusCode: 200
+# - message
+# - data
 GET {{host}}/http/success
 
-### HTTP controlled error response
+
+### HTTP | Test error response
+# Valida el formato estándar de respuesta de error controlado.
+# Esperado:
+# - success: false
+# - statusCode controlado
+# - error.code
+# - error.message
 GET {{host}}/http/error
 
+
 # =================================================================================
-# Security | @jarvis/security | JWT
+# Security | @jarvis/security | JWT - Access Token
+# =================================================================================
+#
+# Access token:
+# - Representa un token para consumir rutas protegidas.
+# - Es el token permitido para /security/protected y /security/me.
+#
 # =================================================================================
 
 ### JWT | Sign access token
+# Genera un access token válido.
+#
+# Este request debe ejecutarse antes de:
+# - JWT | Verify access token
+# - Bearer Auth | Protected route with access token
+# - Bearer Auth | Me with access token
+#
+# La respuesta se guarda como:
+# {{signAccessToken.response.body.data.token}}
 # @name signAccessToken
 POST {{host}}/security/jwt/sign
 Content-Type: {{contentType}}
@@ -44,18 +124,27 @@ Content-Type: {{contentType}}
   "subject": "user-001",
   "tokenType": "access",
   "sessionId": "session-001",
+  "tenantId": "tenant-001",
   "roles": [
     "admin"
   ],
   "permissions": [
-    "security.jwt.test"
+    "security.jwt.test",
+    "security.auth.test"
   ],
   "metadata": {
     "source": "sandbox-api.http"
   }
 }
 
+
 ### JWT | Verify access token
+# Verifica que el access token generado sea válido.
+#
+# Esperado:
+# - statusCode: 200
+# - payload.subject: user-001
+# - payload.tokenType: access
 POST {{host}}/security/jwt/verify
 Content-Type: {{contentType}}
 
@@ -63,7 +152,27 @@ Content-Type: {{contentType}}
   "token": "{{signAccessToken.response.body.data.token}}"
 }
 
+
+# =================================================================================
+# Security | @jarvis/security | JWT - Refresh Token
+# =================================================================================
+#
+# Refresh token:
+# - Se usa para renovar sesión o generar nuevos access tokens.
+# - Puede verificarse como JWT válido.
+# - No debe poder consumir rutas protegidas de usuario.
+#
+# =================================================================================
+
 ### JWT | Sign refresh token
+# Genera un refresh token válido.
+#
+# Este request debe ejecutarse antes de:
+# - JWT | Verify refresh token
+# - Bearer Auth | Refresh token forbidden
+#
+# La respuesta se guarda como:
+# {{signRefreshToken.response.body.data.token}}
 # @name signRefreshToken
 POST {{host}}/security/jwt/sign
 Content-Type: {{contentType}}
@@ -77,7 +186,13 @@ Content-Type: {{contentType}}
   }
 }
 
+
 ### JWT | Verify refresh token
+# Verifica que el refresh token generado sea válido como JWT.
+#
+# Esperado:
+# - statusCode: 200
+# - payload.tokenType: refresh
 POST {{host}}/security/jwt/verify
 Content-Type: {{contentType}}
 
@@ -85,7 +200,27 @@ Content-Type: {{contentType}}
   "token": "{{signRefreshToken.response.body.data.token}}"
 }
 
+
+# =================================================================================
+# Security | @jarvis/security | JWT - Service Token
+# =================================================================================
+#
+# Service token:
+# - Se usa para comunicación interna entre servicios.
+# - Puede verificarse como JWT válido.
+# - No debe poder consumir rutas protegidas de usuario si la ruta solo acepta access.
+#
+# =================================================================================
+
 ### JWT | Sign service token
+# Genera un service token válido.
+#
+# Este request debe ejecutarse antes de:
+# - JWT | Verify service token
+# - Bearer Auth | Service token forbidden
+#
+# La respuesta se guarda como:
+# {{signServiceToken.response.body.data.token}}
 # @name signServiceToken
 POST {{host}}/security/jwt/sign
 Content-Type: {{contentType}}
@@ -103,7 +238,13 @@ Content-Type: {{contentType}}
   }
 }
 
+
 ### JWT | Verify service token
+# Verifica que el service token generado sea válido como JWT.
+#
+# Esperado:
+# - statusCode: 200
+# - payload.tokenType: service
 POST {{host}}/security/jwt/verify
 Content-Type: {{contentType}}
 
@@ -111,11 +252,22 @@ Content-Type: {{contentType}}
   "token": "{{signServiceToken.response.body.data.token}}"
 }
 
+
 # =================================================================================
-# Security | JWT | Controlled errors
+# Security | @jarvis/security | JWT - Error cases
+# =================================================================================
+#
+# Estas pruebas validan errores controlados del servicio JWT.
+#
 # =================================================================================
 
 ### JWT | Verify invalid token
+# Intenta verificar un token inválido.
+#
+# Esperado:
+# - statusCode: 401
+# - code: UNAUTHORIZED
+# - message: Token JWT inválido o expirado.
 POST {{host}}/security/jwt/verify
 Content-Type: {{contentType}}
 
@@ -123,7 +275,14 @@ Content-Type: {{contentType}}
   "token": "token-invalido"
 }
 
+
 ### JWT | Verify missing token
+# Intenta verificar un token vacío.
+#
+# Esperado:
+# - statusCode: 401
+# - code: UNAUTHORIZED
+# - message relacionado con token ausente.
 POST {{host}}/security/jwt/verify
 Content-Type: {{contentType}}
 
@@ -131,16 +290,164 @@ Content-Type: {{contentType}}
   "token": ""
 }
 
+
 ### JWT | Sign invalid body
+# Intenta firmar un token usando un body inválido.
+#
+# En este caso se manda un array en lugar de un objeto.
+#
+# Esperado:
+# - statusCode: 400
+# - code: BAD_REQUEST
 POST {{host}}/security/jwt/sign
 Content-Type: {{contentType}}
 
 []
 
+
 ### JWT | Sign missing tokenType
+# Intenta firmar un token sin tokenType.
+#
+# tokenType es obligatorio porque define si el token es:
+# - access
+# - refresh
+# - service
+#
+# Esperado:
+# - statusCode: 401 o error controlado por validación JWT
+# - message relacionado con tokenType inválido o ausente.
 POST {{host}}/security/jwt/sign
 Content-Type: {{contentType}}
 
 {
   "subject": "user-001"
 }
+
+
+# =================================================================================
+# Security | @jarvis/security | Bearer Auth - Success cases
+# =================================================================================
+#
+# Estas pruebas validan la autenticación Bearer universal integrada en Sandbox-API.
+#
+# Las rutas protegidas usan:
+# Authorization: Bearer <token>
+#
+# Actualmente las rutas protegidas aceptan solamente:
+# - tokenType: access
+#
+# =================================================================================
+
+### Bearer Auth | Protected route with access token
+# Valida que una ruta protegida acepte un access token válido.
+#
+# Requiere ejecutar antes:
+# - JWT | Sign access token
+#
+# Esperado:
+# - statusCode: 200
+# - authorized: true
+# - log: security.auth.bearer.success
+GET {{host}}/security/protected
+Authorization: Bearer {{signAccessToken.response.body.data.token}}
+
+
+### Bearer Auth | Me with access token
+# Valida que una ruta protegida pueda devolver el payload autenticado.
+#
+# Requiere ejecutar antes:
+# - JWT | Sign access token
+#
+# Esperado:
+# - statusCode: 200
+# - data.payload.subject: user-001
+# - data.payload.tokenType: access
+GET {{host}}/security/me
+Authorization: Bearer {{signAccessToken.response.body.data.token}}
+
+
+# =================================================================================
+# Security | @jarvis/security | Bearer Auth - Error cases
+# =================================================================================
+#
+# Estas pruebas validan errores controlados de Bearer Auth.
+#
+# =================================================================================
+
+### Bearer Auth | Missing Authorization header
+# Intenta consumir una ruta protegida sin header Authorization.
+#
+# Esperado:
+# - statusCode: 401
+# - code: UNAUTHORIZED
+# - message: Authorization header ausente.
+# - log: security.auth.bearer.failed
+GET {{host}}/security/protected
+
+
+### Bearer Auth | Invalid Authorization header
+# Intenta consumir una ruta protegida con un esquema distinto a Bearer.
+#
+# Header enviado:
+# Authorization: Basic token-invalido
+#
+# Esperado:
+# - statusCode: 401
+# - code: UNAUTHORIZED
+# - message: Authorization header inválido.
+GET {{host}}/security/protected
+Authorization: Basic token-invalido
+
+
+### Bearer Auth | Bearer without token
+# Intenta consumir una ruta protegida usando Bearer sin token.
+#
+# Esperado:
+# - statusCode: 401
+# - code: UNAUTHORIZED
+# - message: Token JWT ausente.
+GET {{host}}/security/protected
+Authorization: Bearer
+
+
+### Bearer Auth | Invalid Bearer token
+# Intenta consumir una ruta protegida usando un token inválido.
+#
+# Esperado:
+# - statusCode: 401
+# - code: UNAUTHORIZED
+# - message: Token JWT inválido o expirado.
+GET {{host}}/security/protected
+Authorization: Bearer token-invalido
+
+
+### Bearer Auth | Refresh token forbidden
+# Intenta consumir una ruta protegida de usuario usando un refresh token.
+#
+# El token refresh es válido como JWT, pero no está autorizado para esta ruta.
+#
+# Requiere ejecutar antes:
+# - JWT | Sign refresh token
+#
+# Esperado:
+# - statusCode: 403
+# - code: FORBIDDEN
+# - message: Token JWT no autorizado para esta operación.
+GET {{host}}/security/protected
+Authorization: Bearer {{signRefreshToken.response.body.data.token}}
+
+
+### Bearer Auth | Service token forbidden
+# Intenta consumir una ruta protegida de usuario usando un service token.
+#
+# El token service es válido como JWT, pero no está autorizado para esta ruta.
+#
+# Requiere ejecutar antes:
+# - JWT | Sign service token
+#
+# Esperado:
+# - statusCode: 403
+# - code: FORBIDDEN
+# - message: Token JWT no autorizado para esta operación.
+GET {{host}}/security/protected
+Authorization: Bearer {{signServiceToken.response.body.data.token}}

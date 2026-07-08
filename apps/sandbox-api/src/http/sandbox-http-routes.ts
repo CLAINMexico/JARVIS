@@ -11,6 +11,7 @@ import type {
 } from '@jarvis/logger';
 
 import type {
+  SecurityAuthService,
   SecurityJwtService
 } from '@jarvis/security';
 
@@ -23,6 +24,14 @@ import {
 import {
   registerSandboxSecurityJwtRoutes
 } from '../security/sandbox-security-jwt-routes.js';
+
+import {
+  createSandboxSecurityAuthPreHandler
+} from '../security/sandbox-security-auth-pre-handler.js';
+
+import {
+  registerSandboxSecurityAuthRoutes
+} from '../security/sandbox-security-auth-routes.js';
 
 /**
  * Paquete visual usado por los logs propios de Sandbox-API.
@@ -39,17 +48,41 @@ const SandboxPackageName = 'Sandbox-API';
 export function registerSandboxHttpRoutes(
   server: FastifyInstance,
   core: JarvisApplication,
-  securityJwt: SecurityJwtService
+  securityJwt: SecurityJwtService,
+  securityAuth: SecurityAuthService
 ): void {
   const instance = core.info();
   const logger = core.service('logger') as LoggerService;
 
   /**
-   * Registra rutas de prueba para @jarvis/security.
+   * Registra rutas de prueba para JWT de @jarvis/security.
    */
   registerSandboxSecurityJwtRoutes(
     server,
     securityJwt,
+    logger
+  );
+
+  /**
+   * Crea el adaptador Fastify para Bearer Auth.
+   *
+   * @jarvis/security conserva la lógica universal de autenticación y
+   * Sandbox-API adapta esa lógica al ciclo de vida HTTP de Fastify.
+   */
+  const authenticate = createSandboxSecurityAuthPreHandler({
+    securityAuth,
+    logger,
+    allowedTokenTypes: [
+      'access'
+    ]
+  });
+
+  /**
+   * Registra rutas protegidas para validar Bearer Auth.
+   */
+  registerSandboxSecurityAuthRoutes(
+    server,
+    authenticate,
     logger
   );
 
@@ -84,7 +117,9 @@ export function registerSandboxHttpRoutes(
           '/http/success',
           '/http/error',
           '/security/jwt/sign',
-          '/security/jwt/verify'
+          '/security/jwt/verify',
+          '/security/protected',
+          '/security/me'
         ]
       }
     });

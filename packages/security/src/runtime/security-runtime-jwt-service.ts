@@ -35,8 +35,7 @@ import {
  * Este servicio concentra las operaciones básicas para firmar y verificar
  * tokens JWT dentro del ecosistema J.A.R.V.I.S.
  *
- * En v0.18.1 se complementa el soporte inicial agregando tokenType y
- * expiración por tipo de token.
+ * El servicio soporta tokenType y expiración por tipo de token.
  */
 export class SecurityJwtService {
   /**

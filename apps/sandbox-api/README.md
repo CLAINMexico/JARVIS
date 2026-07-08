@@ -637,6 +637,205 @@ payload sin tokenType
 
 ---
 
+## Bearer Auth en Sandbox-API
+
+**`Sandbox-API`** integra la autenticación Bearer universal de **`@jarvis/security`** mediante un adaptador específico para Fastify.
+
+La lógica principal de autenticación vive en **`@jarvis/security`**. La aplicación solo adapta Fastify para leer el header **`Authorization`**, ejecutar el servicio universal y adjuntar el resultado al request.
+
+---
+
+### Rutas protegidas
+
+Se agregan rutas de prueba para validar autenticación Bearer:
+
+```txt
+GET /security/protected
+GET /security/me
+```
+
+Ambas rutas requieren:
+
+```txt
+Authorization: Bearer <access-token>
+```
+
+Actualmente aceptan solamente tokens con:
+
+```txt
+tokenType = access
+```
+
+---
+
+### GET /security/protected
+
+Valida que una solicitud autenticada pueda consumir una ruta protegida.
+
+```http
+GET {{host}}/security/protected
+Authorization: Bearer {{signAccessToken.response.body.data.token}}
+```
+
+Respuesta esperada:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Acceso autorizado correctamente.",
+  "data": {
+    "authorized": true
+  }
+}
+```
+
+---
+
+### GET /security/me
+
+Devuelve el payload autenticado adjuntado al request.
+
+```http
+GET {{host}}/security/me
+Authorization: Bearer {{signAccessToken.response.body.data.token}}
+```
+
+Respuesta esperada:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Payload autenticado obtenido correctamente.",
+  "data": {
+    "payload": {
+      "subject": "user-001",
+      "tokenType": "access",
+      "sessionId": "session-001"
+    }
+  }
+}
+```
+
+---
+
+### Adaptador Fastify
+
+El adaptador vive dentro de:
+
+```txt
+apps/sandbox-api/src/security/sandbox-security-auth-pre-handler.ts
+```
+
+Su responsabilidad es:
+
+```txt
+- Leer request.headers.authorization.
+- Ejecutar securityAuth.authenticateBearer().
+- Validar que el token sea de tipo access.
+- Adjuntar el resultado en request.auth.
+- Registrar logs de éxito o fallo.
+- Devolver respuestas de error usando @jarvis/http.
+```
+
+---
+
+### Contexto autenticado
+
+Para permitir el uso de **`request.auth`**, Sandbox-API extiende los tipos de Fastify en:
+
+```txt
+apps/sandbox-api/src/security/sandbox-security-auth-context.ts
+```
+
+Ejemplo:
+
+```ts
+declare module 'fastify' {
+  interface FastifyRequest {
+    auth?: SecurityAuthResult;
+  }
+}
+```
+
+Esta extensión pertenece a Sandbox-API porque es específica de Fastify. **`@jarvis/security`** se mantiene desacoplado del framework.
+
+---
+
+### Flujo de autenticación
+
+```txt
+Cliente
+↓
+GET /security/me
+Authorization: Bearer <token>
+↓
+Fastify ejecuta el preHandler
+↓
+Sandbox-API entrega el header a @jarvis/security
+↓
+SecurityAuthService valida Bearer + JWT + tokenType
+↓
+Sandbox-API adjunta request.auth
+↓
+La ruta responde usando el payload autenticado
+```
+
+---
+
+### Casos validados
+
+```txt
+access token válido              -> 200 OK
+Authorization ausente            -> 401 UNAUTHORIZED
+Authorization mal formado        -> 401 UNAUTHORIZED
+Bearer sin token                 -> 401 UNAUTHORIZED
+token inválido                   -> 401 UNAUTHORIZED
+refresh token en ruta access     -> 403 FORBIDDEN
+service token en ruta access     -> 403 FORBIDDEN
+```
+
+---
+
+### Pruebas HTTP
+
+El archivo de pruebas se encuentra en:
+
+```txt
+apps/sandbox-api/http/sandbox-api.http
+```
+
+Flujo recomendado:
+
+```txt
+1. Ejecutar App | Health.
+2. Ejecutar JWT | Sign access token.
+3. Ejecutar JWT | Sign refresh token.
+4. Ejecutar JWT | Sign service token.
+5. Ejecutar Bearer Auth | Protected route with access token.
+6. Ejecutar Bearer Auth | Me with access token.
+7. Ejecutar los casos de error.
+```
+
+---
+
+### Logs esperados
+
+Cuando una solicitud se autentica correctamente:
+
+```txt
+security.auth.bearer.success
+```
+
+Cuando una solicitud falla:
+
+```txt
+security.auth.bearer.failed
+```
+
+---
+
 ## Configuración de logger transports
 
 **`Sandbox-API`** configura las salidas del logger desde **`settings.json`** usando la sección:

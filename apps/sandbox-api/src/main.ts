@@ -27,6 +27,7 @@ import type {
 } from '@jarvis/logger';
 
 import {
+  SecurityAuthService,
   SecurityJwtService
 } from '@jarvis/security';
 
@@ -207,12 +208,20 @@ async function main(): Promise<void> {
     /**
      * Crea el servicio JWT de @jarvis/security.
      *
-     * Este servicio se usa para rutas de prueba de firma y verificación.
-     * La protección real de rutas se integrará mediante autenticación Bearer.
+     * Este servicio se usa para firmar y verificar tokens JWT.
      */
     const securityJwt = new SecurityJwtService(
       securityJwtOptions
     );
+
+    /**
+     * Crea el servicio universal de autenticación de @jarvis/security.
+     *
+     * Este servicio valida Authorization Bearer sin depender de Fastify.
+     */
+    const securityAuth = new SecurityAuthService({
+      jwt: securityJwt
+    });
 
     /**
      * Resuelve las opciones finales del servidor HTTP/HTTPS.
@@ -243,7 +252,8 @@ async function main(): Promise<void> {
     registerSandboxHttpRoutes(
       server,
       core,
-      securityJwt
+      securityJwt,
+      securityAuth
     );
 
     /**

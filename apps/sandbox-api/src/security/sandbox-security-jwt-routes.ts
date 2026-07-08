@@ -46,8 +46,8 @@ function isSandboxObject(value: unknown): value is Record<string, unknown> {
  * verificar tokens JWT usando SecurityJwtService.
  *
  * Importante:
- * Estas rutas son de prueba. La protección real de rutas se implementará
- * posteriormente mediante middleware HTTP.
+ * Estas rutas son de prueba para emisión y verificación directa de JWT.
+ * La protección de rutas vive en el adaptador Bearer Auth de Sandbox-API.
  */
 export function registerSandboxSecurityJwtRoutes(
   server: FastifyInstance,

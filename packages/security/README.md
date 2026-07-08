@@ -682,6 +682,220 @@ Respuesta esperada:
 
 ---
 
+## Bearer Auth universal
+
+**`@jarvis/security`** expone una capa universal para autenticar solicitudes usando el header HTTP **`Authorization`** con esquema **`Bearer`**.
+
+Ejemplo:
+
+```txt
+Authorization: Bearer <token>
+```
+
+Esta capacidad permite validar tokens JWT desde cualquier aplicación sin acoplar el paquete a un framework específico.
+
+La regla de arquitectura es:
+
+```txt
+@jarvis/security valida la autenticación.
+La aplicación adapta su framework a @jarvis/security.
+```
+
+Por esta razón, **`@jarvis/security`** no importa tipos de Fastify, Express, Nest, Hono ni de ningún servidor HTTP.
+
+---
+
+### SecurityAuthService
+
+El servicio **`SecurityAuthService`** concentra la lógica universal de autenticación Bearer.
+
+Ejemplo de uso:
+
+```ts
+import {
+  SecurityAuthService,
+  SecurityJwtService
+} from '@jarvis/security';
+
+const jwt = new SecurityJwtService({
+  secret: 'JARVIS_LOCAL_SECURITY_SECRET',
+  issuer: 'J.A.R.V.I.S.',
+  audience: 'Sandbox-API',
+  accessTokenExpiresIn: '15m',
+  refreshTokenExpiresIn: '7d',
+  serviceTokenExpiresIn: '1h'
+});
+
+const securityAuth = new SecurityAuthService({
+  jwt
+});
+```
+
+Para autenticar una solicitud:
+
+```ts
+const auth = await securityAuth.authenticateBearer({
+  authorizationHeader,
+  allowedTokenTypes: [
+    'access'
+  ]
+});
+```
+
+---
+
+### SecurityAuthBearerOptions
+
+Las opciones de autenticación Bearer se definen mediante **`SecurityAuthBearerOptions`**.
+
+```ts
+export interface SecurityAuthBearerOptions {
+  authorizationHeader: string | null | undefined;
+  allowedTokenTypes?: SecurityJwtTokenType[];
+}
+```
+
+Propiedades:
+
+```txt
+authorizationHeader = valor recibido desde el header Authorization
+allowedTokenTypes   = tipos de token permitidos para la operación actual
+```
+
+Se permite **`undefined`** porque algunos frameworks devuelven ese valor cuando el header no existe.
+
+---
+
+### SecurityAuthResult
+
+Cuando la autenticación es correcta, **`authenticateBearer()`** devuelve un resultado normalizado:
+
+```ts
+export interface SecurityAuthResult {
+  token: string;
+  payload: SecurityJwtPayload;
+}
+```
+
+Ejemplo:
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "payload": {
+    "subject": "user-001",
+    "tokenType": "access",
+    "sessionId": "session-001",
+    "roles": [
+      "admin"
+    ],
+    "permissions": [
+      "security.auth.test"
+    ]
+  }
+}
+```
+
+---
+
+### allowedTokenTypes
+
+La propiedad **`allowedTokenTypes`** permite restringir qué tipo de token puede usarse en una operación.
+
+Ejemplo para rutas protegidas de usuario:
+
+```ts
+const auth = await securityAuth.authenticateBearer({
+  authorizationHeader,
+  allowedTokenTypes: [
+    'access'
+  ]
+});
+```
+
+Regla recomendada:
+
+```txt
+access  = consumir rutas protegidas de usuario
+refresh = renovar credenciales
+service = comunicación interna entre servicios
+```
+
+---
+
+### extractSecurityBearerToken
+
+La utilidad **`extractSecurityBearerToken()`** extrae y valida el token desde un header Authorization.
+
+```ts
+import {
+  extractSecurityBearerToken
+} from '@jarvis/security';
+
+const token = extractSecurityBearerToken(
+  'Bearer eyJhbGciOiJIUzI1NiIs...'
+);
+```
+
+Casos validados:
+
+```txt
+- Authorization header ausente.
+- Authorization header vacío.
+- Authorization header con esquema incorrecto.
+- Authorization header Bearer sin token.
+```
+
+---
+
+### Errores controlados
+
+Bearer Auth usa errores controlados de **`@jarvis/http`**.
+
+Casos esperados:
+
+```txt
+401 UNAUTHORIZED -> Authorization header ausente.
+401 UNAUTHORIZED -> Authorization header inválido.
+401 UNAUTHORIZED -> Token JWT ausente.
+401 UNAUTHORIZED -> Token JWT inválido o expirado.
+403 FORBIDDEN    -> Token JWT no autorizado para esta operación.
+```
+
+---
+
+### Integración con aplicaciones
+
+**`@jarvis/security`** no registra middleware HTTP por sí mismo.
+
+Una aplicación debe tomar el header desde su framework y entregarlo al servicio universal.
+
+Ejemplo conceptual con Fastify:
+
+```ts
+const auth = await securityAuth.authenticateBearer({
+  authorizationHeader: request.headers.authorization,
+  allowedTokenTypes: [
+    'access'
+  ]
+});
+```
+
+Ejemplo conceptual con Express:
+
+```ts
+const auth = await securityAuth.authenticateBearer({
+  authorizationHeader: request.headers.authorization,
+  allowedTokenTypes: [
+    'access'
+  ]
+});
+```
+
+La aplicación decide cómo adjuntar el resultado autenticado a su request, contexto o flujo interno.
+
+---
+
 ## Uso
 
 Ejemplo básico:

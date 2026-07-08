@@ -1,7 +1,7 @@
 {
   "name": "J.A.R.V.I.S.",
   "description": "JavaScript Architecture Runtime for Versatile Intelligent Services",
-  "version": "0.19.1",
+  "version": "0.20.0",
   "author": "CLAIN México, S.A. de C.V.",
   "license": "UNLICENSED",
   "private": true,

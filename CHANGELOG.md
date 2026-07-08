@@ -1,6 +1,56 @@
 # CHANGELOG | J.A.R.V.I.S.
 
-## **`0.19.1`** <sup><small>(08/Julio/2026)</small></sup>
+## **`0.20.0`**
+
+### Resumen
+
+Se agregó **Bearer Auth universal** en **`@jarvis/security`**, permitiendo autenticar solicitudes mediante headers **`Authorization: Bearer <token>`** sin acoplar el paquete a frameworks HTTP específicos.
+
+También se integró esta capacidad en **`Sandbox-API`** mediante un adaptador Fastify mínimo y rutas protegidas de prueba.
+
+---
+
+### Cambios
+
+- Se agregó **`SecurityAuthService`** en **`@jarvis/security`**.
+- Se agregó el contrato **`SecurityAuthBearerOptions`**.
+- Se agregó el contrato **`SecurityAuthResult`**.
+- Se agregó la utilidad **`extractSecurityBearerToken()`**.
+- Se agregó validación de **`Authorization`** con esquema **`Bearer`**.
+- Se agregó validación de **`allowedTokenTypes`**.
+- Se agregaron errores controlados para autenticación Bearer mediante **`@jarvis/http`**.
+- Se exportaron los nuevos contratos, servicios y utilidades desde **`@jarvis/security`**.
+- Se integró **`SecurityAuthService`** en **`Sandbox-API`**.
+- Se agregó un preHandler Fastify para rutas protegidas.
+- Se agregó extensión de tipos de Fastify para soportar **`request.auth`**.
+- Se agregaron rutas protegidas de prueba:
+  - **`GET /security/protected`**
+  - **`GET /security/me`**
+- Se actualizó **`sandbox-api.http`** con pruebas documentadas de Bearer Auth.
+
+---
+
+### Mejoras
+
+- **`@jarvis/security`** mantiene una arquitectura universal y desacoplada de frameworks HTTP.
+- La aplicación es responsable de adaptar su framework al contrato de seguridad.
+- Las rutas protegidas pueden restringir tokens mediante **`allowedTokenTypes`**.
+- Se mantiene separación entre tokens **`access`**, **`refresh`** y **`service`**.
+- Se agregan pruebas claras para casos exitosos y fallidos.
+- Se mejora la trazabilidad mediante logs de autenticación exitosa y fallida.
+
+---
+
+### Correcciones
+
+- Se ajustó el tipado para aceptar headers **`Authorization`** como **`string | null | undefined`**.
+- Se evitó acoplar **`@jarvis/security`** a tipos de Fastify.
+- Se resolvió la integración del preHandler de Fastify mediante adaptación en la aplicación.
+- Se documentó el contexto autenticado **`request.auth`** como responsabilidad de **`Sandbox-API`**.
+
+---
+
+## **`0.19.1`**
 
 ### Resumen
 
@@ -42,7 +92,7 @@ Se ajustó la configuración de **`@jarvis/logger`** para agrupar sus salidas de
 
 ---
 
-## **`0.19.0`** <sup><small>(04/Julio/2026)</small></sup>
+## **`0.19.0`**
 
 ### Resumen
 
@@ -129,7 +179,7 @@ Fastify
 
 ---
 
-## **`0.18.1`** <sup><small>(04/Julio/2026)</small></sup>
+## **`0.18.1`**
 
 ### Resumen
 
@@ -189,7 +239,7 @@ Esta versión renombra la sección **`settings.modules`** a **`settings.packages
 
 ---
 
-## **`0.18.0`** <sup><small>(04/Julio/2026)</small></sup>
+## **`0.18.0`**
 
 ### Resumen
 
@@ -271,7 +321,7 @@ La versión también integra errores controlados mediante **`@jarvis/http`** par
 
 ---
 
-## **`0.17.0`** <sup><small>(04/Julio/2026)</small></sup>
+## **`0.17.0`**
 
 ### Resumen
 
@@ -357,7 +407,7 @@ La línea del log contiene el contexto.
 
 ---
 
-## **`0.16.0`** <sup><small>(03/Julio/2026)</small></sup>
+## **`0.16.0`**
 
 ### Resumen
 
@@ -435,7 +485,7 @@ docker compose exec jarvis-node pnpm verify
 
 ---
 
-## **`0.15.0`** <sup><small>(26/Junio/2026)</small></sup>
+## **`0.15.0`**
 
 ### Resumen
 
@@ -494,7 +544,7 @@ docker compose exec jarvis-node pnpm verify
 
 ---
 
-## **`0.14.0`** <sup><small>(26/Junio/2026)</small></sup>
+## **`0.14.0`**
 
 ### Resumen
 
@@ -545,7 +595,7 @@ docker compose exec jarvis-node pnpm verify
 
 ---
 
-## **`0.13.1`** <sup><small>(26/Junio/2026)</small></sup>
+## **`0.13.1`**
 
 ### Resumen
 
@@ -579,7 +629,7 @@ Se agregan pruebas HTTP versionables para **`apps/sandbox-api`** usando archivos
 
 ---
 
-## **`0.13.0`** <sup><small>(26/Junio/2026)</small></sup>
+## **`0.13.0`**
 
 ### Resumen
 
@@ -628,7 +678,7 @@ docker compose exec jarvis-node pnpm verify
 
 ---
 
-## **`0.12.0`** <sup><small>(26/Junio/2026)</small></sup>
+## **`0.12.0`**
 
 ### Resumen
 
@@ -674,7 +724,7 @@ docker compose exec jarvis-node pnpm verify
 
 ---
 
-## **`0.11.0`** <sup><small>(26/Junio/2026)</small></sup>
+## **`0.11.0`**
 
 ### Resumen
 
@@ -730,7 +780,59 @@ docker compose exec jarvis-node pnpm verify
 
 ---
 
-## **`0.10.2`** <sup><small>(25/Junio/2026)</small></sup>
+## **`0.10.4`**
+
+### Resumen
+
+Complemento en documentación completa del proyecto en **`README.md`**
+
+---
+
+### Cambios
+
+- No aplica.
+
+---
+
+### Mejoras
+
+- No aplica.
+
+---
+
+### Correcciones
+
+- No aplica.
+
+---
+
+## **`0.10.3`**
+
+### Resumen
+
+Complemento en documentación del proyecto
+
+---
+
+### Cambios
+
+- No aplica.
+
+---
+
+### Mejoras
+
+- No aplica.
+
+---
+
+### Correcciones
+
+- No aplica.
+
+---
+
+## **`0.10.2`**
 
 ### Resumen
 
@@ -765,7 +867,7 @@ Esta versión no modifica lógica del runtime. Su objetivo es ordenar la documen
 
 ---
 
-## **`0.10.1`** <sup><small>(25/Junio/2026)</small></sup>
+## **`0.10.1`**
 
 ### Resumen
 
@@ -799,7 +901,7 @@ Se corrige el comportamiento de **@jarvis/logger** para respetar **packages.logg
 
 ---
 
-## **`0.10.0`** <sup><small>(24/Junio/2026)</small></sup>
+## **`0.10.0`**
 
 ### Resumen
 
@@ -843,7 +945,7 @@ Se agrega el primer módulo real de logging del ecosistema **`J.A.R.V.I.S.`** me
 
 ---
 
-## **`0.9.0`** <sup><small>(24/Junio/2026)</small></sup>
+## **`0.9.0`**
 
 ### Resumen
 
@@ -878,7 +980,7 @@ Se agrega **@jarvis/bootstrap** como package encargado de preparar la configurac
 
 ---
 
-## **`0.8.0`** <sup><small>(23/Junio/2026)</small></sup>
+## **`0.8.0`**
 
 ### Resumen
 
@@ -908,7 +1010,7 @@ Se agrega el registro inicial de servicios en **@jarvis/core**.
 
 ---
 
-## **`0.7.1`** <sup><small>(23/Junio/2026)</small></sup>
+## **`0.7.1`**
 
 ### Resumen
 
@@ -938,7 +1040,7 @@ Se homologa la documentación del monorepo después de integrar el primer módul
 
 ---
 
-## **`0.7.0`** <sup><small>(23/Junio/2026)</small></sup>
+## **`0.7.0`**
 
 ### Resumen
 
@@ -973,7 +1075,7 @@ Se agrega **@jarvis/config** como primer módulo real del ecosistema **`J.A.R.V.
 
 ---
 
-## **`0.6.1`** <sup><small>(23/Junio/2026)</small></sup>
+## **`0.6.1`**
 
 ### Resumen
 
@@ -1003,7 +1105,7 @@ Se agrega documentación y configuración base para **apps/sandbox-api**.
 
 ---
 
-## **`0.6.0`** <sup><small>(23/Junio/2026)</small></sup>
+## **`0.6.0`**
 
 ### Resumen
 
@@ -1033,7 +1135,7 @@ Se agrega el ciclo de vida inicial de módulos vivos en **@jarvis/core**.
 
 ---
 
-## **`0.5.2`** <sup><small>(22/Junio/2026)</small></sup>
+## **`0.5.2`**
 
 ### Resumen
 
@@ -1062,7 +1164,33 @@ Se agrega documentación inicial de core, sandbox y versiones.
 
 ---
 
-## **`0.5.0`** <sup><small>(22/Junio/2026)</small></sup>
+## **`0.5.1`**
+
+### Resumen
+
+Complemento para el registro inicial de módulos dentro de **`@jarvis/core`**
+
+---
+
+### Cambios
+
+- No aplica.
+
+---
+
+### Mejoras
+
+- No aplica.
+
+---
+
+### Correcciones
+
+- No aplica.
+
+---
+
+## **`0.5.0`**
 
 ### Resumen
 
@@ -1090,7 +1218,7 @@ Se agrega el registro inicial de módulos dentro de **@jarvis/core**.
 
 ---
 
-## **`0.4.0`** <sup><small>(22/Junio/2026)</small></sup>
+## **`0.4.0`**
 
 ### Resumen
 
@@ -1119,7 +1247,7 @@ Se agrega el bootstrap inicial de **@jarvis/core**.
 
 ---
 
-## **`0.3.0`** <sup><small>(22/Junio/2026)</small></sup>
+## **`0.3.0`**
 
 ### Resumen
 
@@ -1147,7 +1275,85 @@ Se conecta la estructura inicial de packages dentro del monorepo.
 
 ---
 
-## **`0.2.x`** <sup><small>(22/Junio/2026)</small></sup>
+## **`0.2.3`**
+
+### Resumen
+
+Correcciones en estructura de archivo **`package.json`**
+
+---
+
+### Cambios
+
+- No aplica.
+
+---
+
+### Mejoras
+
+- No aplica.
+
+---
+
+### Correcciones
+
+- No aplica.
+
+---
+
+## **`0.2.2`**
+
+### Resumen
+
+Correcciones de verbos, coherencia y ajuste de contexto en archivos README.md
+
+---
+
+### Cambios
+
+- No aplica.
+
+---
+
+### Mejoras
+
+- No aplica.
+
+---
+
+### Correcciones
+
+- No aplica.
+
+---
+
+## **`0.2.1`**
+
+### Resumen
+
+Se complementa documentación inicial e integración de imagen oficial del desarrollo
+
+---
+
+### Cambios
+
+- No aplica.
+
+---
+
+### Mejoras
+
+- No aplica.
+
+---
+
+### Correcciones
+
+- No aplica.
+
+---
+
+## **`0.2.0`**
 
 ### Resumen
 
@@ -1178,7 +1384,7 @@ Se prepara el ambiente base del proyecto, documentación inicial y branding.
 
 ---
 
-## **`0.1.0`** <sup><small>(21/Junio/2026)</small></sup>
+## **`0.1.0`**
 
 ### Resumen
 
@@ -1204,3 +1410,5 @@ Se crea la estructura inicial del monorepo **`J.A.R.V.I.S.`**
 ### Correcciones
 
 - No aplica.
+
+---

@@ -68,16 +68,16 @@ export interface SecurityJwtPayload {
   /**
    * Roles asociados al sujeto.
    *
-   * En v0.18.1 este campo solo viaja como metadata dentro del token.
-   * La validación formal de roles se implementará en una versión posterior.
+   * Este campo puede viajar como metadata dentro del token.
+   * La validación formal de roles se implementará dentro de las reglas de autorización.
    */
   roles?: string[];
 
   /**
    * Permisos asociados al sujeto.
    *
-   * En v0.18.1 este campo solo viaja como metadata dentro del token.
-   * La validación formal de permisos se implementará en una versión posterior.
+   * Este campo puede viajar como metadata dentro del token.
+   * La validación formal de permisos se implementará dentro de las reglas de autorización.
    */
   permissions?: string[];
 
