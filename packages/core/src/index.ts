@@ -13,8 +13,8 @@ import type {
 /**
  * Contratos públicos de información del runtime.
  *
- * Estos types describen la información que puede reportar una instancia viva
- * de J.A.R.V.I.S. mediante core.info().
+ * Estos types describen la información que una instancia viva de J.A.R.V.I.S.
+ * puede reportar mediante core.info().
  */
 export type {
   JarvisAppInfo,
@@ -25,8 +25,8 @@ export type {
 /**
  * Contratos públicos de módulos informativos.
  *
- * Estos types definen cómo se registran y reportan los módulos dentro
- * del runtime de J.A.R.V.I.S.
+ * Estos types definen cómo se describen, registran y reportan los módulos
+ * dentro del runtime de J.A.R.V.I.S.
  */
 export type {
   JarvisModuleInfo,
@@ -38,7 +38,7 @@ export type {
  * Contrato público para módulos vivos del runtime.
  *
  * Este type define el comportamiento que puede tener un módulo dentro del
- * ciclo de vida de J.A.R.V.I.S., como boot(), shutdown() y service.
+ * ciclo de vida de J.A.R.V.I.S., incluyendo boot(), shutdown() y service.
  */
 export type {
   JarvisRuntimeModule
@@ -47,7 +47,8 @@ export type {
 /**
  * Contratos públicos de configuración de arranque.
  *
- * Estos types definen la configuración aceptada por Jarvis.boot().
+ * Estos types definen la configuración aceptada por Jarvis.boot() para crear
+ * una nueva instancia del runtime.
  */
 export type {
   JarvisAppOptions,
@@ -59,20 +60,21 @@ export type {
 } from './contracts/core-contract-options.js';
 
 /**
- * Clase principal de aplicación del runtime.
+ * Runtime principal de Core.
  *
+ * JarvisApplication representa una instancia viva del runtime de J.A.R.V.I.S.
  * Se exporta para usos avanzados. La forma recomendada de crear una instancia
- * es usando Jarvis.boot().
+ * es mediante Jarvis.boot().
  */
 export {
   JarvisApplication
 } from './runtime/core-runtime-application.js';
 
 /**
- * Punto de entrada principal del paquete @jarvis/core.
+ * Punto de entrada principal de @jarvis/core.
  *
- * Esta clase expone la API pública para arrancar e inspeccionar el runtime
- * de J.A.R.V.I.S.
+ * Jarvis expone la API pública para arrancar e inspeccionar el runtime base
+ * del ecosistema J.A.R.V.I.S.
  */
 export class Jarvis {
   /**
@@ -88,9 +90,9 @@ export class Jarvis {
   }
 
   /**
-   * Devuelve información estática sobre J.A.R.V.I.S.
+   * Devuelve información estática sobre @jarvis/core.
    *
-   * Este método no necesita que exista una instancia arrancada del runtime.
+   * Este método no necesita que exista una instancia viva del runtime.
    */
   public static about(): Pick<JarvisInfo, 'name' | 'description'> {
     return {

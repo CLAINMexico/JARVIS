@@ -9,15 +9,19 @@
 # - Validar respuestas estándar de @jarvis/http.
 # - Validar firma y verificación JWT de @jarvis/security.
 # - Validar Bearer Auth universal usando rutas protegidas.
+# - Validar Authorization por roles y permisos usando rutas protegidas.
 #
 # Flujo recomendado:
-# 1. Ejecutar primero App | Health.
+# 1. Ejecutar App | Health.
 # 2. Ejecutar JWT | Sign access token.
 # 3. Ejecutar JWT | Sign refresh token.
 # 4. Ejecutar JWT | Sign service token.
 # 5. Ejecutar Bearer Auth | Protected route with access token.
 # 6. Ejecutar Bearer Auth | Me with access token.
-# 7. Ejecutar los casos de error.
+# 7. Ejecutar Authorization | Role admin allowed.
+# 8. Ejecutar Authorization | Permission security.auth.test allowed.
+# 9. Ejecutar Authorization | Admin role and permission allowed.
+# 10. Ejecutar los casos de error.
 #
 # Nota:
 # Los requests con # @name guardan su respuesta para reutilizar tokens.
@@ -103,6 +107,11 @@ GET {{host}}/http/error
 # Access token:
 # - Representa un token para consumir rutas protegidas.
 # - Es el token permitido para /security/protected y /security/me.
+# - También se usa para probar Authorization por roles y permisos.
+#
+# Este token principal incluye:
+# - role: admin
+# - permission: security.auth.test
 #
 # =================================================================================
 
@@ -113,6 +122,9 @@ GET {{host}}/http/error
 # - JWT | Verify access token
 # - Bearer Auth | Protected route with access token
 # - Bearer Auth | Me with access token
+# - Authorization | Role admin allowed
+# - Authorization | Permission security.auth.test allowed
+# - Authorization | Admin role and permission allowed
 #
 # La respuesta se guarda como:
 # {{signAccessToken.response.body.data.token}}
@@ -250,6 +262,90 @@ Content-Type: {{contentType}}
 
 {
   "token": "{{signServiceToken.response.body.data.token}}"
+}
+
+
+# =================================================================================
+# Security | @jarvis/security | JWT - Authorization Test Tokens
+# =================================================================================
+#
+# Estos tokens se usan para validar casos 403 de Authorization.
+#
+# Todos son access tokens válidos, pero no contienen los roles o permisos
+# necesarios para consumir rutas protegidas por autorización.
+#
+# =================================================================================
+
+### JWT | Sign access token without roles
+# @name signAccessTokenWithoutRoles
+# Genera un access token válido, pero sin roles.
+#
+# Este token debe fallar contra rutas que requieren:
+# - role: admin
+POST {{host}}/security/jwt/sign
+Content-Type: {{contentType}}
+
+{
+  "subject": "user-no-roles",
+  "tokenType": "access",
+  "sessionId": "session-no-roles",
+  "permissions": [
+    "security.auth.test"
+  ],
+  "metadata": {
+    "source": "sandbox-api.http",
+    "case": "without-roles"
+  }
+}
+
+
+### JWT | Sign access token without permissions
+# @name signAccessTokenWithoutPermissions
+# Genera un access token válido, pero sin permisos.
+#
+# Este token debe fallar contra rutas que requieren:
+# - permission: security.auth.test
+POST {{host}}/security/jwt/sign
+Content-Type: {{contentType}}
+
+{
+  "subject": "user-no-permissions",
+  "tokenType": "access",
+  "sessionId": "session-no-permissions",
+  "roles": [
+    "admin"
+  ],
+  "metadata": {
+    "source": "sandbox-api.http",
+    "case": "without-permissions"
+  }
+}
+
+
+### JWT | Sign access token guest
+# @name signAccessTokenGuest
+# Genera un access token válido, pero con rol y permiso insuficientes.
+#
+# Este token debe fallar contra rutas que requieren:
+# - role: admin
+# - permission: security.auth.test
+POST {{host}}/security/jwt/sign
+Content-Type: {{contentType}}
+
+{
+  "subject": "user-guest",
+  "tokenType": "access",
+  "sessionId": "session-guest",
+  "roles": [
+    "guest"
+  ],
+  "permissions": [
+    "security.guest.read"
+  ],
+  "metadata": {
+    "source": "sandbox-api.http",
+    "case": "guest"
+  }
 }
 
 
@@ -451,3 +547,115 @@ Authorization: Bearer {{signRefreshToken.response.body.data.token}}
 # - message: Token JWT no autorizado para esta operación.
 GET {{host}}/security/protected
 Authorization: Bearer {{signServiceToken.response.body.data.token}}
+
+
+# =================================================================================
+# Security | @jarvis/security | Authorization - Success cases
+# =================================================================================
+#
+# Estas pruebas validan autorización por roles y permisos.
+#
+# Las rutas de Authorization primero validan Bearer Auth y después validan
+# roles/permisos presentes en el payload JWT autenticado.
+#
+# Requieren ejecutar antes:
+# - JWT | Sign access token
+#
+# El access token principal debe tener:
+# - role: admin
+# - permission: security.auth.test
+#
+# =================================================================================
+
+### Authorization | Role admin allowed
+# Valida que el payload autenticado tenga el rol admin.
+#
+# Esperado:
+# - statusCode: 200
+# - message: Rol autorizado correctamente.
+# - log: security.authorization.role.success
+GET {{host}}/security/authorization/role
+Authorization: Bearer {{signAccessToken.response.body.data.token}}
+
+
+### Authorization | Permission security.auth.test allowed
+# Valida que el payload autenticado tenga el permiso security.auth.test.
+#
+# Esperado:
+# - statusCode: 200
+# - message: Permiso autorizado correctamente.
+# - log: security.authorization.permission.success
+GET {{host}}/security/authorization/permission
+Authorization: Bearer {{signAccessToken.response.body.data.token}}
+
+
+### Authorization | Admin role and permission allowed
+# Valida que el payload autenticado tenga:
+# - role: admin
+# - permission: security.auth.test
+#
+# Esperado:
+# - statusCode: 200
+# - message: Rol y permiso autorizados correctamente.
+# - log: security.authorization.success
+GET {{host}}/security/authorization/admin
+Authorization: Bearer {{signAccessToken.response.body.data.token}}
+
+
+# =================================================================================
+# Security | @jarvis/security | Authorization - Forbidden cases
+# =================================================================================
+#
+# Estas pruebas validan errores 403 cuando el token es válido,
+# pero no tiene los roles o permisos requeridos.
+#
+# Importante:
+# Estos casos prueban autorización, no autenticación.
+# Por eso el JWT debe ser válido y de tipo access.
+#
+# =================================================================================
+
+### Authorization | Role admin forbidden
+# Intenta consumir una ruta que requiere admin usando token sin roles.
+#
+# Requiere ejecutar antes:
+# - JWT | Sign access token without roles
+#
+# Esperado:
+# - statusCode: 403
+# - code: FORBIDDEN
+# - message: Roles o permisos insuficientes para esta operación.
+# - log: security.authorization.role.failed
+GET {{host}}/security/authorization/role
+Authorization: Bearer {{signAccessTokenWithoutRoles.response.body.data.token}}
+
+
+### Authorization | Permission security.auth.test forbidden
+# Intenta consumir una ruta que requiere security.auth.test usando token sin permisos.
+#
+# Requiere ejecutar antes:
+# - JWT | Sign access token without permissions
+#
+# Esperado:
+# - statusCode: 403
+# - code: FORBIDDEN
+# - message: Roles o permisos insuficientes para esta operación.
+# - log: security.authorization.permission.failed
+GET {{host}}/security/authorization/permission
+Authorization: Bearer {{signAccessTokenWithoutPermissions.response.body.data.token}}
+
+
+### Authorization | Admin forbidden for guest
+# Intenta consumir una ruta que requiere admin y security.auth.test
+# usando un usuario guest.
+#
+# Requiere ejecutar antes:
+# - JWT | Sign access token guest
+#
+# Esperado:
+# - statusCode: 403
+# - code: FORBIDDEN
+# - message: Roles o permisos insuficientes para esta operación.
+# - log: security.authorization.failed
+GET {{host}}/security/authorization/admin
+Authorization: Bearer {{signAccessTokenGuest.response.body.data.token}}

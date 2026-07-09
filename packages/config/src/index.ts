@@ -1,8 +1,8 @@
 /**
- * Contratos públicos de @jarvis/config.
+ * Contratos públicos de valores de configuración.
  *
- * Estos types describen los valores permitidos dentro de la configuración
- * y las opciones disponibles para crear el módulo de configuración.
+ * Estos types describen los valores primitivos, objetos y estructuras
+ * permitidas dentro de la configuración de J.A.R.V.I.S.
  */
 export type {
   ConfigObject,
@@ -10,17 +10,24 @@ export type {
   ConfigValue
 } from './contracts/config-contract-value.js';
 
+/**
+ * Contratos públicos del módulo de configuración.
+ *
+ * Estos types describen las opciones disponibles para crear y registrar
+ * el módulo de configuración dentro del runtime.
+ */
 export type {
   ConfigModuleOptions
 } from './contracts/config-contract-options.js';
 
 /**
- * Servicio principal de configuración.
+ * Servicio principal de Config.
  *
- * Permite cargar, consultar y exponer valores de configuración mediante
- * paths separados por punto.
+ * ConfigService permite cargar, consultar y exponer valores de configuración
+ * mediante paths separados por punto.
  *
  * Ejemplo:
+ *
  * config.get('app.name')
  */
 export {
@@ -28,7 +35,7 @@ export {
 } from './runtime/config-runtime-service.js';
 
 /**
- * Módulo vivo de configuración.
+ * Módulo vivo de Config.
  *
  * ConfigModule describe el módulo compatible con JarvisRuntimeModule.
  * createConfigModule() crea una instancia lista para ser registrada,
@@ -43,11 +50,10 @@ export {
 } from './runtime/config-runtime-module.js';
 
 /**
- * Utilidad pública para cargar archivos de configuración.
+ * Utilidad pública para carga de archivos de configuración.
  *
- * Se exporta para que paquetes superiores, como @jarvis/bootstrap,
- * puedan leer settings.json sin duplicar lógica de lectura, parseo
- * y validación.
+ * loadConfigFile() permite leer, parsear y validar archivos JSON de
+ * configuración sin duplicar lógica en paquetes superiores.
  */
 export {
   loadConfigFile

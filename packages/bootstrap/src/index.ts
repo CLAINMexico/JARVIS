@@ -1,8 +1,8 @@
 /**
- * Contratos públicos de @jarvis/bootstrap.
+ * Contratos públicos de aplicación.
  *
  * Estos types describen las opciones de entrada, estructuras normalizadas
- * y resultado final que produce el bootstrap inicial de una aplicación.
+ * y resultado final producido durante el bootstrap inicial de una aplicación.
  */
 export type {
   BootstrapOptions
@@ -25,10 +25,20 @@ export type {
 } from './contracts/bootstrap-contract-result.js';
 
 /**
- * Utilidades públicas para normalizar valores simples durante el bootstrap.
+ * Runtime principal de Bootstrap.
  *
- * Pueden usarse en pruebas, integraciones o futuras extensiones que necesiten
- * convertir valores desconocidos a tipos seguros.
+ * createJarvisBootstrap() prepara la configuración inicial de una aplicación
+ * antes de arrancar @jarvis/core.
+ */
+export {
+  createJarvisBootstrap
+} from './runtime/bootstrap-runtime-module.js';
+
+/**
+ * Utilidades públicas para normalización de valores.
+ *
+ * Estas funciones permiten convertir valores desconocidos de configuración
+ * a tipos seguros usados por el bootstrap.
  */
 export {
   getBootstrapBoolean,
@@ -39,23 +49,15 @@ export {
 } from './utils/bootstrap-util-value.js';
 
 /**
- * Utilidades públicas para construir nombres consistentes relacionados
- * con @jarvis/logger.
+ * Utilidades públicas para integración con Logger.
+ *
+ * Estas funciones construyen nombres consistentes para la salida visual
+ * de @jarvis/logger dentro del ecosistema J.A.R.V.I.S.
  */
 export {
   buildBootstrapLoggerAppName,
   buildBootstrapLoggerDefaultModule
 } from './utils/bootstrap-util-logger.js';
-
-/**
- * API principal de @jarvis/bootstrap.
- *
- * createJarvisBootstrap() prepara la configuración inicial de una aplicación
- * antes de arrancar @jarvis/core.
- */
-export {
-  createJarvisBootstrap
-} from './runtime/bootstrap-runtime-module.js';
 
 /**
  * Información pública del package @jarvis/bootstrap.

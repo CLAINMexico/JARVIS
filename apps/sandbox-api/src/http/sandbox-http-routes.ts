@@ -33,6 +33,10 @@ import {
   registerSandboxSecurityAuthRoutes
 } from '../security/sandbox-security-auth-routes.js';
 
+import {
+  registerSandboxSecurityAuthorizationRoutes
+} from '../security/sandbox-security-authorization-routes.js';
+
 /**
  * Paquete visual usado por los logs propios de Sandbox-API.
  */
@@ -44,6 +48,12 @@ const SandboxPackageName = 'Sandbox-API';
  * Estas rutas permiten validar que el servidor HTTP está activo, que puede
  * exponer información básica del runtime de J.A.R.V.I.S. y que responde con
  * el formato estándar de @jarvis/http.
+ *
+ * También registra las rutas de prueba para:
+ *
+ * - JWT.
+ * - Bearer Auth.
+ * - Authorization por roles y permisos.
  */
 export function registerSandboxHttpRoutes(
   server: FastifyInstance,
@@ -56,6 +66,9 @@ export function registerSandboxHttpRoutes(
 
   /**
    * Registra rutas de prueba para JWT de @jarvis/security.
+   *
+   * Estas rutas permiten firmar y verificar tokens JWT usando el servicio
+   * universal SecurityJwtService.
    */
   registerSandboxSecurityJwtRoutes(
     server,
@@ -79,11 +92,28 @@ export function registerSandboxHttpRoutes(
 
   /**
    * Registra rutas protegidas para validar Bearer Auth.
+   *
+   * Estas rutas validan que un access token válido pueda consumir endpoints
+   * protegidos y que el payload autenticado pueda adjuntarse a request.auth.
    */
   registerSandboxSecurityAuthRoutes(
     server,
     authenticate,
     logger
+  );
+
+  /**
+   * Registra rutas protegidas para validar Authorization.
+   *
+   * Estas rutas usan Bearer Auth primero y después validan roles y permisos
+   * presentes en el payload JWT autenticado.
+   */
+  registerSandboxSecurityAuthorizationRoutes(
+    server,
+    {
+      securityAuth,
+      logger
+    }
   );
 
   /**
@@ -119,7 +149,10 @@ export function registerSandboxHttpRoutes(
           '/security/jwt/sign',
           '/security/jwt/verify',
           '/security/protected',
-          '/security/me'
+          '/security/me',
+          '/security/authorization/role',
+          '/security/authorization/permission',
+          '/security/authorization/admin'
         ]
       }
     });

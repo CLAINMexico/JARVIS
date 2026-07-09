@@ -1,8 +1,8 @@
 /**
- * Contratos públicos de códigos de estado HTTP.
+ * Catálogo público de status codes HTTP.
  *
- * Estos exports permiten usar el catálogo oficial de status codes soportados
- * por J.A.R.V.I.S. sin escribir números mágicos en otros paquetes.
+ * HTTP_STATUS permite usar códigos de estado oficiales sin escribir números
+ * mágicos dentro de paquetes o aplicaciones.
  */
 export {
   HTTP_STATUS
@@ -13,9 +13,9 @@ export type {
 } from './contracts/http-contract-status-code.js';
 
 /**
- * Contratos públicos de códigos internos de error HTTP.
+ * Catálogo público de códigos internos de error HTTP.
  *
- * Estos códigos permiten identificar errores de forma estable en APIs,
+ * HTTP_ERROR_CODE permite identificar errores de forma estable en APIs,
  * clientes, logs e integraciones.
  */
 export {
@@ -27,9 +27,10 @@ export type {
 } from './contracts/http-contract-error-code.js';
 
 /**
- * Contratos públicos para construir errores HTTP controlados.
+ * Contratos públicos para errores HTTP controlados.
  *
- * Estos types definen la estructura base que usa JarvisHttpError.
+ * Estos types definen la estructura base usada por JarvisHttpError para
+ * representar errores seguros y consistentes.
  */
 export type {
   HttpErrorDetails,
@@ -59,10 +60,10 @@ export type {
 } from './contracts/http-contract-success-response.js';
 
 /**
- * Clase principal de error HTTP controlado.
+ * Runtime principal de errores HTTP.
  *
- * JarvisHttpError permite representar errores seguros, consistentes y
- * convertibles a respuesta HTTP estándar.
+ * JarvisHttpError permite representar errores controlados, seguros,
+ * consistentes y convertibles a respuesta HTTP estándar.
  */
 export {
   JarvisHttpError,
@@ -70,7 +71,7 @@ export {
 } from './runtime/http-runtime-error.js';
 
 /**
- * Utilidades para crear errores HTTP comunes.
+ * Utilidades públicas para crear errores HTTP comunes.
  *
  * Estos helpers evitan repetir manualmente statusCode, code y message cada
  * vez que otro paquete necesita generar un error controlado.
@@ -88,7 +89,7 @@ export {
 } from './utils/http-util-error.js';
 
 /**
- * Utilidades para crear respuestas HTTP estándar.
+ * Utilidades públicas para crear respuestas HTTP estándar.
  *
  * Estas funciones permiten construir respuestas de éxito y error con el
  * formato oficial de J.A.R.V.I.S.
@@ -104,7 +105,7 @@ export type {
 } from './utils/http-util-response.js';
 
 /**
- * Utilidades para clasificar códigos de estado HTTP.
+ * Utilidades públicas para clasificación de status codes.
  *
  * Estas funciones permiten identificar si un status code pertenece a un rango
  * informativo, exitoso, redirección, error de cliente o error de servidor.
@@ -119,3 +120,14 @@ export {
   isSuccessStatus,
   isSupportedHttpStatus
 } from './utils/http-util-status.js';
+
+/**
+ * Información pública del package @jarvis/http.
+ *
+ * Este objeto permite identificar el package desde pruebas, diagnósticos
+ * o futuras herramientas internas del ecosistema J.A.R.V.I.S.
+ */
+export const JarvisHttpPackage = {
+  name: '@jarvis/http',
+  description: 'J.A.R.V.I.S. | Package - HTTP'
+} as const;

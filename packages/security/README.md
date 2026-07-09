@@ -2,13 +2,15 @@
 
 **`@jarvis/security`** es el paquete base de seguridad del ecosistema **`J.A.R.V.I.S.`**.
 
-Su propósito es concentrar las capacidades relacionadas con autenticación, autorización, tokens, sesiones, validación de acceso y utilidades de seguridad reutilizables por cualquier aplicación construida sobre el runtime.
+Su propósito es concentrar capacidades relacionadas con autenticación, autorización, tokens, validación de acceso y utilidades de seguridad reutilizables por cualquier aplicación construida sobre el runtime.
+
+El paquete está diseñado para crecer de forma progresiva sin acoplarse a frameworks HTTP específicos ni a una fuente de datos concreta.
 
 ---
 
 ## Objetivo
 
-El objetivo de **`@jarvis/security`** es centralizar la seguridad del ecosistema **`J.A.R.V.I.S.`** en un paquete reutilizable, desacoplado de frameworks HTTP específicos y preparado para integrarse con distintas aplicaciones.
+El objetivo de **`@jarvis/security`** es centralizar la seguridad del ecosistema **`J.A.R.V.I.S.`** en un paquete reutilizable, desacoplado y preparado para integrarse con distintas aplicaciones.
 
 Este paquete debe poder usarse desde aplicaciones basadas en:
 
@@ -42,12 +44,13 @@ Por esta razón, el paquete trabaja con contratos y datos genéricos, no con tip
 Autenticación
 Tokens JWT
 Bearer Auth
+Authorization
+Roles
+Permisos
 Hash de contraseñas
 Login
 Refresh tokens
 Sesiones
-Roles
-Permisos
 Policies
 Guards
 OAuth 2.0
@@ -56,12 +59,54 @@ Validaciones de acceso
 Errores HTTP controlados
 ```
 
-### JWT
+---
+
+## Arquitectura
+
+**`@jarvis/security`** no debe consultar directamente bases de datos ni depender de frameworks HTTP.
+
+La responsabilidad del paquete es evaluar datos de seguridad ya normalizados.
+
+```txt
+@jarvis/security
+↓
+valida tokens, autenticación, roles y permisos
+
+Aplicación / Adapter / Provider
+↓
+obtiene datos desde HTTP, BD, Redis, OAuth u otra fuente
+```
+
+Regla:
+
+```txt
+@jarvis/security no consulta datos.
+@jarvis/security evalúa datos.
+```
+
+Esto permite que en futuras versiones una aplicación pueda integrar **`@jarvis/database`** o un provider externo sin reescribir la lógica central de seguridad.
+
+---
+
+## Capacidades actuales
+
+Actualmente **`@jarvis/security`** incluye:
+
+```txt
+JWT
+Bearer Auth
+Authorization por roles y permisos
+```
+
+---
+
+## JWT
 
 JWT representa la base inicial de autenticación por tokens dentro de **`@jarvis/security`**.
 
 El paquete puede:
 
+```txt
 - Firmar tokens.
 - Verificar tokens.
 - Validar expiración.
@@ -71,6 +116,7 @@ El paquete puede:
 - Validar tokenType.
 - Devolver payload normalizado.
 - Lanzar errores HTTP controlados cuando el token no es válido.
+```
 
 Los tokens soportados actualmente son:
 
@@ -82,256 +128,15 @@ service
 
 ---
 
-### Bearer Auth
+## SecurityJwtService
 
-Bearer Auth representa la autenticación mediante el header HTTP:
-
-```txt
-Authorization: Bearer <token>
-```
-
-La lógica de Bearer Auth debe vivir dentro de **`@jarvis/security`** de forma universal y sin depender de un framework específico.
-
-El paquete debe encargarse de:
-
-- Validar que exista el header Authorization.
-- Validar que tenga formato Bearer.
-- Extraer el token.
-- Verificar el JWT.
-- Validar que el tipo de token esté permitido para la operación.
-- Devolver un resultado autenticado normalizado.
-
-La aplicación será responsable de adaptar esta lógica a su framework.
-
-Ejemplo conceptual:
-
-```ts
-const auth = await securityAuth.authenticateBearer({
-  authorizationHeader,
-  allowedTokenTypes: [
-    'access'
-  ]
-});
-```
-
----
-
-### Login
-
-El login será la capa encargada de validar credenciales y emitir tokens iniciales.
-
-El alcance esperado incluye:
-
-- Recibir credenciales.
-- Validar identidad.
-- Validar contraseña usando hash seguro.
-- Emitir access token.
-- Emitir refresh token cuando aplique.
-- Registrar información de sesión.
-- Devolver una respuesta autenticada normalizada.
-
-El login no debe estar amarrado a una base de datos específica. La validación del usuario debe poder integrarse mediante servicios externos o implementaciones propias de cada aplicación.
-
----
-
-### Hash de contraseñas
-
-El hash de contraseñas será una capacidad propia de **`@jarvis/security`** para evitar almacenar contraseñas en texto plano.
-
-El alcance esperado incluye:
-
-- Generar hashes seguros.
-- Verificar contraseñas contra hashes existentes.
-- Definir parámetros seguros por defecto.
-- Evitar exponer información sensible en errores.
-- Permitir evolución futura de algoritmos.
-
-Esta capacidad será usada por flujos de login, creación de usuarios y cambio de contraseña.
-
----
-
-### Refresh tokens
-
-Los refresh tokens permitirán renovar sesiones sin obligar al usuario a iniciar sesión constantemente.
-
-El alcance esperado incluye:
-
-- Emitir refresh tokens.
-- Verificar refresh tokens.
-- Renovar access tokens.
-- Asociar refresh tokens a una sesión.
-- Revocar refresh tokens.
-- Detectar refresh tokens inválidos o expirados.
-- Separar claramente access tokens de refresh tokens.
-
-Un refresh token no debe usarse para consumir rutas protegidas de usuario directamente. Su propósito es renovar credenciales.
-
----
-
-### Sesiones
-
-La capa de sesiones permitirá controlar el ciclo de vida de autenticaciones activas.
-
-El alcance esperado incluye:
-
-- Crear sesiones.
-- Consultar sesiones.
-- Cerrar sesiones.
-- Revocar sesiones.
-- Relacionar tokens con sessionId.
-- Invalidar tokens asociados a sesiones cerradas.
-- Mantener trazabilidad de accesos.
-
-Las sesiones pueden vivir en distintos almacenes según la aplicación: memoria, base de datos, Redis u otro mecanismo externo.
-
----
-
-### Roles
-
-Los roles representan agrupaciones de responsabilidades o perfiles de acceso.
-
-Ejemplos:
+El servicio principal para JWT es:
 
 ```txt
-admin
-user
-support
-service
-auditor
+SecurityJwtService
 ```
 
-El alcance esperado incluye:
-
-- Leer roles desde el payload.
-- Validar roles requeridos.
-- Permitir múltiples roles.
-- Devolver errores controlados cuando el usuario no tenga el rol necesario.
-
-Los roles son una capa de autorización más general que los permisos.
-
----
-
-### Permisos
-
-Los permisos representan acciones específicas que un sujeto puede ejecutar.
-
-Ejemplos:
-
-```txt
-users.read
-users.create
-security.jwt.test
-reports.export
-internal.health
-```
-
-El alcance esperado incluye:
-
-- Leer permisos desde el payload.
-- Validar permisos requeridos.
-- Permitir múltiples permisos.
-- Soportar validaciones tipo `all` o `any`.
-- Devolver errores controlados cuando falten permisos.
-
-Los permisos permiten controles más finos que los roles.
-
----
-
-### Policies
-
-Las policies representan reglas de autorización más expresivas que pueden combinar condiciones.
-
-Ejemplo conceptual:
-
-```txt
-El usuario puede editar un recurso si:
-- tiene el permiso resource.update
-- pertenece al mismo tenant
-- el recurso no está bloqueado
-```
-
-El alcance esperado incluye:
-
-- Definir reglas reutilizables.
-- Ejecutar policies contra un contexto.
-- Combinar roles, permisos, tenant, metadata y reglas de negocio.
-- Devolver resultados autorizados o errores controlados.
-
-Las policies permitirán controlar accesos complejos sin duplicar lógica en cada ruta.
-
----
-
-### Guards
-
-Los guards serán piezas reutilizables para proteger operaciones o rutas.
-
-Un guard puede validar:
-
-- Que exista autenticación.
-- Que el token sea de tipo access.
-- Que el usuario tenga ciertos roles.
-- Que el usuario tenga ciertos permisos.
-- Que una policy se cumpla.
-- Que el token pertenezca al tenant esperado.
-
-Los guards no deben depender directamente de un framework. La aplicación debe adaptarlos al servidor usado.
-
----
-
-### OAuth 2.0
-
-OAuth 2.0 será una capacidad futura para integraciones con proveedores externos de identidad.
-
-El alcance esperado puede incluir:
-
-- Autenticación con proveedores externos.
-- Validación de tokens externos.
-- Intercambio de códigos por tokens.
-- Integración con usuarios internos.
-- Normalización de perfiles externos.
-- Manejo seguro de clientes, secretos y redirects.
-
-OAuth 2.0 debe integrarse sin reemplazar la autenticación interna de J.A.R.V.I.S., sino como una opción adicional para aplicaciones que lo requieran.
-
----
-
-### Tokens de servicio
-
-Los tokens de servicio permiten comunicación interna entre aplicaciones, servicios o procesos automatizados.
-
-El tokenType usado para este caso es:
-
-```txt
-service
-```
-
-Uso esperado:
-
-```txt
-servicio interno -> consume recurso interno
-```
-
-Ejemplo:
-
-```ts
-const serviceToken = await jwt.sign({
-  subject: 'service-sandbox-api',
-  tokenType: 'service',
-  permissions: [
-    'internal.read'
-  ]
-});
-```
-
-Los tokens de servicio deben tener reglas distintas a los tokens de usuario.
-
----
-
-## Funcionamiento actual
-
-**`@jarvis/security`** expone actualmente el servicio **`SecurityJwtService`**, encargado de firmar y verificar tokens JWT.
-
-El servicio recibe una configuración base:
+Ejemplo de configuración:
 
 ```ts
 const jwt = new SecurityJwtService({
@@ -363,6 +168,8 @@ Por esta razón, **`issuer`** y **`audience`** no deben exponerse como valores c
 export type SecurityJwtTokenType = 'access' | 'refresh' | 'service';
 ```
 
+---
+
 ### access
 
 Token de acceso para consumir rutas protegidas.
@@ -381,6 +188,8 @@ const accessToken = await jwt.sign({
 });
 ```
 
+---
+
 ### refresh
 
 Token usado para renovar sesión o generar nuevos access tokens.
@@ -392,6 +201,10 @@ const refreshToken = await jwt.sign({
   sessionId: 'session-001'
 });
 ```
+
+Un refresh token no debe usarse para consumir rutas protegidas de usuario directamente. Su propósito es renovar credenciales.
+
+---
 
 ### service
 
@@ -406,6 +219,8 @@ const serviceToken = await jwt.sign({
   ]
 });
 ```
+
+Los tokens de servicio deben tener reglas distintas a los tokens de usuario.
 
 ---
 
@@ -447,13 +262,15 @@ El campo **`metadata`** permite extender información segura sin abrir propiedad
 
 No se deben incluir dentro del payload JWT:
 
-- Contraseñas.
-- Hashes de contraseña.
-- Tokens externos.
-- Secretos de API.
-- Llaves privadas.
-- Refresh tokens externos.
-- Información sensible innecesaria.
+```txt
+Contraseñas
+Hashes de contraseña
+Tokens externos
+Secretos de API
+Llaves privadas
+Refresh tokens externos
+Información sensible innecesaria
+```
 
 ---
 
@@ -585,103 +402,6 @@ Resultado esperado:
 
 ---
 
-## Errores controlados
-
-**`@jarvis/security`** lanza errores controlados usando **`@jarvis/http`**.
-
-Casos JWT cubiertos:
-
-```txt
-security.jwt.invalid
-security.jwt.missing
-security.jwt.subject.missing
-security.jwt.tokenType.invalid
-```
-
-Errores esperados:
-
-```txt
-401 UNAUTHORIZED -> token ausente, inválido o expirado
-403 FORBIDDEN    -> token válido, pero no autorizado para la operación
-```
-
----
-
-## Integración HTTP
-
-**`@jarvis/security`** no crea servidores ni registra rutas por sí mismo. Su responsabilidad es exponer servicios reutilizables para que una aplicación pueda integrarlos.
-
-Una aplicación puede exponer rutas HTTP usando **`SecurityJwtService`**.
-
-Ejemplo de rutas de prueba:
-
-```txt
-POST /security/jwt/sign
-POST /security/jwt/verify
-```
-
-### Firmar un token desde HTTP
-
-Body de ejemplo:
-
-```json
-{
-  "subject": "user-001",
-  "tokenType": "access",
-  "sessionId": "session-001",
-  "roles": [
-    "admin"
-  ],
-  "permissions": [
-    "security.jwt.test"
-  ],
-  "metadata": {
-    "source": "sandbox-api.http"
-  }
-}
-```
-
-Respuesta esperada usando **`@jarvis/http`**:
-
-```json
-{
-  "success": true,
-  "statusCode": 200,
-  "message": "Token JWT generado correctamente.",
-  "data": {
-    "token": "..."
-  }
-}
-```
-
-### Verificar un token desde HTTP
-
-Body de ejemplo:
-
-```json
-{
-  "token": "..."
-}
-```
-
-Respuesta esperada:
-
-```json
-{
-  "success": true,
-  "statusCode": 200,
-  "message": "Token JWT verificado correctamente.",
-  "data": {
-    "payload": {
-      "subject": "user-001",
-      "tokenType": "access"
-    }
-  }
-}
-```
-
----
-
 ## Bearer Auth universal
 
 **`@jarvis/security`** expone una capa universal para autenticar solicitudes usando el header HTTP **`Authorization`** con esquema **`Bearer`**.
@@ -701,11 +421,9 @@ La regla de arquitectura es:
 La aplicación adapta su framework a @jarvis/security.
 ```
 
-Por esta razón, **`@jarvis/security`** no importa tipos de Fastify, Express, Nest, Hono ni de ningún servidor HTTP.
-
 ---
 
-### SecurityAuthService
+## SecurityAuthService
 
 El servicio **`SecurityAuthService`** concentra la lógica universal de autenticación Bearer.
 
@@ -744,7 +462,7 @@ const auth = await securityAuth.authenticateBearer({
 
 ---
 
-### SecurityAuthBearerOptions
+## SecurityAuthBearerOptions
 
 Las opciones de autenticación Bearer se definen mediante **`SecurityAuthBearerOptions`**.
 
@@ -766,7 +484,7 @@ Se permite **`undefined`** porque algunos frameworks devuelven ese valor cuando 
 
 ---
 
-### SecurityAuthResult
+## SecurityAuthResult
 
 Cuando la autenticación es correcta, **`authenticateBearer()`** devuelve un resultado normalizado:
 
@@ -798,7 +516,7 @@ Ejemplo:
 
 ---
 
-### allowedTokenTypes
+## allowedTokenTypes
 
 La propiedad **`allowedTokenTypes`** permite restringir qué tipo de token puede usarse en una operación.
 
@@ -823,7 +541,7 @@ service = comunicación interna entre servicios
 
 ---
 
-### extractSecurityBearerToken
+## extractSecurityBearerToken
 
 La utilidad **`extractSecurityBearerToken()`** extrae y valida el token desde un header Authorization.
 
@@ -840,37 +558,276 @@ const token = extractSecurityBearerToken(
 Casos validados:
 
 ```txt
-- Authorization header ausente.
-- Authorization header vacío.
-- Authorization header con esquema incorrecto.
-- Authorization header Bearer sin token.
+Authorization header ausente.
+Authorization header vacío.
+Authorization header con esquema incorrecto.
+Authorization header Bearer sin token.
 ```
 
 ---
 
-### Errores controlados
+## Authorization roles y permissions
 
-Bearer Auth usa errores controlados de **`@jarvis/http`**.
+**`@jarvis/security`** incorpora una capa universal de autorización para validar roles y permisos sobre un payload previamente autenticado.
 
-Casos esperados:
+Esta funcionalidad complementa el flujo de seguridad existente:
 
 ```txt
-401 UNAUTHORIZED -> Authorization header ausente.
-401 UNAUTHORIZED -> Authorization header inválido.
-401 UNAUTHORIZED -> Token JWT ausente.
-401 UNAUTHORIZED -> Token JWT inválido o expirado.
-403 FORBIDDEN    -> Token JWT no autorizado para esta operación.
+JWT firma/verifica
+↓
+Bearer Auth autentica el token
+↓
+Authorization valida roles y permisos
+```
+
+La autorización no consulta base de datos y no depende de frameworks HTTP. Su responsabilidad es evaluar datos ya normalizados dentro del payload JWT.
+
+---
+
+## SecurityAuthorizationService
+
+El servicio principal es:
+
+```txt
+SecurityAuthorizationService
+```
+
+Este servicio evalúa:
+
+```txt
+roles presentes en payload.roles
+permissions presentes en payload.permissions
+requiredRoles solicitados por la operación
+requiredPermissions solicitados por la operación
+mode: all | any
+```
+
+Si el payload cumple con los requisitos, devuelve un resultado normalizado.
+
+Si no cumple, lanza un error controlado **`403 FORBIDDEN`** usando **`@jarvis/http`**.
+
+---
+
+## SecurityAuthorizationMode
+
+```ts
+export type SecurityAuthorizationMode = 'all' | 'any';
+```
+
+Modos disponibles:
+
+```txt
+all = todos los roles/permisos requeridos deben existir
+any = al menos uno de los roles/permisos requeridos debe existir
 ```
 
 ---
 
-### Integración con aplicaciones
+## SecurityAuthorizationOptions
 
-**`@jarvis/security`** no registra middleware HTTP por sí mismo.
+```ts
+export interface SecurityAuthorizationOptions {
+  payload: SecurityJwtPayload;
+  requiredRoles?: string[];
+  requiredPermissions?: string[];
+  mode?: SecurityAuthorizationMode;
+}
+```
 
-Una aplicación debe tomar el header desde su framework y entregarlo al servicio universal.
+Propiedades:
 
-Ejemplo conceptual con Fastify:
+```txt
+payload              = payload JWT previamente autenticado
+requiredRoles       = roles requeridos para autorizar la operación
+requiredPermissions = permisos requeridos para autorizar la operación
+mode                = modo de evaluación, por defecto all
+```
+
+---
+
+## SecurityAuthorizationResult
+
+```ts
+export interface SecurityAuthorizationResult {
+  authorized: true;
+  mode: SecurityAuthorizationMode;
+  requiredRoles: string[];
+  requiredPermissions: string[];
+  payloadRoles: string[];
+  payloadPermissions: string[];
+}
+```
+
+Este resultado permite auditar qué se pidió y qué tenía el payload autenticado.
+
+---
+
+## Uso de Authorization
+
+### Crear servicio
+
+```ts
+import {
+  SecurityAuthorizationService
+} from '@jarvis/security';
+
+const authorization = new SecurityAuthorizationService();
+```
+
+---
+
+### Validar rol requerido
+
+```ts
+authorization.requireRoles({
+  payload,
+  requiredRoles: [
+    'admin'
+  ],
+  mode: 'all'
+});
+```
+
+---
+
+### Validar permiso requerido
+
+```ts
+authorization.requirePermissions({
+  payload,
+  requiredPermissions: [
+    'security.auth.test'
+  ],
+  mode: 'all'
+});
+```
+
+---
+
+### Validar rol y permiso
+
+```ts
+authorization.authorize({
+  payload,
+  requiredRoles: [
+    'admin'
+  ],
+  requiredPermissions: [
+    'security.auth.test'
+  ],
+  mode: 'all'
+});
+```
+
+---
+
+## Utilidades de Authorization
+
+### normalizeSecurityAuthorizationValues
+
+Normaliza arreglos de roles o permisos.
+
+```ts
+normalizeSecurityAuthorizationValues([
+  'admin',
+  ' security.auth.test ',
+  ''
+]);
+```
+
+Resultado:
+
+```ts
+[
+  'admin',
+  'security.auth.test'
+]
+```
+
+---
+
+### matchSecurityAuthorizationValues
+
+Evalúa si una lista origen cumple con una lista requerida.
+
+```ts
+matchSecurityAuthorizationValues(
+  [
+    'admin'
+  ],
+  [
+    'admin'
+  ],
+  'all'
+);
+```
+
+Resultado:
+
+```ts
+true
+```
+
+---
+
+## Errores controlados
+
+**`@jarvis/security`** lanza errores controlados usando **`@jarvis/http`**.
+
+Casos JWT cubiertos:
+
+```txt
+security.jwt.invalid
+security.jwt.missing
+security.jwt.subject.missing
+security.jwt.tokenType.invalid
+```
+
+Casos Bearer Auth cubiertos:
+
+```txt
+security.auth.authorization.missing
+security.auth.authorization.invalid
+security.auth.token.missing
+security.auth.tokenType.forbidden
+```
+
+Casos Authorization cubiertos:
+
+```txt
+security.authorization.forbidden
+```
+
+Errores esperados:
+
+```txt
+401 UNAUTHORIZED -> token ausente, inválido o expirado
+403 FORBIDDEN    -> token válido, pero no autorizado para la operación
+```
+
+---
+
+## Integración HTTP
+
+**`@jarvis/security`** no crea servidores ni registra rutas por sí mismo.
+
+Una aplicación puede exponer rutas HTTP usando los servicios de seguridad.
+
+Ejemplo de rutas de prueba:
+
+```txt
+POST /security/jwt/sign
+POST /security/jwt/verify
+GET  /security/protected
+GET  /security/me
+GET  /security/authorization/role
+GET  /security/authorization/permission
+GET  /security/authorization/admin
+```
+
+---
+
+## Ejemplo conceptual con Fastify
 
 ```ts
 const auth = await securityAuth.authenticateBearer({
@@ -879,15 +836,13 @@ const auth = await securityAuth.authenticateBearer({
     'access'
   ]
 });
-```
 
-Ejemplo conceptual con Express:
+request.auth = auth;
 
-```ts
-const auth = await securityAuth.authenticateBearer({
-  authorizationHeader: request.headers.authorization,
-  allowedTokenTypes: [
-    'access'
+authorization.requirePermissions({
+  payload: request.auth.payload,
+  requiredPermissions: [
+    'security.auth.test'
   ]
 });
 ```
@@ -896,12 +851,12 @@ La aplicación decide cómo adjuntar el resultado autenticado a su request, cont
 
 ---
 
-## Uso
-
-Ejemplo básico:
+## Uso básico
 
 ```ts
 import {
+  SecurityAuthorizationService,
+  SecurityAuthService,
   SecurityJwtService
 } from '@jarvis/security';
 
@@ -914,6 +869,12 @@ const jwt = new SecurityJwtService({
   serviceTokenExpiresIn: '1h'
 });
 
+const auth = new SecurityAuthService({
+  jwt
+});
+
+const authorization = new SecurityAuthorizationService();
+
 const token = await jwt.sign({
   subject: 'user-001',
   tokenType: 'access',
@@ -922,23 +883,52 @@ const token = await jwt.sign({
     'admin'
   ],
   permissions: [
-    'security.jwt.test'
+    'security.auth.test'
   ]
 });
 
-const result = await jwt.verify(token);
+const authenticated = await auth.authenticateBearer({
+  authorizationHeader: `Bearer ${token}`,
+  allowedTokenTypes: [
+    'access'
+  ]
+});
+
+authorization.authorize({
+  payload: authenticated.payload,
+  requiredRoles: [
+    'admin'
+  ],
+  requiredPermissions: [
+    'security.auth.test'
+  ],
+  mode: 'all'
+});
 ```
 
-Ejemplo de imports públicos:
+---
+
+## Imports públicos
 
 ```ts
 import {
+  SecurityAuthorizationService,
+  SecurityAuthService,
   SecurityJwtService,
   assertSecurityJwtSecret,
-  encodeSecurityJwtSecret
+  encodeSecurityJwtSecret,
+  extractSecurityBearerToken,
+  matchSecurityAuthorizationValues,
+  normalizeSecurityAuthorizationValues
 } from '@jarvis/security';
 
 import type {
+  SecurityAuthBearerOptions,
+  SecurityAuthResult,
+  SecurityAuthServiceOptions,
+  SecurityAuthorizationMode,
+  SecurityAuthorizationOptions,
+  SecurityAuthorizationResult,
   SecurityJwtMetadata,
   SecurityJwtOptions,
   SecurityJwtPayload,
@@ -946,6 +936,185 @@ import type {
   SecurityJwtTokenType,
   SecurityJwtVerifyResult
 } from '@jarvis/security';
+```
+
+---
+
+## Capacidades futuras
+
+**`@jarvis/security`** está preparado para incorporar nuevas capacidades en versiones posteriores:
+
+```txt
+Hash de contraseñas
+Login
+Refresh tokens funcionales
+Sesiones
+Policies
+Guards
+OAuth 2.0
+Identity providers
+Integración con @jarvis/database
+```
+
+---
+
+## Hash de contraseñas
+
+El hash de contraseñas será una capacidad propia de **`@jarvis/security`** para evitar almacenar contraseñas en texto plano.
+
+El alcance esperado incluye:
+
+```txt
+- Generar hashes seguros.
+- Verificar contraseñas contra hashes existentes.
+- Definir parámetros seguros por defecto.
+- Evitar exponer información sensible en errores.
+- Permitir evolución futura de algoritmos.
+```
+
+---
+
+## Login
+
+El login será la capa encargada de validar credenciales y emitir tokens iniciales.
+
+El alcance esperado incluye:
+
+```txt
+- Recibir credenciales.
+- Validar identidad.
+- Validar contraseña usando hash seguro.
+- Emitir access token.
+- Emitir refresh token cuando aplique.
+- Registrar información de sesión.
+- Devolver una respuesta autenticada normalizada.
+```
+
+El login no debe estar amarrado a una base de datos específica. La validación del usuario debe poder integrarse mediante servicios externos o implementaciones propias de cada aplicación.
+
+---
+
+## Refresh tokens funcionales
+
+Los refresh tokens permitirán renovar sesiones sin obligar al usuario a iniciar sesión constantemente.
+
+El alcance esperado incluye:
+
+```txt
+- Emitir refresh tokens.
+- Verificar refresh tokens.
+- Renovar access tokens.
+- Asociar refresh tokens a una sesión.
+- Revocar refresh tokens.
+- Detectar refresh tokens inválidos o expirados.
+- Separar claramente access tokens de refresh tokens.
+```
+
+---
+
+## Sesiones
+
+La capa de sesiones permitirá controlar el ciclo de vida de autenticaciones activas.
+
+El alcance esperado incluye:
+
+```txt
+- Crear sesiones.
+- Consultar sesiones.
+- Cerrar sesiones.
+- Revocar sesiones.
+- Relacionar tokens con sessionId.
+- Invalidar tokens asociados a sesiones cerradas.
+- Mantener trazabilidad de accesos.
+```
+
+Las sesiones pueden vivir en distintos almacenes según la aplicación: memoria, base de datos, Redis u otro mecanismo externo.
+
+---
+
+## Policies
+
+Las policies representan reglas de autorización más expresivas que pueden combinar condiciones.
+
+Ejemplo conceptual:
+
+```txt
+El usuario puede editar un recurso si:
+- tiene el permiso resource.update
+- pertenece al mismo tenant
+- el recurso no está bloqueado
+```
+
+El alcance esperado incluye:
+
+```txt
+- Definir reglas reutilizables.
+- Ejecutar policies contra un contexto.
+- Combinar roles, permisos, tenant, metadata y reglas de negocio.
+- Devolver resultados autorizados o errores controlados.
+```
+
+---
+
+## Guards
+
+Los guards serán piezas reutilizables para proteger operaciones o rutas.
+
+Un guard puede validar:
+
+```txt
+- Que exista autenticación.
+- Que el token sea de tipo access.
+- Que el usuario tenga ciertos roles.
+- Que el usuario tenga ciertos permisos.
+- Que una policy se cumpla.
+- Que el token pertenezca al tenant esperado.
+```
+
+Los guards no deben depender directamente de un framework. La aplicación debe adaptarlos al servidor usado.
+
+---
+
+## OAuth 2.0
+
+OAuth 2.0 será una capacidad futura para integraciones con proveedores externos de identidad.
+
+El alcance esperado puede incluir:
+
+```txt
+- Autenticación con proveedores externos.
+- Validación de tokens externos.
+- Intercambio de códigos por tokens.
+- Integración con usuarios internos.
+- Normalización de perfiles externos.
+- Manejo seguro de clientes, secretos y redirects.
+```
+
+OAuth 2.0 debe integrarse sin reemplazar la autenticación interna de **`J.A.R.V.I.S.`**, sino como una opción adicional para aplicaciones que lo requieran.
+
+---
+
+## Integración futura con @jarvis/database
+
+Cuando exista **`@jarvis/database`**, una aplicación o provider podrá resolver usuarios, roles y permisos desde tablas reales y entregar esos datos a **`@jarvis/security`** para evaluación.
+
+Flujo futuro:
+
+```txt
+JWT trae subject
+↓
+IdentityProvider consulta BD
+↓
+BD devuelve usuario, roles y permisos
+↓
+@jarvis/security autoriza la operación
+```
+
+La regla se mantiene:
+
+```txt
+@jarvis/security no consulta directamente la base de datos.
+La aplicación o provider conecta @jarvis/security con @jarvis/database.
 ```
 
 ---

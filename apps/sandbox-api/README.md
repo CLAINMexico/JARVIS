@@ -2,13 +2,23 @@
 
 **`Sandbox-API`** es una aplicación interna de desarrollo usada para probar el funcionamiento de **`J.A.R.V.I.S.`** desde el contexto de una API backend.
 
-Este sandbox no representa una aplicación final de negocio. Su objetivo es servir como laboratorio para validar el comportamiento de los paquetes que se vayan integrando al runtime.
+Este sandbox no representa una aplicación final de negocio. Su objetivo es servir como laboratorio para validar el comportamiento de los paquetes que se integran al runtime.
 
 ---
 
 ## Objetivo
 
-El objetivo de **`Sandbox-API`** es validar que **`J.A.R.V.I.S.`** pueda arrancar, montar módulos reales, preparar configuración inicial, registrar servicios, ejecutar su ciclo de vida y exponer rutas HTTP/HTTPS desde el contexto de una aplicación backend.
+El objetivo de **`Sandbox-API`** es validar que **`J.A.R.V.I.S.`** pueda:
+
+```txt
+- arrancar correctamente
+- montar módulos reales
+- preparar configuración inicial
+- registrar servicios
+- ejecutar su ciclo de vida
+- exponer rutas HTTP/HTTPS
+- probar integraciones entre packages
+```
 
 También permite validar integraciones entre paquetes del ecosistema, por ejemplo:
 
@@ -32,7 +42,9 @@ cp apps/sandbox-api/settings.example.json apps/sandbox-api/settings.json
 cp apps/sandbox-api/.env.example apps/sandbox-api/.env
 ```
 
-El archivo **`settings.json`** contiene configuración no sensible de la aplicación, mientras que el archivo **`.env`** debe contener valores sensibles o secretos locales.
+El archivo **`settings.json`** contiene configuración no sensible de la aplicación.
+
+El archivo **`.env`** debe contener valores sensibles o secretos locales.
 
 ---
 
@@ -80,6 +92,68 @@ Si la validación finaliza correctamente, significa que **`Sandbox-API`** puede 
 
 ---
 
+## Configuración de packages
+
+La configuración de paquetes instalables del ecosistema se declara bajo:
+
+```json
+{
+  "packages": {}
+}
+```
+
+Antes se usaba:
+
+```json
+{
+  "modules": {}
+}
+```
+
+El cambio evita confusión entre:
+
+```txt
+packages       = paquetes instalables del monorepo
+runtimeModules = módulos vivos registrados en runtime
+modules        = módulos reportados por core.modules()
+```
+
+Ejemplo:
+
+```json
+{
+  "packages": {
+    "logger": {
+      "enabled": true,
+      "level": "debug",
+      "error": {
+        "verbose": false
+      },
+      "transports": {
+        "console": {
+          "enabled": true,
+          "colors": true
+        },
+        "file": {
+          "enabled": true,
+          "path": "./logs",
+          "splitByLevel": true,
+          "writeAll": true
+        }
+      }
+    }
+  }
+}
+```
+
+**`@jarvis/bootstrap`** lee la configuración del logger desde:
+
+```txt
+packages.logger
+```
+
+---
+
 ## Configuración HTTP/HTTPS
 
 **`Sandbox-API`** puede arrancar usando **HTTP** o **HTTPS** según la configuración declarada en **`settings.json`**.
@@ -88,7 +162,7 @@ La configuración del servidor es leída por **`@jarvis/bootstrap`**, normalizad
 
 ---
 
-## Configuración HTTP
+### Configuración HTTP
 
 Para arrancar en HTTP:
 
@@ -115,7 +189,7 @@ http://localhost:3000
 
 ---
 
-## Configuración HTTPS
+### Configuración HTTPS
 
 Para arrancar en HTTPS:
 
@@ -170,7 +244,7 @@ openssl req -x509 -newkey rsa:4096 -nodes \
 
 ---
 
-## Archivos seguros en certs
+### Archivos seguros en certs
 
 La carpeta de certificados puede mantenerse versionada con archivos seguros:
 
@@ -190,649 +264,6 @@ No deben publicarse:
 ```
 
 Cada desarrollador debe generar sus propios certificados locales.
-
----
-
-## Pruebas con REST Client
-
-El archivo de pruebas se encuentra en:
-
-```txt
-apps/sandbox-api/http/sandbox-api.http
-```
-
-Ejemplo:
-
-```http
-@protocol = https
-@baseUrl = {{protocol}}://localhost:3000
-
-### Sandbox-API | Root
-GET {{baseUrl}}/
-
-### Sandbox-API | Health
-GET {{baseUrl}}/health
-
-### Sandbox-API | Runtime Info
-GET {{baseUrl}}/info
-
-### Sandbox-API | Runtime Modules
-GET {{baseUrl}}/modules
-
-### Sandbox-API | HTTP Success Response
-GET {{baseUrl}}/http/success
-
-### Sandbox-API | HTTP Error Response
-GET {{baseUrl}}/http/error
-```
-
-Para probar HTTP, cambiar:
-
-```http
-@protocol = http
-```
-
-Para probar HTTPS, cambiar:
-
-```http
-@protocol = https
-```
-
----
-
-## Rutas disponibles
-
-```txt
-GET /
-GET /health
-GET /info
-GET /modules
-GET /http/success
-GET /http/error
-```
-
-### GET /
-
-Valida que la API esté activa y muestra información base del runtime y las rutas disponibles.
-
-### GET /health
-
-Valida que el servidor HTTP/HTTPS esté vivo.
-
-### GET /info
-
-Devuelve la información general expuesta por **`core.info()`**.
-
-### GET /modules
-
-Devuelve los módulos registrados dentro del runtime.
-
-### GET /http/success
-
-Ruta de prueba para validar respuestas exitosas usando **`@jarvis/http`**.
-
-También registra un log con:
-
-```txt
-package: @jarvis/http
-event: http.response.success
-statusCode: 200
-```
-
-Salida esperada en consola o archivo:
-
-```txt
-[2026-07-04 14:10:24] [INFO] [@jarvis/http] [J.A.R.V.I.S. | Sandbox-API] | [200] - Respuesta exitosa generada por @jarvis/http.
-{
-  "route": "/http/success",
-  "method": "GET"
-}
-```
-
-### GET /http/error
-
-Ruta de prueba para validar errores controlados usando **`@jarvis/http`**.
-
-También registra un log con:
-
-```txt
-package: @jarvis/http
-event: http.response.error
-statusCode: 401
-```
-
-Salida esperada en consola o archivo:
-
-```txt
-[2026-07-04 14:10:29] [WARN] [@jarvis/http] [J.A.R.V.I.S. | Sandbox-API] | [401] - Token inválido o ausente.
-{
-  "route": "/http/error",
-  "method": "GET",
-  "code": "UNAUTHORIZED"
-}
-```
-
----
-
-## Integración con @jarvis/logger
-
-**`Sandbox-API`** usa **`@jarvis/logger`** como sistema principal de bitácoras.
-
-El formato homologado esperado es:
-
-```txt
-[YYYY-MM-DD HH:mm:ss] [TYPE] [PACKAGE] [J.A.R.V.I.S. | APP] | [STATUSCODE] - MESSAGE
-```
-
-Ejemplo:
-
-```txt
-[2026-07-04 14:10:24] [INFO] [@jarvis/http] [J.A.R.V.I.S. | Sandbox-API] | [200] - Respuesta exitosa generada por @jarvis/http.
-```
-
-Cuando no existe **`statusCode`**, el bloque se omite:
-
-```txt
-[2026-07-04 14:10:18] [INFO] [Sandbox-API] [J.A.R.V.I.S. | Sandbox-API] - Servidor HTTPS: https://localhost:3000
-```
-
-### Archivos de log
-
-Cuando la salida a archivos está habilitada, se genera la estructura:
-
-```txt
-logs/YYYY/MM/DD/
-```
-
-Archivos esperados:
-
-```txt
-all.log
-debug.log
-info.log
-warn.log
-error.log
-fatal.log
-```
-
-Ejemplo:
-
-```txt
-logs/
-  2026/
-    07/
-      04/
-        all.log
-        debug.log
-        info.log
-        warn.log
-        error.log
-        fatal.log
-```
-
----
-
-## Flujo de arranque
-
-```txt
-settings.json
-↓
-@jarvis/bootstrap
-↓
-@jarvis/core
-↓
-core.info().server
-↓
-resolveSandboxHttpOptions()
-↓
-createSandboxHttpServer()
-↓
-registerSandboxHttpRoutes()
-↓
-Fastify HTTP/HTTPS
-```
-
----
-
-## Apagado seguro
-
-**`Sandbox-API`** mantiene el apagado seguro del servidor y del runtime.
-
-Orden de apagado:
-
-```txt
-Cerrar servidor HTTP/HTTPS
-↓
-Ejecutar core.shutdown()
-↓
-Apagar módulos vivos del runtime
-```
-
----
-
-## Configuración de packages
-
-La configuración de paquetes instalables del ecosistema se declara bajo:
-
-```json
-{
-  "packages": {}
-}
-```
-
-Antes se usaba:
-
-```json
-{
-  "modules": {}
-}
-```
-
-El cambio evita confusión entre:
-
-```txt
-packages        = paquetes instalables del monorepo.
-runtimeModules  = módulos vivos registrados en runtime.
-```
-
-Ejemplo:
-
-```json
-{
-  "packages": {
-    "logger": {
-      "enabled": true,
-      "level": "debug",
-      "transports": {
-        "console": {
-          "enabled": true,
-          "colors": true
-        },
-        "file": {
-          "enabled": true,
-          "path": "./logs",
-          "splitByLevel": true,
-          "writeAll": true
-        }
-      }
-    }
-  }
-}
-```
-
-**`@jarvis/bootstrap`** lee la configuración del logger desde:
-
-```txt
-packages.logger
-```
-
----
-
-## Configuración JWT
-
-La configuración JWT de **`Sandbox-API`** vive dentro de:
-
-```txt
-api.jwt
-```
-
-Ejemplo:
-
-```json
-{
-  "api": {
-    "jwt": {
-      "enabled": true,
-      "secret": "SETTINGS_SECURITY_JWT_SECRET",
-      "accessTokenExpiresIn": "15m",
-      "refreshTokenExpiresIn": "7d",
-      "serviceTokenExpiresIn": "1h"
-    }
-  }
-}
-```
-
-Reglas oficiales para integración futura con **`@jarvis/security`**:
-
-```txt
-issuer   = J.A.R.V.I.S.
-audience = app.name
-```
-
-Por esta razón, **`issuer`** y **`audience`** no se configuran en **`settings.json`**.
-
-En esta aplicación:
-
-```txt
-issuer   = J.A.R.V.I.S.
-audience = Sandbox-API
-```
-
-**`Sandbox-API`** usa esta configuración para crear una instancia de **`SecurityJwtService`** y exponer rutas HTTP de prueba para firma y verificación de tokens JWT.
-
----
-
-## Rutas HTTP homologadas
-
-Las rutas base de **`Sandbox-API`** responden usando el formato estándar de **`@jarvis/http`**.
-
-Rutas base:
-
-```txt
-GET /
-GET /health
-GET /info
-GET /modules
-GET /http/success
-GET /http/error
-```
-
-Formato de respuesta exitosa:
-
-```json
-{
-  "success": true,
-  "statusCode": 200,
-  "message": "...",
-  "data": {}
-}
-```
-
-Formato de respuesta de error:
-
-```json
-{
-  "success": false,
-  "statusCode": 401,
-  "error": {
-    "code": "UNAUTHORIZED",
-    "message": "..."
-  }
-}
-```
-
-### Información del runtime
-
-La ruta **`GET /info`** expone la información normalizada de **`core.info()`**, incluyendo la zona horaria configurada para la aplicación.
-
-Ejemplo:
-
-```json
-{
-  "success": true,
-  "statusCode": 200,
-  "message": "Información del runtime consultada correctamente.",
-  "data": {
-    "app": {
-      "name": "Sandbox-API",
-      "description": "Ambiente de pruebas para aplicaciones de tipo API.",
-      "version": "1.0.0",
-      "environment": "local",
-      "timeZone": "America/Mexico_City"
-    }
-  }
-}
-```
-
----
-
-## Rutas JWT
-
-**`Sandbox-API`** expone rutas de prueba para validar **`@jarvis/security`** desde HTTP:
-
-```txt
-POST /security/jwt/sign
-POST /security/jwt/verify
-```
-
-### Firmar token access
-
-```http
-POST {{host}}/security/jwt/sign
-Content-Type: application/json
-
-{
-  "subject": "user-001",
-  "tokenType": "access",
-  "sessionId": "session-001",
-  "roles": [
-    "admin"
-  ],
-  "permissions": [
-    "security.jwt.test"
-  ],
-  "metadata": {
-    "source": "sandbox-api.http"
-  }
-}
-```
-
-### Verificar token
-
-```http
-POST {{host}}/security/jwt/verify
-Content-Type: application/json
-
-{
-  "token": "..."
-}
-```
-
-Tipos de token usados en pruebas:
-
-```txt
-access
-refresh
-service
-```
-
-Errores controlados validados:
-
-```txt
-token inválido
-token ausente
-body inválido
-payload sin tokenType
-```
-
----
-
-## Bearer Auth en Sandbox-API
-
-**`Sandbox-API`** integra la autenticación Bearer universal de **`@jarvis/security`** mediante un adaptador específico para Fastify.
-
-La lógica principal de autenticación vive en **`@jarvis/security`**. La aplicación solo adapta Fastify para leer el header **`Authorization`**, ejecutar el servicio universal y adjuntar el resultado al request.
-
----
-
-### Rutas protegidas
-
-Se agregan rutas de prueba para validar autenticación Bearer:
-
-```txt
-GET /security/protected
-GET /security/me
-```
-
-Ambas rutas requieren:
-
-```txt
-Authorization: Bearer <access-token>
-```
-
-Actualmente aceptan solamente tokens con:
-
-```txt
-tokenType = access
-```
-
----
-
-### GET /security/protected
-
-Valida que una solicitud autenticada pueda consumir una ruta protegida.
-
-```http
-GET {{host}}/security/protected
-Authorization: Bearer {{signAccessToken.response.body.data.token}}
-```
-
-Respuesta esperada:
-
-```json
-{
-  "success": true,
-  "statusCode": 200,
-  "message": "Acceso autorizado correctamente.",
-  "data": {
-    "authorized": true
-  }
-}
-```
-
----
-
-### GET /security/me
-
-Devuelve el payload autenticado adjuntado al request.
-
-```http
-GET {{host}}/security/me
-Authorization: Bearer {{signAccessToken.response.body.data.token}}
-```
-
-Respuesta esperada:
-
-```json
-{
-  "success": true,
-  "statusCode": 200,
-  "message": "Payload autenticado obtenido correctamente.",
-  "data": {
-    "payload": {
-      "subject": "user-001",
-      "tokenType": "access",
-      "sessionId": "session-001"
-    }
-  }
-}
-```
-
----
-
-### Adaptador Fastify
-
-El adaptador vive dentro de:
-
-```txt
-apps/sandbox-api/src/security/sandbox-security-auth-pre-handler.ts
-```
-
-Su responsabilidad es:
-
-```txt
-- Leer request.headers.authorization.
-- Ejecutar securityAuth.authenticateBearer().
-- Validar que el token sea de tipo access.
-- Adjuntar el resultado en request.auth.
-- Registrar logs de éxito o fallo.
-- Devolver respuestas de error usando @jarvis/http.
-```
-
----
-
-### Contexto autenticado
-
-Para permitir el uso de **`request.auth`**, Sandbox-API extiende los tipos de Fastify en:
-
-```txt
-apps/sandbox-api/src/security/sandbox-security-auth-context.ts
-```
-
-Ejemplo:
-
-```ts
-declare module 'fastify' {
-  interface FastifyRequest {
-    auth?: SecurityAuthResult;
-  }
-}
-```
-
-Esta extensión pertenece a Sandbox-API porque es específica de Fastify. **`@jarvis/security`** se mantiene desacoplado del framework.
-
----
-
-### Flujo de autenticación
-
-```txt
-Cliente
-↓
-GET /security/me
-Authorization: Bearer <token>
-↓
-Fastify ejecuta el preHandler
-↓
-Sandbox-API entrega el header a @jarvis/security
-↓
-SecurityAuthService valida Bearer + JWT + tokenType
-↓
-Sandbox-API adjunta request.auth
-↓
-La ruta responde usando el payload autenticado
-```
-
----
-
-### Casos validados
-
-```txt
-access token válido              -> 200 OK
-Authorization ausente            -> 401 UNAUTHORIZED
-Authorization mal formado        -> 401 UNAUTHORIZED
-Bearer sin token                 -> 401 UNAUTHORIZED
-token inválido                   -> 401 UNAUTHORIZED
-refresh token en ruta access     -> 403 FORBIDDEN
-service token en ruta access     -> 403 FORBIDDEN
-```
-
----
-
-### Pruebas HTTP
-
-El archivo de pruebas se encuentra en:
-
-```txt
-apps/sandbox-api/http/sandbox-api.http
-```
-
-Flujo recomendado:
-
-```txt
-1. Ejecutar App | Health.
-2. Ejecutar JWT | Sign access token.
-3. Ejecutar JWT | Sign refresh token.
-4. Ejecutar JWT | Sign service token.
-5. Ejecutar Bearer Auth | Protected route with access token.
-6. Ejecutar Bearer Auth | Me with access token.
-7. Ejecutar los casos de error.
-```
-
----
-
-### Logs esperados
-
-Cuando una solicitud se autentica correctamente:
-
-```txt
-security.auth.bearer.success
-```
-
-Cuando una solicitud falla:
-
-```txt
-security.auth.bearer.failed
-```
 
 ---
 
@@ -982,17 +413,774 @@ Con **`verbose: true`**, el log incluye **`stack`** para depuración local.
 
 ---
 
-### Notas
+## Configuración JWT
 
-La configuración de transports permite mantener limpia la sección **`packages.logger`** y deja preparada la aplicación para soportar nuevas salidas de log sin modificar la raíz de configuración.
-
-Ejemplos futuros:
+La configuración JWT de **`Sandbox-API`** vive dentro de:
 
 ```txt
-packages.logger.transports.database
-packages.logger.transports.http
-packages.logger.transports.cloud
-packages.logger.transports.otel
+api.jwt
+```
+
+Ejemplo:
+
+```json
+{
+  "api": {
+    "jwt": {
+      "enabled": true,
+      "secret": "SETTINGS_SECURITY_JWT_SECRET",
+      "accessTokenExpiresIn": "15m",
+      "refreshTokenExpiresIn": "7d",
+      "serviceTokenExpiresIn": "1h"
+    }
+  }
+}
+```
+
+Reglas oficiales de integración con **`@jarvis/security`**:
+
+```txt
+issuer   = J.A.R.V.I.S.
+audience = app.name
+```
+
+Por esta razón, **`issuer`** y **`audience`** no se configuran en **`settings.json`**.
+
+En esta aplicación:
+
+```txt
+issuer   = J.A.R.V.I.S.
+audience = Sandbox-API
+```
+
+**`Sandbox-API`** usa esta configuración para crear una instancia de **`SecurityJwtService`** y exponer rutas HTTP de prueba para firma y verificación de tokens JWT.
+
+---
+
+## Rutas disponibles
+
+```txt
+GET  /
+GET  /health
+GET  /info
+GET  /modules
+GET  /http/success
+GET  /http/error
+POST /security/jwt/sign
+POST /security/jwt/verify
+GET  /security/protected
+GET  /security/me
+GET  /security/authorization/role
+GET  /security/authorization/permission
+GET  /security/authorization/admin
+```
+
+---
+
+## Rutas base
+
+### GET /
+
+Valida que la API esté activa y muestra información base del runtime y las rutas disponibles.
+
+---
+
+### GET /health
+
+Valida que el servidor HTTP/HTTPS esté vivo.
+
+---
+
+### GET /info
+
+Devuelve la información general expuesta por **`core.info()`**.
+
+Ejemplo:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Información del runtime consultada correctamente.",
+  "data": {
+    "app": {
+      "name": "Sandbox-API",
+      "description": "Ambiente de pruebas para aplicaciones de tipo API.",
+      "version": "1.0.0",
+      "environment": "local",
+      "timeZone": "America/Mexico_City"
+    }
+  }
+}
+```
+
+---
+
+### GET /modules
+
+Devuelve los módulos registrados dentro del runtime.
+
+---
+
+## Rutas HTTP homologadas
+
+Las rutas base de **`Sandbox-API`** responden usando el formato estándar de **`@jarvis/http`**.
+
+Formato de respuesta exitosa:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "...",
+  "data": {}
+}
+```
+
+Formato de respuesta de error:
+
+```json
+{
+  "success": false,
+  "statusCode": 401,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "..."
+  }
+}
+```
+
+---
+
+### GET /http/success
+
+Ruta de prueba para validar respuestas exitosas usando **`@jarvis/http`**.
+
+También registra un log con:
+
+```txt
+package: @jarvis/http
+event: http.response.success
+statusCode: 200
+```
+
+Salida esperada en consola o archivo:
+
+```txt
+[2026-07-04 14:10:24] [INFO] [@jarvis/http] [J.A.R.V.I.S. | Sandbox-API] | [200] - Respuesta exitosa generada por @jarvis/http.
+{
+  "route": "/http/success",
+  "method": "GET"
+}
+```
+
+---
+
+### GET /http/error
+
+Ruta de prueba para validar errores controlados usando **`@jarvis/http`**.
+
+También registra un log con:
+
+```txt
+package: @jarvis/http
+event: http.response.error
+statusCode: 401
+```
+
+Salida esperada en consola o archivo:
+
+```txt
+[2026-07-04 14:10:29] [WARN] [@jarvis/http] [J.A.R.V.I.S. | Sandbox-API] | [401] - Token inválido o ausente.
+{
+  "route": "/http/error",
+  "method": "GET",
+  "code": "UNAUTHORIZED"
+}
+```
+
+---
+
+## Rutas JWT
+
+**`Sandbox-API`** expone rutas de prueba para validar **`@jarvis/security`** desde HTTP:
+
+```txt
+POST /security/jwt/sign
+POST /security/jwt/verify
+```
+
+---
+
+### POST /security/jwt/sign
+
+Firma un token JWT usando **`SecurityJwtService`**.
+
+Ejemplo access token:
+
+```http
+POST {{host}}/security/jwt/sign
+Content-Type: application/json
+
+{
+  "subject": "user-001",
+  "tokenType": "access",
+  "sessionId": "session-001",
+  "roles": [
+    "admin"
+  ],
+  "permissions": [
+    "security.jwt.test",
+    "security.auth.test"
+  ],
+  "metadata": {
+    "source": "sandbox-api.http"
+  }
+}
+```
+
+Tipos de token usados en pruebas:
+
+```txt
+access
+refresh
+service
+```
+
+---
+
+### POST /security/jwt/verify
+
+Verifica un token JWT usando **`SecurityJwtService`**.
+
+```http
+POST {{host}}/security/jwt/verify
+Content-Type: application/json
+
+{
+  "token": "..."
+}
+```
+
+Errores controlados validados:
+
+```txt
+token inválido
+token ausente
+body inválido
+payload sin tokenType
+```
+
+---
+
+## Bearer Auth en Sandbox-API
+
+**`Sandbox-API`** integra la autenticación Bearer universal de **`@jarvis/security`** mediante un adaptador específico para Fastify.
+
+La lógica principal de autenticación vive en **`@jarvis/security`**. La aplicación solo adapta Fastify para leer el header **`Authorization`**, ejecutar el servicio universal y adjuntar el resultado al request.
+
+---
+
+### Rutas protegidas
+
+Se agregan rutas de prueba para validar autenticación Bearer:
+
+```txt
+GET /security/protected
+GET /security/me
+```
+
+Ambas rutas requieren:
+
+```txt
+Authorization: Bearer <access-token>
+```
+
+Actualmente aceptan solamente tokens con:
+
+```txt
+tokenType = access
+```
+
+---
+
+### GET /security/protected
+
+Valida que una solicitud autenticada pueda consumir una ruta protegida.
+
+```http
+GET {{host}}/security/protected
+Authorization: Bearer {{signAccessToken.response.body.data.token}}
+```
+
+Respuesta esperada:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Acceso autorizado correctamente.",
+  "data": {
+    "authorized": true
+  }
+}
+```
+
+---
+
+### GET /security/me
+
+Devuelve el payload autenticado adjuntado al request.
+
+```http
+GET {{host}}/security/me
+Authorization: Bearer {{signAccessToken.response.body.data.token}}
+```
+
+Respuesta esperada:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Payload autenticado obtenido correctamente.",
+  "data": {
+    "payload": {
+      "subject": "user-001",
+      "tokenType": "access",
+      "sessionId": "session-001"
+    }
+  }
+}
+```
+
+---
+
+### Adaptador Fastify
+
+El adaptador vive dentro de:
+
+```txt
+apps/sandbox-api/src/security/sandbox-security-auth-pre-handler.ts
+```
+
+Su responsabilidad es:
+
+```txt
+- Leer request.headers.authorization.
+- Ejecutar securityAuth.authenticateBearer().
+- Validar que el token sea de tipo access.
+- Adjuntar el resultado en request.auth.
+- Registrar logs de éxito o fallo.
+- Devolver respuestas de error usando @jarvis/http.
+```
+
+---
+
+### Contexto autenticado
+
+Para permitir el uso de **`request.auth`**, **`Sandbox-API`** extiende los tipos de Fastify en:
+
+```txt
+apps/sandbox-api/src/security/sandbox-security-auth-context.ts
+```
+
+Ejemplo:
+
+```ts
+declare module 'fastify' {
+  interface FastifyRequest {
+    auth?: SecurityAuthResult;
+  }
+}
+```
+
+Esta extensión pertenece a **`Sandbox-API`** porque es específica de Fastify. **`@jarvis/security`** se mantiene desacoplado del framework.
+
+---
+
+### Flujo de autenticación
+
+```txt
+Cliente
+↓
+GET /security/me
+Authorization: Bearer <token>
+↓
+Fastify ejecuta el preHandler
+↓
+Sandbox-API entrega el header a @jarvis/security
+↓
+SecurityAuthService valida Bearer + JWT + tokenType
+↓
+Sandbox-API adjunta request.auth
+↓
+La ruta responde usando el payload autenticado
+```
+
+---
+
+### Casos validados
+
+```txt
+access token válido              -> 200 OK
+Authorization ausente            -> 401 UNAUTHORIZED
+Authorization mal formado        -> 401 UNAUTHORIZED
+Bearer sin token                 -> 401 UNAUTHORIZED
+token inválido                   -> 401 UNAUTHORIZED
+refresh token en ruta access     -> 403 FORBIDDEN
+service token en ruta access     -> 403 FORBIDDEN
+```
+
+---
+
+### Logs esperados
+
+Cuando una solicitud se autentica correctamente:
+
+```txt
+security.auth.bearer.success
+```
+
+Cuando una solicitud falla:
+
+```txt
+security.auth.bearer.failed
+```
+
+---
+
+## Authorization en Sandbox-API
+
+**`Sandbox-API`** integra la autorización por roles y permisos de **`@jarvis/security`** mediante rutas protegidas de prueba.
+
+Estas rutas primero ejecutan Bearer Auth y después validan Authorization sobre el payload autenticado.
+
+Flujo:
+
+```txt
+Authorization: Bearer <token>
+↓
+SecurityAuthService valida el token
+↓
+request.auth recibe el payload autenticado
+↓
+SecurityAuthorizationService valida roles y permisos
+↓
+La ruta responde 200 o 403
+```
+
+---
+
+### Rutas de autorización
+
+Se agregan las siguientes rutas protegidas:
+
+```txt
+GET /security/authorization/role
+GET /security/authorization/permission
+GET /security/authorization/admin
+```
+
+Todas requieren:
+
+```txt
+Authorization: Bearer <access-token>
+```
+
+---
+
+### GET /security/authorization/role
+
+Valida que el payload autenticado tenga el rol:
+
+```txt
+admin
+```
+
+Request:
+
+```http
+GET {{host}}/security/authorization/role
+Authorization: Bearer {{signAccessToken.response.body.data.token}}
+```
+
+Respuesta esperada:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Rol autorizado correctamente.",
+  "data": {
+    "authorized": true,
+    "mode": "all",
+    "requiredRoles": [
+      "admin"
+    ]
+  }
+}
+```
+
+---
+
+### GET /security/authorization/permission
+
+Valida que el payload autenticado tenga el permiso:
+
+```txt
+security.auth.test
+```
+
+Request:
+
+```http
+GET {{host}}/security/authorization/permission
+Authorization: Bearer {{signAccessToken.response.body.data.token}}
+```
+
+Respuesta esperada:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Permiso autorizado correctamente.",
+  "data": {
+    "authorized": true,
+    "mode": "all",
+    "requiredPermissions": [
+      "security.auth.test"
+    ]
+  }
+}
+```
+
+---
+
+### GET /security/authorization/admin
+
+Valida que el payload autenticado tenga:
+
+```txt
+role: admin
+permission: security.auth.test
+```
+
+Request:
+
+```http
+GET {{host}}/security/authorization/admin
+Authorization: Bearer {{signAccessToken.response.body.data.token}}
+```
+
+Respuesta esperada:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Rol y permiso autorizados correctamente.",
+  "data": {
+    "authorized": true,
+    "mode": "all",
+    "requiredRoles": [
+      "admin"
+    ],
+    "requiredPermissions": [
+      "security.auth.test"
+    ]
+  }
+}
+```
+
+---
+
+### Casos 403
+
+Los casos prohibidos usan access tokens válidos, pero sin roles o permisos suficientes.
+
+Esto permite validar que el error sea de autorización, no de autenticación.
+
+Casos validados:
+
+```txt
+token sin roles        -> 403 FORBIDDEN
+token sin permissions  -> 403 FORBIDDEN
+token guest            -> 403 FORBIDDEN
+```
+
+Mensaje esperado:
+
+```txt
+Roles o permisos insuficientes para esta operación.
+```
+
+---
+
+### Logs esperados
+
+Casos exitosos:
+
+```txt
+security.authorization.role.success
+security.authorization.permission.success
+security.authorization.success
+```
+
+Casos fallidos:
+
+```txt
+security.authorization.role.failed
+security.authorization.permission.failed
+security.authorization.failed
+security.authorization.forbidden
+```
+
+---
+
+## Pruebas con REST Client
+
+El archivo de pruebas se encuentra en:
+
+```txt
+apps/sandbox-api/http/sandbox-api.http
+```
+
+El archivo contiene bloques para validar:
+
+```txt
+- rutas base de Sandbox-API
+- respuestas estándar de @jarvis/http
+- firma y verificación JWT
+- Bearer Auth
+- Authorization por roles y permisos
+- casos de error controlado
+```
+
+Flujo recomendado:
+
+```txt
+1. Ejecutar App | Health.
+2. Ejecutar JWT | Sign access token.
+3. Ejecutar JWT | Sign refresh token.
+4. Ejecutar JWT | Sign service token.
+5. Ejecutar Bearer Auth | Protected route with access token.
+6. Ejecutar Bearer Auth | Me with access token.
+7. Ejecutar Authorization | Role admin allowed.
+8. Ejecutar Authorization | Permission security.auth.test allowed.
+9. Ejecutar Authorization | Admin role and permission allowed.
+10. Ejecutar los casos de error.
+```
+
+Para probar HTTP, ajustar el host:
+
+```http
+@host = http://localhost:3000
+```
+
+Para probar HTTPS, ajustar el host:
+
+```http
+@host = https://localhost:3000
+```
+
+---
+
+## Integración con @jarvis/logger
+
+**`Sandbox-API`** usa **`@jarvis/logger`** como sistema principal de bitácoras.
+
+El formato homologado esperado es:
+
+```txt
+[YYYY-MM-DD HH:mm:ss] [TYPE] [PACKAGE] [J.A.R.V.I.S. | APP] | [STATUSCODE] - MESSAGE
+```
+
+Ejemplo:
+
+```txt
+[2026-07-04 14:10:24] [INFO] [@jarvis/http] [J.A.R.V.I.S. | Sandbox-API] | [200] - Respuesta exitosa generada por @jarvis/http.
+```
+
+Cuando no existe **`statusCode`**, el bloque se omite:
+
+```txt
+[2026-07-04 14:10:18] [INFO] [Sandbox-API] [J.A.R.V.I.S. | Sandbox-API] - Servidor HTTPS: https://localhost:3000
+```
+
+---
+
+### Archivos de log
+
+Cuando la salida a archivos está habilitada, se genera la estructura:
+
+```txt
+logs/YYYY/MM/DD/
+```
+
+Archivos esperados:
+
+```txt
+all.log
+debug.log
+info.log
+warn.log
+error.log
+fatal.log
+```
+
+Ejemplo:
+
+```txt
+logs/
+  2026/
+    07/
+      04/
+        all.log
+        debug.log
+        info.log
+        warn.log
+        error.log
+        fatal.log
+```
+
+---
+
+## Flujo de arranque
+
+```txt
+settings.json
+↓
+@jarvis/bootstrap
+↓
+@jarvis/core
+↓
+core.info().server
+↓
+resolveSandboxHttpOptions()
+↓
+createSandboxHttpServer()
+↓
+registerSandboxHttpRoutes()
+↓
+Fastify HTTP/HTTPS
+```
+
+---
+
+## Apagado seguro
+
+**`Sandbox-API`** mantiene el apagado seguro del servidor y del runtime.
+
+Orden de apagado:
+
+```txt
+Cerrar servidor HTTP/HTTPS
+↓
+Ejecutar core.shutdown()
+↓
+Apagar módulos vivos del runtime
 ```
 
 ---
@@ -1007,9 +1195,11 @@ Esta configuración es únicamente para desarrollo local o pruebas controladas.
 
 También es importante considerar:
 
+```txt
 - No publicar certificados locales reales.
-- No subir archivos **`.env`**.
-- No subir archivos **`logs/`** ni **`*.log`**.
+- No subir archivos .env.
+- No subir archivos logs/ ni *.log.
 - Mantener las rutas de prueba como laboratorio controlado del ecosistema.
 - Mantener documentación en español.
 - Mantener comentarios útiles en español.
+```

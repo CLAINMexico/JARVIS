@@ -1,5 +1,66 @@
 # CHANGELOG | J.A.R.V.I.S.
 
+## **`v.0.21.0`**
+
+### Resumen
+
+Se agregó autorización universal por **roles** y **permissions** en **`@jarvis/security`**, permitiendo validar si un payload JWT previamente autenticado tiene permisos suficientes para ejecutar una operación.
+
+También se integró esta capacidad en **`Sandbox-API`** mediante rutas protegidas de prueba que primero validan Bearer Auth y después validan autorización.
+
+---
+
+### Cambios
+
+- Se agregó el contrato **`SecurityAuthorizationMode`**.
+- Se agregó el contrato **`SecurityAuthorizationOptions`**.
+- Se agregó el contrato **`SecurityAuthorizationResult`**.
+- Se agregó el servicio **`SecurityAuthorizationService`**.
+- Se agregó la utilidad **`normalizeSecurityAuthorizationValues()`**.
+- Se agregó la utilidad **`matchSecurityAuthorizationValues()`**.
+- Se agregó validación de roles requeridos mediante **`requireRoles()`**.
+- Se agregó validación de permisos requeridos mediante **`requirePermissions()`**.
+- Se agregó validación combinada de roles y permisos mediante **`authorize()`**.
+- Se agregó soporte para modo de autorización **`all`**.
+- Se agregó soporte para modo de autorización **`any`**.
+- Se agregaron errores controlados **`403 FORBIDDEN`** cuando el payload no cumple con los roles o permisos requeridos.
+- Se exportaron los nuevos contratos, servicio y utilidades desde **`@jarvis/security`**.
+- Se agregaron rutas protegidas de autorización en **`Sandbox-API`**:
+  - **`GET /security/authorization/role`**
+  - **`GET /security/authorization/permission`**
+  - **`GET /security/authorization/admin`**
+- Se actualizó **`sandbox-api.http`** con pruebas de autorización exitosas y prohibidas.
+- Se homologó la documentación de los archivos **`index.ts`** de los packages principales.
+
+---
+
+### Mejoras
+
+- Se completa el flujo mínimo de seguridad:
+  - JWT firma/verifica tokens.
+  - Bearer Auth autentica solicitudes.
+  - Authorization valida roles y permisos.
+- **`@jarvis/security`** mantiene una arquitectura universal y desacoplada de frameworks HTTP.
+- La autorización queda preparada para integrarse en el futuro con providers de identidad o **`@jarvis/database`**.
+- Se separa claramente autenticación de autorización.
+- Se permite validar operaciones por rol, por permiso o por ambos.
+- Se mejora la trazabilidad mediante logs específicos para casos autorizados y rechazados.
+- Se agregan pruebas HTTP para tokens válidos con permisos insuficientes.
+- Se mantiene el uso de errores controlados mediante **`@jarvis/http`**.
+- Se mejora la lectura de exports públicos en los packages mediante documentación homogénea en **`index.ts`**.
+
+---
+
+### Correcciones
+
+- Se corrigió la construcción de opciones opcionales para respetar **`exactOptionalPropertyTypes`**.
+- Se corrigió la integración del preHandler de Fastify usando el contexto correcto de **`FastifyInstance`**.
+- Se evitó acoplar **`@jarvis/security`** a **`@jarvis/database`** o a frameworks HTTP.
+- Se validó que los casos 403 correspondan a autorización fallida y no a autenticación fallida.
+- Se validó la versión mediante **`pnpm verify`** completo.
+
+---
+
 ## **`v.0.20.1`**
 
 ### Resumen

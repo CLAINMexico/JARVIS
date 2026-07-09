@@ -1,8 +1,8 @@
 /**
- * Contratos públicos de @jarvis/logger.
+ * Contratos públicos de Logger.
  *
- * Estos types describen el contexto, eventos, niveles, opciones y transports
- * usados por el sistema de logging.
+ * Estos types describen contexto, entradas, niveles, opciones y transports
+ * usados por el sistema de logging de J.A.R.V.I.S.
  */
 export type {
   LoggerContext
@@ -25,7 +25,7 @@ export type {
 } from './contracts/logger-contract-transport.js';
 
 /**
- * Formatters públicos del logger.
+ * Formatters públicos de Logger.
  *
  * Estas funciones convierten entradas normalizadas de log en texto para
  * distintos destinos, como consola o archivos.
@@ -43,7 +43,7 @@ export {
 } from './formatters/logger-formatter-file.js';
 
 /**
- * Runtime principal de @jarvis/logger.
+ * Runtime principal de Logger.
  *
  * LoggerService crea eventos normalizados y los distribuye hacia los
  * transports configurados.
@@ -57,8 +57,9 @@ export {
 } from './runtime/logger-runtime-service.js';
 
 /**
- * Módulo vivo de logger compatible con @jarvis/core.
+ * Módulo vivo de Logger.
  *
+ * LoggerModule describe el módulo compatible con JarvisRuntimeModule.
  * createLoggerModule() crea una instancia lista para registrarse dentro
  * del runtime de J.A.R.V.I.S.
  */
@@ -71,9 +72,9 @@ export {
 } from './runtime/logger-runtime-module.js';
 
 /**
- * Transports públicos del logger.
+ * Transports públicos de consola.
  *
- * Los transports representan destinos de escritura, como consola o archivos.
+ * LoggerConsoleTransport permite escribir logs normalizados en consola.
  */
 export type {
   LoggerConsoleTransportOptions
@@ -83,6 +84,12 @@ export {
   LoggerConsoleTransport
 } from './transports/logger-transport-console.js';
 
+/**
+ * Transports públicos de archivo.
+ *
+ * LoggerFileTransport permite escribir logs normalizados en archivos
+ * organizados por fecha y nivel.
+ */
 export type {
   LoggerFileTransportOptions
 } from './transports/logger-transport-file.js';
