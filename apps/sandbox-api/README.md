@@ -473,6 +473,9 @@ GET  /security/me
 GET  /security/authorization/role
 GET  /security/authorization/permission
 GET  /security/authorization/admin
+GET  /security/policies/role
+GET  /security/policies/permission
+GET  /security/policies/admin
 ```
 
 ---
@@ -1039,6 +1042,309 @@ security.authorization.forbidden
 
 ---
 
+## Policies en Sandbox-API
+
+**`Sandbox-API`** integra el Policy engine universal de **`@jarvis/security`** mediante rutas protegidas de prueba.
+
+A diferencia de Authorization directo, donde la ruta define explícitamente los roles o permisos requeridos, en Policies la aplicación define una regla reutilizable y **`@jarvis/security`** evalúa si el payload autenticado cumple con esa regla.
+
+La separación de responsabilidades es:
+
+```txt
+Sandbox-API
+↓
+define las policies concretas de prueba
+
+@jarvis/security
+↓
+evalúa payload + policy
+```
+
+---
+
+### Ubicación de policies
+
+Las policies propias de **`Sandbox-API`** viven en:
+
+```txt
+apps/sandbox-api/src/security/policies/sandbox-security-policies.ts
+```
+
+Policies definidas:
+
+```txt
+SandboxAdminRolePolicy
+SandboxSecurityPermissionPolicy
+SandboxSecurityAdminPolicy
+```
+
+Estas policies pertenecen a **`Sandbox-API`**, no a **`@jarvis/security`**.
+
+---
+
+### SandboxAdminRolePolicy
+
+Valida acceso por rol:
+
+```txt
+requiredRoles:
+- admin
+```
+
+Nombre de policy:
+
+```txt
+sandbox.security.admin.role
+```
+
+Uso esperado:
+
+```txt
+GET /security/policies/role
+```
+
+---
+
+### SandboxSecurityPermissionPolicy
+
+Valida acceso por permiso:
+
+```txt
+requiredPermissions:
+- security.auth.test
+```
+
+Nombre de policy:
+
+```txt
+sandbox.security.permission
+```
+
+Uso esperado:
+
+```txt
+GET /security/policies/permission
+```
+
+---
+
+### SandboxSecurityAdminPolicy
+
+Valida acceso combinando rol y permiso:
+
+```txt
+requiredRoles:
+- admin
+
+requiredPermissions:
+- security.auth.test
+```
+
+Nombre de policy:
+
+```txt
+sandbox.security.admin
+```
+
+Uso esperado:
+
+```txt
+GET /security/policies/admin
+```
+
+---
+
+### Rutas de Policies
+
+Se agregan las siguientes rutas protegidas:
+
+```txt
+GET /security/policies/role
+GET /security/policies/permission
+GET /security/policies/admin
+```
+
+Todas requieren:
+
+```txt
+Authorization: Bearer <access-token>
+```
+
+Estas rutas primero ejecutan Bearer Auth y después evalúan una policy definida por **`Sandbox-API`**.
+
+---
+
+### GET /security/policies/role
+
+Valida la policy **`SandboxAdminRolePolicy`**.
+
+Request:
+
+```http
+GET {{host}}/security/policies/role
+Authorization: Bearer {{signAccessToken.response.body.data.token}}
+```
+
+Respuesta esperada:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Policy de rol autorizada correctamente.",
+  "data": {
+    "authorized": true,
+    "policyName": "sandbox.security.admin.role",
+    "mode": "all",
+    "requiredRoles": [
+      "admin"
+    ]
+  }
+}
+```
+
+---
+
+### GET /security/policies/permission
+
+Valida la policy **`SandboxSecurityPermissionPolicy`**.
+
+Request:
+
+```http
+GET {{host}}/security/policies/permission
+Authorization: Bearer {{signAccessToken.response.body.data.token}}
+```
+
+Respuesta esperada:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Policy de permiso autorizada correctamente.",
+  "data": {
+    "authorized": true,
+    "policyName": "sandbox.security.permission",
+    "mode": "all",
+    "requiredPermissions": [
+      "security.auth.test"
+    ]
+  }
+}
+```
+
+---
+
+### GET /security/policies/admin
+
+Valida la policy **`SandboxSecurityAdminPolicy`**.
+
+Request:
+
+```http
+GET {{host}}/security/policies/admin
+Authorization: Bearer {{signAccessToken.response.body.data.token}}
+```
+
+Respuesta esperada:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Policy autorizada correctamente.",
+  "data": {
+    "authorized": true,
+    "policyName": "sandbox.security.admin",
+    "mode": "all",
+    "requiredRoles": [
+      "admin"
+    ],
+    "requiredPermissions": [
+      "security.auth.test"
+    ]
+  }
+}
+```
+
+---
+
+### Casos 403 de Policies
+
+Los casos prohibidos usan access tokens válidos, pero no cumplen la policy evaluada.
+
+Casos validados:
+
+```txt
+token sin roles        -> 403 FORBIDDEN
+token sin permissions  -> 403 FORBIDDEN
+token guest            -> 403 FORBIDDEN
+```
+
+Mensaje esperado:
+
+```txt
+Policy no autorizada para esta operación.
+```
+
+Esto confirma que el error corresponde a autorización por policy y no a autenticación.
+
+---
+
+### Logs esperados de Policies
+
+Casos exitosos:
+
+```txt
+security.policy.role.success
+security.policy.permission.success
+security.policy.success
+```
+
+Casos fallidos:
+
+```txt
+security.policy.role.failed
+security.policy.permission.failed
+security.policy.failed
+security.policy.forbidden
+```
+
+---
+
+### Flujo de Policies
+
+```txt
+Cliente
+↓
+GET /security/policies/admin
+Authorization: Bearer <token>
+↓
+Fastify ejecuta Bearer Auth
+↓
+request.auth recibe el payload autenticado
+↓
+Sandbox-API selecciona una policy propia
+↓
+SecurityPolicyService evalúa payload + policy
+↓
+La ruta responde 200 o 403
+```
+
+---
+
+### Regla de arquitectura
+
+```txt
+Sandbox-API define la policy.
+@jarvis/security evalúa la policy.
+```
+
+Esto evita que **`@jarvis/security`** conozca reglas específicas de negocio y permite que cada aplicación defina su propio catálogo de policies.
+
+---
+
 ## Pruebas con REST Client
 
 El archivo de pruebas se encuentra en:
@@ -1055,6 +1361,7 @@ El archivo contiene bloques para validar:
 - firma y verificación JWT
 - Bearer Auth
 - Authorization por roles y permisos
+- Policies
 - casos de error controlado
 ```
 
@@ -1070,7 +1377,15 @@ Flujo recomendado:
 7. Ejecutar Authorization | Role admin allowed.
 8. Ejecutar Authorization | Permission security.auth.test allowed.
 9. Ejecutar Authorization | Admin role and permission allowed.
-10. Ejecutar los casos de error.
+10. Ejecutar Policy | Role admin allowed.
+11. Ejecutar Policy | Permission security.auth.test allowed.
+12. Ejecutar Policy | Admin role and permission allowed.
+13. Ejecutar JWT | Sign access token without roles.
+14. Ejecutar JWT | Sign access token without permissions.
+15. Ejecutar JWT | Sign access token guest.
+16. Ejecutar los casos forbidden de Authorization.
+17. Ejecutar los casos forbidden de Policies.
+18. Ejecutar los casos de error JWT y Bearer Auth.
 ```
 
 Para probar HTTP, ajustar el host:

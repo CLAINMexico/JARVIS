@@ -37,6 +37,10 @@ import {
   registerSandboxSecurityAuthorizationRoutes
 } from '../security/sandbox-security-authorization-routes.js';
 
+import {
+  registerSandboxSecurityPolicyRoutes
+} from '../security/sandbox-security-policy-routes.js';
+
 /**
  * Paquete visual usado por los logs propios de Sandbox-API.
  */
@@ -117,6 +121,20 @@ export function registerSandboxHttpRoutes(
   );
 
   /**
+   * Registra las rutas protegidas para validar el Policy Engine Universal.
+   *
+   * Las policies utilizadas en estas rutas únicamente evalúa si el payload
+   * autenticado cumple con la policy recibida.
+   */
+  registerSandboxSecurityPolicyRoutes(
+    server,
+    {
+      securityAuth,
+      logger
+    }
+  );
+
+  /**
    * Ruta raíz de Sandbox-API.
    *
    * Permite validar rápidamente que la API está disponible y muestra las rutas
@@ -146,13 +164,16 @@ export function registerSandboxHttpRoutes(
           '/modules',
           '/http/success',
           '/http/error',
+          '/security/me',
+          '/security/protected',
           '/security/jwt/sign',
           '/security/jwt/verify',
-          '/security/protected',
-          '/security/me',
           '/security/authorization/role',
           '/security/authorization/permission',
-          '/security/authorization/admin'
+          '/security/authorization/admin',
+          '/security/policies/role',
+          '/security/policies/permission',
+          '/security/policies/admin',
         ]
       }
     });

@@ -1,5 +1,60 @@
 # CHANGELOG | J.A.R.V.I.S.
 
+## **`v.0.22.0`**
+
+### Resumen
+
+Se agregó un **Policy engine universal** en **`@jarvis/security`**, permitiendo evaluar reglas declarativas de autorización definidas por una aplicación.
+
+Esta versión mantiene la separación de responsabilidades: **`@jarvis/security`** define contratos y motor de evaluación, mientras que cada aplicación define sus propias policies.
+
+---
+
+### Cambios
+
+- Se agregó el contrato **`SecurityPolicy`**.
+- Se agregó el contrato **`SecurityPolicyOptions`**.
+- Se agregó el contrato **`SecurityPolicyResult`**.
+- Se agregó el servicio **`SecurityPolicyService`**.
+- Se agregó evaluación de policies usando roles y permisos presentes en el payload autenticado.
+- Se integró **`SecurityPolicyService`** con **`SecurityAuthorizationService`**.
+- Se agregó error controlado **`403 FORBIDDEN`** cuando una policy no se cumple.
+- Se agregó el evento **`security.policy.forbidden`**.
+- Se exportaron los nuevos contratos y runtime desde **`@jarvis/security`**.
+- Se agregaron policies de ejemplo en **`Sandbox-API`**:
+  - **`SandboxAdminRolePolicy`**
+  - **`SandboxSecurityPermissionPolicy`**
+  - **`SandboxSecurityAdminPolicy`**
+- Se agregaron rutas protegidas de policies en **`Sandbox-API`**:
+  - **`GET /security/policies/role`**
+  - **`GET /security/policies/permission`**
+  - **`GET /security/policies/admin`**
+- Se actualizó **`sandbox-api.http`** con pruebas de policies exitosas y prohibidas.
+
+---
+
+### Mejoras
+
+- Se permite reutilizar reglas de autorización mediante policies con nombre.
+- Se evita duplicar arrays de roles y permisos directamente en cada ruta.
+- Se mejora la trazabilidad al registrar el nombre de la policy evaluada.
+- Se mantiene **`@jarvis/security`** desacoplado de reglas de negocio.
+- Se conserva la separación entre autenticación, autorización directa y policies.
+- Se prepara la base para futuras policies más avanzadas con contexto, tenant, metadata o recursos.
+- Se valida que una aplicación pueda definir sus propias policies usando el contrato público de **`@jarvis/security`**.
+
+---
+
+### Correcciones
+
+- Se evitó incluir policies concretas de negocio dentro de **`@jarvis/security`**.
+- Se mantuvo el motor de policies desacoplado de Fastify y de cualquier framework HTTP.
+- Se mantuvo la compatibilidad con **`exactOptionalPropertyTypes`** construyendo objetos opcionales de forma segura.
+- Se validaron casos 200 y 403 desde REST Client.
+- Se validó la versión mediante **`pnpm verify`** completo.
+
+---
+
 ## **`v.0.21.0`**
 
 ### Resumen

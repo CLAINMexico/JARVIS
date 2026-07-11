@@ -10,6 +10,7 @@
 # - Validar firma y verificación JWT de @jarvis/security.
 # - Validar Bearer Auth universal usando rutas protegidas.
 # - Validar Authorization por roles y permisos usando rutas protegidas.
+# - Validar Policies usando reglas definidas por Sandbox-API y evaluadas por @jarvis/security.
 #
 # Flujo recomendado:
 # 1. Ejecutar App | Health.
@@ -21,7 +22,15 @@
 # 7. Ejecutar Authorization | Role admin allowed.
 # 8. Ejecutar Authorization | Permission security.auth.test allowed.
 # 9. Ejecutar Authorization | Admin role and permission allowed.
-# 10. Ejecutar los casos de error.
+# 10. Ejecutar Policy | Role admin allowed.
+# 11. Ejecutar Policy | Permission security.auth.test allowed.
+# 12. Ejecutar Policy | Admin role and permission allowed.
+# 13. Ejecutar JWT | Sign access token without roles.
+# 14. Ejecutar JWT | Sign access token without permissions.
+# 15. Ejecutar JWT | Sign access token guest.
+# 16. Ejecutar los casos forbidden de Authorization.
+# 17. Ejecutar los casos forbidden de Policies.
+# 18. Ejecutar los casos de error JWT y Bearer Auth.
 #
 # Nota:
 # Los requests con # @name guardan su respuesta para reutilizar tokens.
@@ -43,60 +52,44 @@
 # App | Sandbox-API
 # =================================================================================
 #
-# Estas pruebas validan que Sandbox-API esté viva y que el runtime de J.A.R.V.I.S.
+# Estas pruebas validan que Sandbox-API este viva y que el runtime de J.A.R.V.I.S.
 # responda correctamente desde sus rutas base.
 #
 # =================================================================================
 
 ### App | Root
 # Valida la ruta principal de Sandbox-API.
-# Debe responder información general de la aplicación y rutas disponibles.
+# Debe responder informacion general de la aplicacion y rutas disponibles.
 GET {{host}}/
 
 
 ### App | Health
-# Valida que la API esté arriba.
-# Úsalo como primera prueba después de arrancar el servidor.
+# Valida que la API este arriba.
+# Usalo como primera prueba despues de arrancar el servidor.
 GET {{host}}/health
 
 
 ### App | Info
-# Valida la información normalizada del runtime.
+# Valida la informacion normalizada del runtime.
 # Debe incluir app, server, status, timeZone y datos generales de J.A.R.V.I.S.
 GET {{host}}/info
 
 
 ### App | Modules
-# Valida los módulos vivos registrados dentro de @jarvis/core.
-# No representa packages físicos, sino runtimeModules registrados.
+# Valida los modulos vivos registrados dentro de @jarvis/core.
+# No representa packages fisicos, sino runtimeModules registrados.
 GET {{host}}/modules
 
 
 # =================================================================================
 # HTTP | @jarvis/http
 # =================================================================================
-#
-# Estas pruebas validan las respuestas estándar del paquete @jarvis/http.
-#
-# =================================================================================
 
 ### HTTP | Test success response
-# Valida el formato estándar de respuesta exitosa.
-# Esperado:
-# - success: true
-# - statusCode: 200
-# - message
-# - data
 GET {{host}}/http/success
 
 
 ### HTTP | Test error response
-# Valida el formato estándar de respuesta de error controlado.
-# Esperado:
-# - success: false
-# - statusCode controlado
-# - error.code
-# - error.message
 GET {{host}}/http/error
 
 
@@ -107,7 +100,7 @@ GET {{host}}/http/error
 # Access token:
 # - Representa un token para consumir rutas protegidas.
 # - Es el token permitido para /security/protected y /security/me.
-# - También se usa para probar Authorization por roles y permisos.
+# - Tambien se usa para probar Authorization y Policies por roles y permisos.
 #
 # Este token principal incluye:
 # - role: admin
@@ -116,18 +109,6 @@ GET {{host}}/http/error
 # =================================================================================
 
 ### JWT | Sign access token
-# Genera un access token válido.
-#
-# Este request debe ejecutarse antes de:
-# - JWT | Verify access token
-# - Bearer Auth | Protected route with access token
-# - Bearer Auth | Me with access token
-# - Authorization | Role admin allowed
-# - Authorization | Permission security.auth.test allowed
-# - Authorization | Admin role and permission allowed
-#
-# La respuesta se guarda como:
-# {{signAccessToken.response.body.data.token}}
 # @name signAccessToken
 POST {{host}}/security/jwt/sign
 Content-Type: {{contentType}}
@@ -151,12 +132,6 @@ Content-Type: {{contentType}}
 
 
 ### JWT | Verify access token
-# Verifica que el access token generado sea válido.
-#
-# Esperado:
-# - statusCode: 200
-# - payload.subject: user-001
-# - payload.tokenType: access
 POST {{host}}/security/jwt/verify
 Content-Type: {{contentType}}
 
@@ -168,23 +143,8 @@ Content-Type: {{contentType}}
 # =================================================================================
 # Security | @jarvis/security | JWT - Refresh Token
 # =================================================================================
-#
-# Refresh token:
-# - Se usa para renovar sesión o generar nuevos access tokens.
-# - Puede verificarse como JWT válido.
-# - No debe poder consumir rutas protegidas de usuario.
-#
-# =================================================================================
 
 ### JWT | Sign refresh token
-# Genera un refresh token válido.
-#
-# Este request debe ejecutarse antes de:
-# - JWT | Verify refresh token
-# - Bearer Auth | Refresh token forbidden
-#
-# La respuesta se guarda como:
-# {{signRefreshToken.response.body.data.token}}
 # @name signRefreshToken
 POST {{host}}/security/jwt/sign
 Content-Type: {{contentType}}
@@ -200,11 +160,6 @@ Content-Type: {{contentType}}
 
 
 ### JWT | Verify refresh token
-# Verifica que el refresh token generado sea válido como JWT.
-#
-# Esperado:
-# - statusCode: 200
-# - payload.tokenType: refresh
 POST {{host}}/security/jwt/verify
 Content-Type: {{contentType}}
 
@@ -216,23 +171,8 @@ Content-Type: {{contentType}}
 # =================================================================================
 # Security | @jarvis/security | JWT - Service Token
 # =================================================================================
-#
-# Service token:
-# - Se usa para comunicación interna entre servicios.
-# - Puede verificarse como JWT válido.
-# - No debe poder consumir rutas protegidas de usuario si la ruta solo acepta access.
-#
-# =================================================================================
 
 ### JWT | Sign service token
-# Genera un service token válido.
-#
-# Este request debe ejecutarse antes de:
-# - JWT | Verify service token
-# - Bearer Auth | Service token forbidden
-#
-# La respuesta se guarda como:
-# {{signServiceToken.response.body.data.token}}
 # @name signServiceToken
 POST {{host}}/security/jwt/sign
 Content-Type: {{contentType}}
@@ -252,11 +192,6 @@ Content-Type: {{contentType}}
 
 
 ### JWT | Verify service token
-# Verifica que el service token generado sea válido como JWT.
-#
-# Esperado:
-# - statusCode: 200
-# - payload.tokenType: service
 POST {{host}}/security/jwt/verify
 Content-Type: {{contentType}}
 
@@ -266,22 +201,18 @@ Content-Type: {{contentType}}
 
 
 # =================================================================================
-# Security | @jarvis/security | JWT - Authorization Test Tokens
+# Security | @jarvis/security | JWT - Authorization and Policy Test Tokens
 # =================================================================================
 #
-# Estos tokens se usan para validar casos 403 de Authorization.
+# Estos tokens se usan para validar casos 403 de Authorization y Policies.
 #
-# Todos son access tokens válidos, pero no contienen los roles o permisos
-# necesarios para consumir rutas protegidas por autorización.
+# Todos son access tokens validos, pero no contienen los roles o permisos
+# necesarios para consumir rutas protegidas por autorizacion o policies.
 #
 # =================================================================================
 
 ### JWT | Sign access token without roles
 # @name signAccessTokenWithoutRoles
-# Genera un access token válido, pero sin roles.
-#
-# Este token debe fallar contra rutas que requieren:
-# - role: admin
 POST {{host}}/security/jwt/sign
 Content-Type: {{contentType}}
 
@@ -301,10 +232,6 @@ Content-Type: {{contentType}}
 
 ### JWT | Sign access token without permissions
 # @name signAccessTokenWithoutPermissions
-# Genera un access token válido, pero sin permisos.
-#
-# Este token debe fallar contra rutas que requieren:
-# - permission: security.auth.test
 POST {{host}}/security/jwt/sign
 Content-Type: {{contentType}}
 
@@ -324,11 +251,6 @@ Content-Type: {{contentType}}
 
 ### JWT | Sign access token guest
 # @name signAccessTokenGuest
-# Genera un access token válido, pero con rol y permiso insuficientes.
-#
-# Este token debe fallar contra rutas que requieren:
-# - role: admin
-# - permission: security.auth.test
 POST {{host}}/security/jwt/sign
 Content-Type: {{contentType}}
 
@@ -352,18 +274,8 @@ Content-Type: {{contentType}}
 # =================================================================================
 # Security | @jarvis/security | JWT - Error cases
 # =================================================================================
-#
-# Estas pruebas validan errores controlados del servicio JWT.
-#
-# =================================================================================
 
 ### JWT | Verify invalid token
-# Intenta verificar un token inválido.
-#
-# Esperado:
-# - statusCode: 401
-# - code: UNAUTHORIZED
-# - message: Token JWT inválido o expirado.
 POST {{host}}/security/jwt/verify
 Content-Type: {{contentType}}
 
@@ -373,12 +285,6 @@ Content-Type: {{contentType}}
 
 
 ### JWT | Verify missing token
-# Intenta verificar un token vacío.
-#
-# Esperado:
-# - statusCode: 401
-# - code: UNAUTHORIZED
-# - message relacionado con token ausente.
 POST {{host}}/security/jwt/verify
 Content-Type: {{contentType}}
 
@@ -388,13 +294,6 @@ Content-Type: {{contentType}}
 
 
 ### JWT | Sign invalid body
-# Intenta firmar un token usando un body inválido.
-#
-# En este caso se manda un array en lugar de un objeto.
-#
-# Esperado:
-# - statusCode: 400
-# - code: BAD_REQUEST
 POST {{host}}/security/jwt/sign
 Content-Type: {{contentType}}
 
@@ -402,16 +301,6 @@ Content-Type: {{contentType}}
 
 
 ### JWT | Sign missing tokenType
-# Intenta firmar un token sin tokenType.
-#
-# tokenType es obligatorio porque define si el token es:
-# - access
-# - refresh
-# - service
-#
-# Esperado:
-# - statusCode: 401 o error controlado por validación JWT
-# - message relacionado con tokenType inválido o ausente.
 POST {{host}}/security/jwt/sign
 Content-Type: {{contentType}}
 
@@ -423,41 +312,13 @@ Content-Type: {{contentType}}
 # =================================================================================
 # Security | @jarvis/security | Bearer Auth - Success cases
 # =================================================================================
-#
-# Estas pruebas validan la autenticación Bearer universal integrada en Sandbox-API.
-#
-# Las rutas protegidas usan:
-# Authorization: Bearer <token>
-#
-# Actualmente las rutas protegidas aceptan solamente:
-# - tokenType: access
-#
-# =================================================================================
 
 ### Bearer Auth | Protected route with access token
-# Valida que una ruta protegida acepte un access token válido.
-#
-# Requiere ejecutar antes:
-# - JWT | Sign access token
-#
-# Esperado:
-# - statusCode: 200
-# - authorized: true
-# - log: security.auth.bearer.success
 GET {{host}}/security/protected
 Authorization: Bearer {{signAccessToken.response.body.data.token}}
 
 
 ### Bearer Auth | Me with access token
-# Valida que una ruta protegida pueda devolver el payload autenticado.
-#
-# Requiere ejecutar antes:
-# - JWT | Sign access token
-#
-# Esperado:
-# - statusCode: 200
-# - data.payload.subject: user-001
-# - data.payload.tokenType: access
 GET {{host}}/security/me
 Authorization: Bearer {{signAccessToken.response.body.data.token}}
 
@@ -465,86 +326,32 @@ Authorization: Bearer {{signAccessToken.response.body.data.token}}
 # =================================================================================
 # Security | @jarvis/security | Bearer Auth - Error cases
 # =================================================================================
-#
-# Estas pruebas validan errores controlados de Bearer Auth.
-#
-# =================================================================================
 
 ### Bearer Auth | Missing Authorization header
-# Intenta consumir una ruta protegida sin header Authorization.
-#
-# Esperado:
-# - statusCode: 401
-# - code: UNAUTHORIZED
-# - message: Authorization header ausente.
-# - log: security.auth.bearer.failed
 GET {{host}}/security/protected
 
 
 ### Bearer Auth | Invalid Authorization header
-# Intenta consumir una ruta protegida con un esquema distinto a Bearer.
-#
-# Header enviado:
-# Authorization: Basic token-invalido
-#
-# Esperado:
-# - statusCode: 401
-# - code: UNAUTHORIZED
-# - message: Authorization header inválido.
 GET {{host}}/security/protected
 Authorization: Basic token-invalido
 
 
 ### Bearer Auth | Bearer without token
-# Intenta consumir una ruta protegida usando Bearer sin token.
-#
-# Esperado:
-# - statusCode: 401
-# - code: UNAUTHORIZED
-# - message: Token JWT ausente.
 GET {{host}}/security/protected
 Authorization: Bearer
 
 
 ### Bearer Auth | Invalid Bearer token
-# Intenta consumir una ruta protegida usando un token inválido.
-#
-# Esperado:
-# - statusCode: 401
-# - code: UNAUTHORIZED
-# - message: Token JWT inválido o expirado.
 GET {{host}}/security/protected
 Authorization: Bearer token-invalido
 
 
 ### Bearer Auth | Refresh token forbidden
-# Intenta consumir una ruta protegida de usuario usando un refresh token.
-#
-# El token refresh es válido como JWT, pero no está autorizado para esta ruta.
-#
-# Requiere ejecutar antes:
-# - JWT | Sign refresh token
-#
-# Esperado:
-# - statusCode: 403
-# - code: FORBIDDEN
-# - message: Token JWT no autorizado para esta operación.
 GET {{host}}/security/protected
 Authorization: Bearer {{signRefreshToken.response.body.data.token}}
 
 
 ### Bearer Auth | Service token forbidden
-# Intenta consumir una ruta protegida de usuario usando un service token.
-#
-# El token service es válido como JWT, pero no está autorizado para esta ruta.
-#
-# Requiere ejecutar antes:
-# - JWT | Sign service token
-#
-# Esperado:
-# - statusCode: 403
-# - code: FORBIDDEN
-# - message: Token JWT no autorizado para esta operación.
 GET {{host}}/security/protected
 Authorization: Bearer {{signServiceToken.response.body.data.token}}
 
@@ -552,11 +359,74 @@ Authorization: Bearer {{signServiceToken.response.body.data.token}}
 # =================================================================================
 # Security | @jarvis/security | Authorization - Success cases
 # =================================================================================
+
+### Authorization | Role admin allowed
+# Esperado:
+# - 200 OK
+# - Rol autorizado correctamente.
+# - Log: security.authorization.role.success
+GET {{host}}/security/authorization/role
+Authorization: Bearer {{signAccessToken.response.body.data.token}}
+
+
+### Authorization | Permission security.auth.test allowed
+# Esperado:
+# - 200 OK
+# - Permiso autorizado correctamente.
+# - Log: security.authorization.permission.success
+GET {{host}}/security/authorization/permission
+Authorization: Bearer {{signAccessToken.response.body.data.token}}
+
+
+### Authorization | Admin role and permission allowed
+# Esperado:
+# - 200 OK
+# - Rol y permiso autorizados correctamente.
+# - Log: security.authorization.success
+GET {{host}}/security/authorization/admin
+Authorization: Bearer {{signAccessToken.response.body.data.token}}
+
+
+# =================================================================================
+# Security | @jarvis/security | Authorization - Forbidden cases
+# =================================================================================
+
+### Authorization | Role admin forbidden
+# Esperado:
+# - 403 FORBIDDEN
+# - Roles o permisos insuficientes para esta operacion.
+# - Log: security.authorization.role.failed
+GET {{host}}/security/authorization/role
+Authorization: Bearer {{signAccessTokenWithoutRoles.response.body.data.token}}
+
+
+### Authorization | Permission security.auth.test forbidden
+# Esperado:
+# - 403 FORBIDDEN
+# - Roles o permisos insuficientes para esta operacion.
+# - Log: security.authorization.permission.failed
+GET {{host}}/security/authorization/permission
+Authorization: Bearer {{signAccessTokenWithoutPermissions.response.body.data.token}}
+
+
+### Authorization | Admin forbidden for guest
+# Esperado:
+# - 403 FORBIDDEN
+# - Roles o permisos insuficientes para esta operacion.
+# - Log: security.authorization.failed
+GET {{host}}/security/authorization/admin
+Authorization: Bearer {{signAccessTokenGuest.response.body.data.token}}
+
+
+# =================================================================================
+# Security | @jarvis/security | Policies - Success cases
+# =================================================================================
 #
-# Estas pruebas validan autorización por roles y permisos.
+# Estas pruebas validan el Policy engine universal.
 #
-# Las rutas de Authorization primero validan Bearer Auth y después validan
-# roles/permisos presentes en el payload JWT autenticado.
+# Importante:
+# - Las policies concretas pertenecen a Sandbox-API.
+# - @jarvis/security solo evalua si el payload autenticado cumple la policy.
 #
 # Requieren ejecutar antes:
 # - JWT | Sign access token
@@ -567,95 +437,71 @@ Authorization: Bearer {{signServiceToken.response.body.data.token}}
 #
 # =================================================================================
 
-### Authorization | Role admin allowed
-# Valida que el payload autenticado tenga el rol admin.
-#
+### Policy | Role admin allowed
 # Esperado:
-# - statusCode: 200
-# - message: Rol autorizado correctamente.
-# - log: security.authorization.role.success
-GET {{host}}/security/authorization/role
+# - 200 OK
+# - Policy de rol autorizada correctamente.
+# - Log: security.policy.role.success
+GET {{host}}/security/policies/role
 Authorization: Bearer {{signAccessToken.response.body.data.token}}
 
 
-### Authorization | Permission security.auth.test allowed
-# Valida que el payload autenticado tenga el permiso security.auth.test.
-#
+### Policy | Permission security.auth.test allowed
 # Esperado:
-# - statusCode: 200
-# - message: Permiso autorizado correctamente.
-# - log: security.authorization.permission.success
-GET {{host}}/security/authorization/permission
+# - 200 OK
+# - Policy de permiso autorizada correctamente.
+# - Log: security.policy.permission.success
+GET {{host}}/security/policies/permission
 Authorization: Bearer {{signAccessToken.response.body.data.token}}
 
 
-### Authorization | Admin role and permission allowed
-# Valida que el payload autenticado tenga:
-# - role: admin
-# - permission: security.auth.test
-#
+### Policy | Admin role and permission allowed
 # Esperado:
-# - statusCode: 200
-# - message: Rol y permiso autorizados correctamente.
-# - log: security.authorization.success
-GET {{host}}/security/authorization/admin
+# - 200 OK
+# - Policy autorizada correctamente.
+# - Log: security.policy.success
+GET {{host}}/security/policies/admin
 Authorization: Bearer {{signAccessToken.response.body.data.token}}
 
 
 # =================================================================================
-# Security | @jarvis/security | Authorization - Forbidden cases
+# Security | @jarvis/security | Policies - Forbidden cases
 # =================================================================================
 #
-# Estas pruebas validan errores 403 cuando el token es válido,
-# pero no tiene los roles o permisos requeridos.
+# Estas pruebas validan errores 403 cuando el token es valido,
+# pero no cumple con la policy definida por Sandbox-API.
 #
 # Importante:
-# Estos casos prueban autorización, no autenticación.
-# Por eso el JWT debe ser válido y de tipo access.
+# Estos casos prueban policies, no autenticacion.
+# Por eso el JWT debe ser valido y de tipo access.
 #
 # =================================================================================
 
-### Authorization | Role admin forbidden
-# Intenta consumir una ruta que requiere admin usando token sin roles.
-#
-# Requiere ejecutar antes:
-# - JWT | Sign access token without roles
-#
+### Policy | Role admin forbidden
 # Esperado:
-# - statusCode: 403
-# - code: FORBIDDEN
-# - message: Roles o permisos insuficientes para esta operación.
-# - log: security.authorization.role.failed
-GET {{host}}/security/authorization/role
+# - 403 FORBIDDEN
+# - Policy no autorizada para esta operacion.
+# - Log: security.policy.role.failed
+# - Log interno: security.policy.forbidden
+GET {{host}}/security/policies/role
 Authorization: Bearer {{signAccessTokenWithoutRoles.response.body.data.token}}
 
 
-### Authorization | Permission security.auth.test forbidden
-# Intenta consumir una ruta que requiere security.auth.test usando token sin permisos.
-#
-# Requiere ejecutar antes:
-# - JWT | Sign access token without permissions
-#
+### Policy | Permission security.auth.test forbidden
 # Esperado:
-# - statusCode: 403
-# - code: FORBIDDEN
-# - message: Roles o permisos insuficientes para esta operación.
-# - log: security.authorization.permission.failed
-GET {{host}}/security/authorization/permission
+# - 403 FORBIDDEN
+# - Policy no autorizada para esta operacion.
+# - Log: security.policy.permission.failed
+# - Log interno: security.policy.forbidden
+GET {{host}}/security/policies/permission
 Authorization: Bearer {{signAccessTokenWithoutPermissions.response.body.data.token}}
 
 
-### Authorization | Admin forbidden for guest
-# Intenta consumir una ruta que requiere admin y security.auth.test
-# usando un usuario guest.
-#
-# Requiere ejecutar antes:
-# - JWT | Sign access token guest
-#
+### Policy | Admin forbidden for guest
 # Esperado:
-# - statusCode: 403
-# - code: FORBIDDEN
-# - message: Roles o permisos insuficientes para esta operación.
-# - log: security.authorization.failed
-GET {{host}}/security/authorization/admin
+# - 403 FORBIDDEN
+# - Policy no autorizada para esta operacion.
+# - Log: security.policy.failed
+# - Log interno: security.policy.forbidden
+GET {{host}}/security/policies/admin
 Authorization: Bearer {{signAccessTokenGuest.response.body.data.token}}

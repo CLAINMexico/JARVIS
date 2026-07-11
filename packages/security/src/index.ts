@@ -56,6 +56,24 @@ export type {
 } from './contracts/security-contract-authorization-result.js';
 
 /**
+ * Contratos públicos de Policies.
+ *
+ * Estos types describen reglas declarativas de autorización definidas por
+ * una aplicación y evaluadas por @jarvis/security.
+ */
+export type {
+  SecurityPolicy
+} from './contracts/security-contract-policy.js';
+
+export type {
+  SecurityPolicyOptions
+} from './contracts/security-contract-policy-options.js';
+
+export type {
+  SecurityPolicyResult
+} from './contracts/security-contract-policy-result.js';
+
+/**
  * Runtime principal de JWT.
  *
  * SecurityJwtService permite firmar y verificar tokens JWT dentro del
@@ -85,6 +103,16 @@ export {
 export {
   SecurityAuthorizationService
 } from './runtime/security-runtime-authorization-service.js';
+
+/**
+ * Runtime principal de Policies.
+ *
+ * SecurityPolicyService permite evaluar policies declarativas definidas por
+ * la aplicación, usando roles y permisos presentes en un payload autenticado.
+ */
+export {
+  SecurityPolicyService
+} from './runtime/security-runtime-policy-service.js';
 
 /**
  * Utilidades públicas para JWT.

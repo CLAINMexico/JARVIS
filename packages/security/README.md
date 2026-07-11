@@ -47,11 +47,12 @@ Bearer Auth
 Authorization
 Roles
 Permisos
+Policy engine universal
 Hash de contraseñas
 Login
 Refresh tokens
 Sesiones
-Policies
+Policies avanzadas
 Guards
 OAuth 2.0
 Tokens de servicio
@@ -70,7 +71,7 @@ La responsabilidad del paquete es evaluar datos de seguridad ya normalizados.
 ```txt
 @jarvis/security
 ↓
-valida tokens, autenticación, roles y permisos
+valida tokens, autenticación, roles, permisos y policies
 
 Aplicación / Adapter / Provider
 ↓
@@ -96,6 +97,7 @@ Actualmente **`@jarvis/security`** incluye:
 JWT
 Bearer Auth
 Authorization por roles y permisos
+Policy engine universal
 ```
 
 ---
@@ -770,6 +772,294 @@ true
 
 ---
 
+## Policy engine universal
+
+**`@jarvis/security`** incorpora un motor universal para evaluar **policies** de seguridad.
+
+Una policy es una regla declarativa definida por una aplicación y evaluada por **`@jarvis/security`** usando un payload previamente autenticado.
+
+La regla de arquitectura es:
+
+```txt
+@jarvis/security = motor de evaluación
+App              = define sus propias policies
+```
+
+Por esta razón, **`@jarvis/security`** no incluye policies concretas de negocio. El package únicamente define contratos, resultado normalizado y servicio de evaluación.
+
+---
+
+## SecurityPolicy
+
+El contrato **`SecurityPolicy`** define el esqueleto de una policy que puede ser creada por cualquier aplicación.
+
+```ts
+export interface SecurityPolicy {
+  name: string;
+  description?: string;
+  requiredRoles?: string[];
+  requiredPermissions?: string[];
+  mode?: SecurityAuthorizationMode;
+}
+```
+
+Propiedades:
+
+```txt
+name                = nombre único de la policy
+description         = descripción opcional de la regla
+requiredRoles       = roles requeridos por la policy
+requiredPermissions = permisos requeridos por la policy
+mode                = modo de evaluación all | any
+```
+
+Ejemplo de una policy definida por una aplicación:
+
+```ts
+import type {
+  SecurityPolicy
+} from '@jarvis/security';
+
+export const SandboxSecurityAdminPolicy = {
+  name: 'sandbox.security.admin',
+  description: 'Permite validar acceso usando rol admin y permiso security.auth.test.',
+  requiredRoles: [
+    'admin'
+  ],
+  requiredPermissions: [
+    'security.auth.test'
+  ],
+  mode: 'all'
+} satisfies SecurityPolicy;
+```
+
+---
+
+## SecurityPolicyOptions
+
+Las opciones para evaluar una policy se definen mediante **`SecurityPolicyOptions`**.
+
+```ts
+export interface SecurityPolicyOptions {
+  payload: SecurityJwtPayload;
+  policy: SecurityPolicy;
+}
+```
+
+Propiedades:
+
+```txt
+payload = payload JWT previamente autenticado
+policy  = policy definida por la aplicación
+```
+
+---
+
+## SecurityPolicyResult
+
+Cuando la policy se cumple, **`SecurityPolicyService`** devuelve un resultado normalizado.
+
+```ts
+export interface SecurityPolicyResult {
+  authorized: true;
+  policyName: string;
+  policyDescription?: string;
+  mode: SecurityAuthorizationMode;
+  requiredRoles: string[];
+  requiredPermissions: string[];
+  payloadRoles: string[];
+  payloadPermissions: string[];
+}
+```
+
+Este resultado permite auditar:
+
+```txt
+- qué policy se evaluó
+- qué roles pidió
+- qué permisos pidió
+- qué roles tenía el payload
+- qué permisos tenía el payload
+```
+
+---
+
+## SecurityPolicyService
+
+El servicio **`SecurityPolicyService`** evalúa una policy contra un payload autenticado.
+
+```ts
+import {
+  SecurityPolicyService
+} from '@jarvis/security';
+
+const policy = new SecurityPolicyService();
+```
+
+Uso:
+
+```ts
+const result = policy.evaluate({
+  payload: request.auth.payload,
+  policy: SandboxSecurityAdminPolicy
+});
+```
+
+Respuesta esperada:
+
+```json
+{
+  "authorized": true,
+  "policyName": "sandbox.security.admin",
+  "policyDescription": "Permite validar acceso usando rol admin y permiso security.auth.test.",
+  "mode": "all",
+  "requiredRoles": [
+    "admin"
+  ],
+  "requiredPermissions": [
+    "security.auth.test"
+  ],
+  "payloadRoles": [
+    "admin"
+  ],
+  "payloadPermissions": [
+    "security.auth.test"
+  ]
+}
+```
+
+---
+
+## Relación con Authorization
+
+El Policy engine no reemplaza a **`SecurityAuthorizationService`**.
+
+La relación entre ambos es:
+
+```txt
+SecurityAuthorizationService = valida roles/permisos directos
+SecurityPolicyService        = evalúa una regla declarativa que contiene roles/permisos
+```
+
+Internamente, **`SecurityPolicyService`** usa la autorización existente para evaluar los roles y permisos declarados por la policy.
+
+Flujo:
+
+```txt
+payload + policy
+↓
+SecurityPolicyService
+↓
+SecurityAuthorizationService
+↓
+authorized o 403 FORBIDDEN
+```
+
+---
+
+## Error controlado de Policies
+
+Cuando el payload autenticado no cumple con la policy, se lanza:
+
+```txt
+403 FORBIDDEN - Policy no autorizada para esta operación.
+```
+
+Evento principal:
+
+```txt
+security.policy.forbidden
+```
+
+Este error significa que:
+
+```txt
+- el token puede ser válido
+- el usuario puede estar autenticado
+- pero no cumple la policy solicitada
+```
+
+---
+
+## Ejemplo completo de Policy engine
+
+```ts
+import {
+  SecurityAuthService,
+  SecurityJwtService,
+  SecurityPolicyService
+} from '@jarvis/security';
+
+import type {
+  SecurityPolicy
+} from '@jarvis/security';
+
+const jwt = new SecurityJwtService({
+  secret: 'JARVIS_LOCAL_SECURITY_SECRET',
+  issuer: 'J.A.R.V.I.S.',
+  audience: 'Sandbox-API',
+  accessTokenExpiresIn: '15m',
+  refreshTokenExpiresIn: '7d',
+  serviceTokenExpiresIn: '1h'
+});
+
+const auth = new SecurityAuthService({
+  jwt
+});
+
+const policy = new SecurityPolicyService();
+
+const SandboxSecurityAdminPolicy = {
+  name: 'sandbox.security.admin',
+  requiredRoles: [
+    'admin'
+  ],
+  requiredPermissions: [
+    'security.auth.test'
+  ],
+  mode: 'all'
+} satisfies SecurityPolicy;
+
+const authenticated = await auth.authenticateBearer({
+  authorizationHeader,
+  allowedTokenTypes: [
+    'access'
+  ]
+});
+
+const result = policy.evaluate({
+  payload: authenticated.payload,
+  policy: SandboxSecurityAdminPolicy
+});
+```
+
+---
+
+## Regla de responsabilidad
+
+```txt
+La app define qué significa poder hacer algo.
+@jarvis/security evalúa si el payload cumple la regla.
+```
+
+Ejemplo:
+
+```txt
+Sandbox-API define:
+sandbox.security.admin
+
+@jarvis/security evalúa:
+roles requeridos
+permisos requeridos
+mode
+payload.roles
+payload.permissions
+```
+
+Esto permite que cada aplicación tenga su propio catálogo de policies sin modificar el núcleo de seguridad.
+
+---
+
 ## Errores controlados
 
 **`@jarvis/security`** lanza errores controlados usando **`@jarvis/http`**.
@@ -798,6 +1088,12 @@ Casos Authorization cubiertos:
 security.authorization.forbidden
 ```
 
+Casos Policies cubiertos:
+
+```txt
+security.policy.forbidden
+```
+
 Errores esperados:
 
 ```txt
@@ -823,6 +1119,9 @@ GET  /security/me
 GET  /security/authorization/role
 GET  /security/authorization/permission
 GET  /security/authorization/admin
+GET  /security/policies/role
+GET  /security/policies/permission
+GET  /security/policies/admin
 ```
 
 ---
@@ -839,11 +1138,9 @@ const auth = await securityAuth.authenticateBearer({
 
 request.auth = auth;
 
-authorization.requirePermissions({
+policy.evaluate({
   payload: request.auth.payload,
-  requiredPermissions: [
-    'security.auth.test'
-  ]
+  policy: SandboxSecurityAdminPolicy
 });
 ```
 
@@ -857,7 +1154,8 @@ La aplicación decide cómo adjuntar el resultado autenticado a su request, cont
 import {
   SecurityAuthorizationService,
   SecurityAuthService,
-  SecurityJwtService
+  SecurityJwtService,
+  SecurityPolicyService
 } from '@jarvis/security';
 
 const jwt = new SecurityJwtService({
@@ -874,6 +1172,7 @@ const auth = new SecurityAuthService({
 });
 
 const authorization = new SecurityAuthorizationService();
+const policy = new SecurityPolicyService();
 
 const token = await jwt.sign({
   subject: 'user-001',
@@ -904,6 +1203,20 @@ authorization.authorize({
   ],
   mode: 'all'
 });
+
+policy.evaluate({
+  payload: authenticated.payload,
+  policy: {
+    name: 'sandbox.security.admin',
+    requiredRoles: [
+      'admin'
+    ],
+    requiredPermissions: [
+      'security.auth.test'
+    ],
+    mode: 'all'
+  }
+});
 ```
 
 ---
@@ -915,6 +1228,7 @@ import {
   SecurityAuthorizationService,
   SecurityAuthService,
   SecurityJwtService,
+  SecurityPolicyService,
   assertSecurityJwtSecret,
   encodeSecurityJwtSecret,
   extractSecurityBearerToken,
@@ -934,7 +1248,10 @@ import type {
   SecurityJwtPayload,
   SecurityJwtSignOptions,
   SecurityJwtTokenType,
-  SecurityJwtVerifyResult
+  SecurityJwtVerifyResult,
+  SecurityPolicy,
+  SecurityPolicyOptions,
+  SecurityPolicyResult
 } from '@jarvis/security';
 ```
 
@@ -949,7 +1266,7 @@ Hash de contraseñas
 Login
 Refresh tokens funcionales
 Sesiones
-Policies
+Policies avanzadas con contexto
 Guards
 OAuth 2.0
 Identity providers
@@ -1032,9 +1349,9 @@ Las sesiones pueden vivir en distintos almacenes según la aplicación: memoria,
 
 ---
 
-## Policies
+## Policies avanzadas
 
-Las policies representan reglas de autorización más expresivas que pueden combinar condiciones.
+Las policies avanzadas permitirán combinar condiciones más expresivas que roles y permisos.
 
 Ejemplo conceptual:
 
@@ -1048,9 +1365,9 @@ El usuario puede editar un recurso si:
 El alcance esperado incluye:
 
 ```txt
-- Definir reglas reutilizables.
 - Ejecutar policies contra un contexto.
 - Combinar roles, permisos, tenant, metadata y reglas de negocio.
+- Evaluar recursos externos entregados por la aplicación.
 - Devolver resultados autorizados o errores controlados.
 ```
 
@@ -1107,7 +1424,7 @@ IdentityProvider consulta BD
 ↓
 BD devuelve usuario, roles y permisos
 ↓
-@jarvis/security autoriza la operación
+@jarvis/security autoriza la operación o evalúa una policy
 ```
 
 La regla se mantiene:
